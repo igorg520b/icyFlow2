@@ -81,13 +81,14 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     mainwindow.h
     mainwindow.ui
     ${qtpropertyeditor_SRCS}
-    objectpropertybrowser.cpp
-    objectpropertybrowser.h
-    beamparams.cpp
-    beamparams.h
+    pb/objectpropertybrowser.cpp
+    pb/objectpropertybrowser.h
+    generator/beamparams.cpp
+    generator/beamparams.h
   )
 
 target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets)
 target_link_libraries(icyFlow2 PRIVATE ${VTK_LIBRARIES})
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
+target_include_directories(icyFlow2 PUBLIC generator pb)
 target_link_libraries(icyFlow2 PRIVATE gmsh)
