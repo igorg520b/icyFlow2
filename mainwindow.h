@@ -19,7 +19,9 @@
 #include <vtkUnstructuredGrid.h>
 #include <vtkDataSetMapper.h>
 #include <vtkCamera.h>
-
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkWindowToImageFilter.h>
+#include <vtkPNGWriter.h>
 
 #include <QVTKOpenGLNativeWidget.h>
 #include <QVTKOpenGLWidget.h>
@@ -48,6 +50,12 @@ private slots:
 
     void on_actionGenerate_triggered();
 
+    void on_actionGenerate_Beam_triggered();
+
+    void on_actionWrite_VTU_triggered();
+
+    void on_actionScreenshot_triggered();
+
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;
@@ -60,6 +68,10 @@ private:
     vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
     vtkNew<vtkRenderer> renderer;
     vtkNew<vtkNamedColors> colors;
+    vtkNew<vtkXMLUnstructuredGridWriter> writer;
+    vtkNew<vtkUnstructuredGrid> ugrid;
+    vtkNew<vtkWindowToImageFilter> windowToImageFilter;
+    vtkNew<vtkPNGWriter> writerPNG;
 
 };
 #endif // MAINWINDOW_H
