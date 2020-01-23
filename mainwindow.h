@@ -7,7 +7,6 @@
 #include <QPushButton>
 #include <QSplitter>
 
-
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
@@ -17,6 +16,11 @@
 #include <vtkRenderer.h>
 #include <vtkSphereSource.h>
 #include <vtkVersion.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkDataSetMapper.h>
+#include <vtkCamera.h>
+
+
 #include <QVTKOpenGLNativeWidget.h>
 #include <QVTKOpenGLWidget.h>
 
@@ -25,6 +29,8 @@
 #include <gmsh.h>
 #include "beamparams.h"
 
+namespace model = gmsh::model;
+namespace factory = gmsh::model::occ;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,6 +55,11 @@ private:
     ObjectPropertyBrowser *pb;
 
     BeamParams *beamParams;
+
+    // VTK objects
+    vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+    vtkNew<vtkRenderer> renderer;
+    vtkNew<vtkNamedColors> colors;
 
 };
 #endif // MAINWINDOW_H

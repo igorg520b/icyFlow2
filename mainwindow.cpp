@@ -13,20 +13,21 @@ MainWindow::MainWindow(QWidget *parent)
     sp=new QSplitter(Qt::Orientation::Horizontal);
     qtw = new QVTKOpenGLNativeWidget();
 
-    vtkNew<vtkNamedColors> colors;
 
-    vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+
+
     qtw->SetRenderWindow(renderWindow);
     vtkNew<vtkSphereSource> sphereSource;
     vtkNew<vtkPolyDataMapper> sphereMapper;
     sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
     vtkNew<vtkActor> sphereActor;
     sphereActor->SetMapper(sphereMapper);
-    sphereActor->GetProperty()->SetColor(colors->GetColor4d("Tomato").GetData());
+    sphereActor->GetProperty()->SetColor(colors->GetColor4d("Yellow").GetData());
+    sphereActor->GetProperty()->EdgeVisibilityOn();
 
-    vtkNew<vtkRenderer> renderer;
+
     renderer->AddActor(sphereActor);
-    renderer->SetBackground(colors->GetColor3d("SteelBlue").GetData());
+    renderer->SetBackground(colors->GetColor3d("LightGrey").GetData());
 
     qtw->GetRenderWindow()->AddRenderer(renderer);
     qtw->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
@@ -49,22 +50,23 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionGenerate_triggered()
 {
-    // generate simulation setup
+    double CharacteristicLengthIndenter = 0.02;
+    double a = beamParams->beamA; // beamA
+    double b = beamParams->beamB; // beamB
+    double l1 = beamParams->beamL1;
+    double l2 = beamParams->beamL2;
+    double c = beamParams->beamGap; // beam gap
+    double d = beamParams->beamMargin; // beam margin
+    double h = beamParams->beamThickness; // thickness
+    double indsize = beamParams->IndenterSize; // indentor size
 
-    /*
-    gmsh::initialize(argc, argv);
+    // generate simulation setup
+    qDebug() << "generating indenter";
+
+    gmsh::initialize();
     gmsh::option::setNumber("General.Terminal", 1);
 
     model::add("indenter1");
-    double CharacteristicLengthIndenter = 0.02;
-    double a = 0.4; // beamA
-    double b = 0.4; // beamB
-    double l1 = 0.83;
-    double l2 = 1.3;
-    double c = 0.1; // beam gap
-    double d = 0.35; // beam margin
-    double h = 0.5; // thickness
-    double indsize = 0.15; // indentor size
 
     double dy = l1 + c + d;
     double dx = d;
@@ -104,11 +106,83 @@ void MainWindow::on_actionGenerate_triggered()
     gmsh::option::setNumber("Mesh.CharacteristicLengthMax", CharacteristicLengthIndenter);
     model::mesh::generate(3);
 
-    gmsh::write("indenter.msh");
+    //    gmsh::write("indenter.msh");
+
+    std::vector<std::size_t> nodeTags1;
+    std::vector<double> nodeCoords, parametricCoords;
+    model::mesh::getNodesByElementType(4, nodeTags1, nodeCoords, parametricCoords, -1, false);
+
+    qDebug() << "size node tags " << nodeTags1.size();
+    qDebug() << "size node coords " << nodeCoords.size();
+    qDebug() << "size parametric coords " << parametricCoords.size();
+
+    std::vector<std::size_t> elementTags, nodeTags2;
+
+    model::mesh::getElementsByType(4, elementTags, nodeTags2);
+    qDebug() << "size tags: " << elementTags.size();
+    qDebug() << "node tags: " << nodeTags2.size();
 
 
+
+
+    qDebug() << "done generating";
+    renderer->RemoveAllViewProps();
+    // update qtw
+
+    vtkSmartPointer<vtkPoints> points =
+            vtkSmartPointer<vtkPoints>::New();
+
+    points->Allocate(nodeTags1.size());
+    QMap<vtkIdType,int>map;
+
+    for(int i = 0; i<nodeTags1.size(); i++) {
+        vtkIdType nodeTag = (vtkIdType)nodeTags1[i];
+        points->InsertPoint((vtkIdType)i,
+                nodeCoords[i*3+0],
+                nodeCoords[i*3+1],
+                nodeCoords[i*3+2]);
+        map.insert(nodeTag,i);
+    }
+
+
+    vtkSmartPointer<vtkUnstructuredGrid> ugrid =
+            vtkSmartPointer<vtkUnstructuredGrid>::New();
+    ugrid->SetPoints(points);
+
+    ugrid->Allocate(elementTags.size());
+
+    vtkIdType pts2[4];
+    for(int i=0;i<elementTags.size();i++)
+    {
+        pts2[0] = map[nodeTags2[i*4+0]];
+        pts2[1] = map[nodeTags2[i*4+1]];
+        pts2[2] = map[nodeTags2[i*4+2]];
+        pts2[3] = map[nodeTags2[i*4+3]];
+        ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
+    }
+
+
+
+
+    vtkSmartPointer<vtkDataSetMapper> ugridMapper =
+            vtkSmartPointer<vtkDataSetMapper>::New();
+    ugridMapper->SetInputData(ugrid);
+
+    vtkSmartPointer<vtkActor> ugridActor =
+            vtkSmartPointer<vtkActor>::New();
+    ugridActor->SetMapper(ugridMapper);
+    ugridActor->GetProperty()->SetColor(colors->GetColor3d("Seashell").GetData());
+    ugridActor->GetProperty()->EdgeVisibilityOn();
+
+
+    renderer->AddActor(ugridActor);
+
+    renderer->ResetCamera();
+    renderWindow->Render();
+
+    vtkActorCollection *vac = renderer->GetActors();
+    qDebug() << "number of actors: " << vac->GetNumberOfItems();
     gmsh::finalize();
 
-*/
 }
 
