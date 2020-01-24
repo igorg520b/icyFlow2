@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "face.h"
-namespace icy { class Node; }
+namespace icy { class Node; class Face;}
 
 class icy::Node
 {
@@ -27,7 +27,7 @@ public:
     bool anchored;           // anchored nodes do not contribute to the stiffness matrix
     bool isSurface;
 
-    std::vector<icy::Face> faces;     // Adjacent faces, if any, for collisions
+    std::vector<icy::Face*> faces;     // Adjacent faces, if any, for collisions
 
 
     Node();
