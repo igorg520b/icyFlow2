@@ -15,9 +15,14 @@ namespace icy { class Mesh; }
 class icy::Mesh : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool isDeformable MEMBER isDeformable NOTIFY propertyChanged)
+    Q_PROPERTY(bool isIndenter MEMBER isIndenter NOTIFY propertyChanged)
+    Q_PROPERTY(int nNodes READ getNumberOfNodes)
+    Q_PROPERTY(int nElems READ getNumberOfElems)
+    Q_PROPERTY(int nCZs READ getNumberOfCZs)
+    Q_PROPERTY(int nFaces READ getNumberOfFaces)
 
 public:
-    Mesh();
     std::vector<Node*> nodes;
     std::vector<Element*> elems;
     std::vector<CZ*> czs;
@@ -25,9 +30,27 @@ public:
     std::vector<SurfaceFragment*> surfaceFragments;
     std::vector<Element*> surfaceElements; // elements that can potentially come in contact
 
-      //  public TranslationCollection translationCollection = new TranslationCollection();
+    //  public TranslationCollection translationCollection = new TranslationCollection();
 
+    bool isDeformable = false;
+    bool isIndenter = false;
+    // bounding box
+    double xmin, xmax, ymin, ymax, zmin, zmax;
 
+    Mesh();
+    void ComputeBoundingBox();
+    void DetectSurfaces(bool anchorsides);
+    void IdentifySurfaceElements();
+    void ConnectFaces();
+
+private:
+    int getNumberOfNodes() {return (int)nodes.size();}
+    int getNumberOfElems() {return (int)elems.size();}
+    int getNumberOfCZs() {return (int)czs.size();}
+    int getNumberOfFaces() {return (int)faces.size();}
+
+signals:
+    void propertyChanged();
 };
 
 #endif // MESH_H

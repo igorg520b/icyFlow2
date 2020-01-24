@@ -74,6 +74,14 @@ ${qtpb_dir}/qtpropertybrowser.qrc
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+include(FindOpenMP)
+if(OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else(OPENMP_FOUND)
+    message("ERROR: OpenMP could not be found.")
+endif(OPENMP_FOUND)
 
   add_executable(icyFlow2
     main.cpp
@@ -111,10 +119,19 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     simulation/implicitmodel4.h
     simulation/linearsystem.cpp
     simulation/linearsystem.h
+    simulation/bvht.cpp
+    simulation/bvht.h
+    simulation/point_triangle_distance.cpp
+    simulation/GteSymmetricEigensolver3x3.h
+    simulation/pardiso_wrapper.cpp
   )
+
+target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
+target_include_directories(icyFlow2 PUBLIC generator pb)
+target_include_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/include)
+target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
 
 target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets)
 target_link_libraries(icyFlow2 PRIVATE ${VTK_LIBRARIES})
-target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
-target_include_directories(icyFlow2 PUBLIC generator pb)
 target_link_libraries(icyFlow2 PRIVATE gmsh)
+target_link_libraries(icyFlow2 PRIVATE mkl_rt)
