@@ -1,6 +1,6 @@
 #include "cz.h"
 
-CZ::CZ()
+icy::CZ::CZ()
 {
 
 }

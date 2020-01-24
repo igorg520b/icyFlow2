@@ -1,6 +1,6 @@
 #include "modelprms.h"
 
-ModelPrms::ModelPrms()
+icy::ModelPrms::ModelPrms()
 {
 
 }

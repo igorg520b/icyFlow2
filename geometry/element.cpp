@@ -1,6 +1,6 @@
 #include "element.h"
 
-Element::Element()
+icy::Element::Element()
 {
 
 }

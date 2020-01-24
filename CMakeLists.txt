@@ -85,6 +85,32 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     pb/objectpropertybrowser.h
     generator/beamparams.cpp
     generator/beamparams.h
+    geometry/node.cpp
+    geometry/node.h
+    geometry/face.h
+    geometry/face.cpp
+    geometry/element.cpp
+    geometry/element.h
+    geometry/cz.h
+    geometry/cz.cpp
+    geometry/mesh.cpp
+    geometry/mesh.h
+    geometry/meshcollection.cpp
+    geometry/meshcollection.h
+    geometry/surfacefragment.cpp
+    geometry/surfacefragment.h
+    geometry/translation.cpp
+    geometry/translation.h
+    simulation/modelprms.cpp
+    simulation/modelprms.h
+    simulation/csrdictionary.cpp
+    simulation/csrdictionary.h
+    simulation/frameinfo.cpp
+    simulation/frameinfo.h
+    simulation/implicitmodel4.cpp
+    simulation/implicitmodel4.h
+    simulation/linearsystem.cpp
+    simulation/linearsystem.h
   )
 
 target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets)

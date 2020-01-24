@@ -1,6 +1,6 @@
 #include "face.h"
 
-Face::Face()
+icy::Face::Face()
 {
 
 }

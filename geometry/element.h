@@ -1,8 +1,11 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+namespace icy {
+class Element;
+}
 
-class Element
+class icy::Element
 {
 public:
     Element();

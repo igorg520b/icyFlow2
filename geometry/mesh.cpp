@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-Mesh::Mesh()
+icy::Mesh::Mesh()
 {
 
 }

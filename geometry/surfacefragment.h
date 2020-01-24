@@ -1,8 +1,11 @@
 #ifndef SURFACEFRAGMENT_H
 #define SURFACEFRAGMENT_H
 
+namespace icy {
+class SurfaceFragment;
+}
 
-class SurfaceFragment
+class icy::SurfaceFragment
 {
 public:
     SurfaceFragment();

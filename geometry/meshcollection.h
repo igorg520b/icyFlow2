@@ -1,8 +1,11 @@
 #ifndef MESHCOLLECTION_H
 #define MESHCOLLECTION_H
 
+namespace icy {
+class MeshCollection;
+}
 
-class MeshCollection
+class icy::MeshCollection
 {
 public:
     MeshCollection();

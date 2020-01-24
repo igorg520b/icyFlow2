@@ -1,8 +1,11 @@
 #ifndef CSRDICTIONARY_H
 #define CSRDICTIONARY_H
 
+namespace icy {
+class CSRDictionary;
+}
 
-class CSRDictionary
+class icy::CSRDictionary
 {
 public:
     CSRDictionary();

@@ -1,8 +1,11 @@
 #ifndef FACE_H
 #define FACE_H
 
+namespace icy {
+class Face;
+}
 
-class Face
+class icy::Face
 {
 public:
     Face();

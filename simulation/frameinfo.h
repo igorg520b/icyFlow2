@@ -3,7 +3,11 @@
 
 #include <QObject>
 
-class FrameInfo : public QObject
+namespace icy {
+class FrameInfo;
+}
+
+class icy::FrameInfo : public QObject
 {
     Q_OBJECT
 public:
