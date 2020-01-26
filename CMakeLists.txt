@@ -121,6 +121,10 @@ endif(OPENMP_FOUND)
     simulation/linearsystem.h
     simulation/bvh/bvht.cpp
     simulation/bvh/bvht.h
+    simulation/bvh/bvhn.cpp
+    simulation/bvh/bvhn.h
+    simulation/bvh/kdop24.cpp
+    simulation/bvh/kdop24.h
     simulation/point_triangle_distance.cpp
     simulation/GteSymmetricEigensolver3x3.h
     simulation/pardiso_wrapper.cpp

@@ -6,7 +6,7 @@
 #include "modelprms.h"
 #include "frameinfo.h"
 #include "linearsystem.h"
-#include "bvht.h"
+#include "bvh/bvht.h"
 
 namespace icy {
 class ImplicitModel4;
