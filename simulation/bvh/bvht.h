@@ -43,7 +43,6 @@ private:
 class icy::BVHN
 {
 public:
-    static int maxLevel;
     static std::vector<Element*> broad_list; // list of pairs of elements, reuslt of broad phase
 
     kDOP24 box;
@@ -51,10 +50,12 @@ public:
     int level;
     bool isLeaf;
 
-    BVHN(BVHN parent, std::vector<kDOP24> *bvs, int level);
-    void Initialize(BVHN parent, std::vector<kDOP24> *bvs, int level);
+    BVHN(BVHN &parent, std::vector<kDOP24> *bvs, int level);
+    void Initialize(BVHN &parent, std::vector<kDOP24> *bvs, int level);
     void FinalizeConstruction();
-
+    void Update();
+    void SelfCollide();
+    void Collide(BVHN &b);
 
 private:
     std::vector<kDOP24> *bvs = nullptr;

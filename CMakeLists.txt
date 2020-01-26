@@ -119,11 +119,12 @@ endif(OPENMP_FOUND)
     simulation/implicitmodel4.h
     simulation/linearsystem.cpp
     simulation/linearsystem.h
-    simulation/bvht.cpp
-    simulation/bvht.h
+    simulation/bvh/bvht.cpp
+    simulation/bvh/bvht.h
     simulation/point_triangle_distance.cpp
     simulation/GteSymmetricEigensolver3x3.h
     simulation/pardiso_wrapper.cpp
+    AwesomeObjectFactory.h
   )
 
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
