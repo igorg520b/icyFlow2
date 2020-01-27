@@ -16,22 +16,21 @@ class icy::BVHN
 {
 public:
     static std::vector<Element*> broad_list; // list of pairs of elements, reuslt of broad phase
-    static AwesomeObjectFactory<std::vector<kDOP24>> kDopFactory(50);
+    static AwesomeObjectFactory<std::vector<kDOP24*>> kDopVectorFactory;
+    static AwesomeObjectFactory<BVHN> BVHNFactory;
 
     kDOP24 box;
-    BVHN *child1, *child2, *parent;
-    int level;
     bool isLeaf;
+    Element *elem = nullptr; // element that is enveloped by this kDOP, if leaf
 
-    BVHN(BVHN &parent, std::vector<kDOP24> *bvs, int level);
-    void Initialize(BVHN &parent, std::vector<kDOP24> *bvs, int level);
-    void FinalizeConstruction();
+    void Initialize(std::vector<kDOP24*> *bvs);
     void Update();
+    void UpdateLeaf();  // use tentative coordinates from elem
     void SelfCollide();
-    void Collide(BVHN &b);
+    void Collide(BVHN *b);
 
 private:
-    std::vector<kDOP24> *bvs = nullptr;
+    BVHN *child1, *child2;
 };
 
 #endif // BVHN_H

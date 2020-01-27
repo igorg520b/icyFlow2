@@ -1,11 +1,7 @@
 #ifndef KDOP24_H
 #define KDOP24_H
 
-#include "geometry/element.h"
-
-namespace icy {
-class kDOP24;
-}
+namespace icy { class kDOP24; }
 
 class icy::kDOP24
 {
@@ -24,21 +20,21 @@ class icy::kDOP24
 public:
     double d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11; // lower boundaries
     double d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23; // higher boundaries
-    Element *elem = nullptr; // element that is enveloped by this kDOP, if exists
     kDOP24();
-    kDOP24(kDOP24 &k);
     void Reset();
-    void UpdateTentative(Element &e);
     bool Overlaps(kDOP24 &b);
     void Expand(double x, double y, double z);
     void Expand(kDOP24 &b);
     void Dimensions(double &dx, double &dy, double &dz);
+    double centerX() { return (d0 + d12) / 2; }
+    double centerY() { return (d1 + d13) / 2; }
+    double centerZ() { return (d2 + d14) / 2; }
 
 private:
     inline void MinMax(double p, double &mi, double &ma);
     inline void MinMax(double a, double b, double &mi, double &ma);
-    inline double min(double a, double b) { return a < b ? a : b; }
-    inline double max(double a, double b) { return a > b ? a : b; }
+    double min(double a, double b) { return a < b ? a : b; }
+    double max(double a, double b) { return a > b ? a : b; }
 };
 
 #endif // KDOP24_H

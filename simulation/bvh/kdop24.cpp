@@ -4,37 +4,7 @@
 
 icy::kDOP24::kDOP24()
 {
-    Reset();
-}
-
-icy::kDOP24::kDOP24(kDOP24 &k)
-{
-    d0 = k.d0;
-    d1 = k.d1;
-    d2 = k.d2;
-    d3 = k.d3;
-    d4 = k.d4;
-    d5 = k.d5;
-    d6 = k.d6;
-    d7 = k.d7;
-    d8 = k.d8;
-    d9 = k.d9;
-
-    d10 = k.d10;
-    d11 = k.d11;
-    d12 = k.d12;
-    d13 = k.d13;
-    d14 = k.d14;
-    d15 = k.d15;
-    d16 = k.d16;
-    d17 = k.d17;
-    d18 = k.d18;
-    d19 = k.d19;
-
-    d20 = k.d20;
-    d21 = k.d21;
-    d22 = k.d22;
-    d23 = k.d23;
+//    Reset();
 }
 
 void icy::kDOP24::Reset()
@@ -42,21 +12,6 @@ void icy::kDOP24::Reset()
     d0 = d1 = d2 = d3 = d4 = d5 = d6 = d7 = d8 = d9 = d10 = d11 = DBL_MAX;
     d12 = d13 = d14 = d15 = d16 = d17 = d18 = d19 = d20 = d21 = d22 = d23 = -DBL_MAX;
 }
-
-
-void icy::kDOP24::UpdateTentative(Element &e)
-{
-    Reset();
-    Node *nd = e.vrts[0];
-    Expand(nd->tx, nd->ty, nd->tz);
-    nd = e.vrts[1];
-    Expand(nd->tx, nd->ty, nd->tz);
-    nd = e.vrts[2];
-    Expand(nd->tx, nd->ty, nd->tz);
-    nd = e.vrts[3];
-    Expand(nd->tx, nd->ty, nd->tz);
-}
-
 
 bool icy::kDOP24::Overlaps(kDOP24 &b)
 {
