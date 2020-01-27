@@ -4,7 +4,7 @@
 #include <vector>
 #include "geometry/element.h"
 #include "kdop24.h"
-#include "AwesomeObjectFactory.h"
+#include "SimpleObjectPool.h"
 
 namespace icy {
 class BVHN;
@@ -16,8 +16,8 @@ class icy::BVHN
 {
 public:
     static std::vector<Element*> broad_list; // list of pairs of elements, reuslt of broad phase
-    static AwesomeObjectFactory<std::vector<kDOP24*>> kDopVectorFactory;
-    static AwesomeObjectFactory<BVHN> BVHNFactory;
+    static SimpleObjectPool<std::vector<kDOP24*>> kDopVectorFactory;
+    static SimpleObjectPool<BVHN> BVHNFactory;
 
     kDOP24 box;
     bool isLeaf;

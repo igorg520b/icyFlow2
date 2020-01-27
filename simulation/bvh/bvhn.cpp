@@ -4,8 +4,8 @@
 #include "bvhn.h"
 
 std::vector<icy::Element*> icy::BVHN::broad_list;
-icy::AwesomeObjectFactory<std::vector<icy::kDOP24*>> icy::BVHN::kDopVectorFactory(50);
-icy::AwesomeObjectFactory<icy::BVHN> icy::BVHN::BVHNFactory(10000);
+icy::SimpleObjectPool<std::vector<icy::kDOP24*>> icy::BVHN::kDopVectorFactory(50);
+icy::SimpleObjectPool<icy::BVHN> icy::BVHN::BVHNFactory(10000);
 
 void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
 {
