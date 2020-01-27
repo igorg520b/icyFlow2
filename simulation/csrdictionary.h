@@ -15,7 +15,7 @@ class icy::CSRDictionary
 public:
 
     std::vector<std::set<int>> rows_staticNeighbors;
-    std::vector<std::set<int>> rows_allNeighbors;
+    std::vector<std::set<int>> rows_dynamicNeighbors;
     int *csr_rows;
     int *csr_cols;            // structure arrays of the sparse matrix
     int N = 0;   // number of variables
@@ -34,7 +34,7 @@ public:
 private:
     int maxRowIndex = -1;   // maximum row index, zero-based, equal to resulting matrix height minus 1
     std::vector<std::map<int,int>> rows_pcsr;   // per row mappings between columns and offset in "values"
-
+    std::vector<std::vector<int>> rows_sortedAllNeighbors;
 };
 
 #endif // CSRDICTIONARY_H
