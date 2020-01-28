@@ -31,7 +31,7 @@ public:
 
 
     Node();
-    Node(double x, double y, double z, int id);
+    void Initialize(double x, double y, double z, int id);
     void AcceptTentativeValues(double h);
     void InferTentativeValues(double h, double beta, double gamma);
 

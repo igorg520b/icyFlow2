@@ -2,9 +2,22 @@
 
 icy::Node::Node()
 {
+    id = altId = globalNodeId = -1;
+    x0 = y0 = z0 = 0;
+    cx = cy = cz = 0;
+    ux = uy = uz = 0;
+    vx = vy = vz = 0;
+    ax = ay = az = 0;
+    fx = fy = fz = 0;
+    unx = uny = unz = 0;
+    vnx = vny = vnz = 0;
+    anx = any = anz = 0;
+    tx = ty = tz = 0;
+    dux = duy = duz = 0;
+    anchored = isSurface = false;
 }
 
-icy::Node::Node(double x, double y, double z, int _id)
+void icy::Node::Initialize(double x, double y, double z, int _id)
 {
     id=_id;
     cx = x0 = x;

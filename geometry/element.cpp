@@ -1,8 +1,9 @@
 #include "element.h"
-#include <QtGlobal>
+#include <stdexcept>
+
+
 icy::Element::Element()
 {
-
 }
 
 void icy::Element::FindAdjFaces()
@@ -34,7 +35,7 @@ double icy::Element::volume()
     Jdet = x21 * (y23 * z34 - y34 * z23) + x32 * (y34 * z12 - y12 * z34) + x43 * (y12 * z23 - y23 * z12);
     double V = Jdet / 6.0;
 
-    Q_ASSERT(V>0);
+    if(V<=0) throw std::runtime_error("element volume: V<=0");
     return V; // supposed to be positive
 }
 

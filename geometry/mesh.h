@@ -23,11 +23,13 @@ class icy::Mesh : public QObject
     Q_PROPERTY(int nFaces READ getNumberOfFaces)
 
 public:
-    std::vector<Node*> nodes;
-    std::vector<Element*> elems;
-    std::vector<CZ*> czs;
-    std::vector<Face*> faces;
-    std::vector<SurfaceFragment*> surfaceFragments;
+    std::vector<Node> nodes;
+    std::vector<Element> elems;
+    std::vector<CZ> czs;
+    std::vector<Face> faces;
+    std::vector<SurfaceFragment> surfaceFragments;
+
+    // the is is a subset of elems
     std::vector<Element*> surfaceElements; // elements that can potentially come in contact
 
     //  public TranslationCollection translationCollection = new TranslationCollection();
@@ -38,6 +40,7 @@ public:
     double xmin, xmax, ymin, ymax, zmin, zmax;
 
     Mesh();
+    ~Mesh();
     void ComputeBoundingBox();
     void DetectSurfaces(bool anchorsides);
     void IdentifySurfaceElements();

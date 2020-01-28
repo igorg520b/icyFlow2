@@ -93,6 +93,8 @@ endif(OPENMP_FOUND)
     pb/objectpropertybrowser.h
     generator/beamparams.cpp
     generator/beamparams.h
+    generator/generatortool.cpp
+    generator/generatortool.h
     geometry/node.cpp
     geometry/node.h
     geometry/face.h

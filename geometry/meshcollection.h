@@ -24,7 +24,7 @@ public:
 //    std::vector<icy::Face*> allFaces;
     std::vector<icy::Mesh*> deformables, nonDeformables, indenters;
 
-
+    void Clear(); // return the collection to empty state
 
 };
 
