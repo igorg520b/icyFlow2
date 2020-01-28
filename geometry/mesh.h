@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <vector>
+#include <algorithm>
 #include "node.h"
 #include "element.h"
 #include "cz.h"
@@ -45,6 +46,7 @@ public:
     void DetectSurfaces(bool anchorsides);
     void IdentifySurfaceElements();
     void ConnectFaces();
+    void CenterSample(double &dx, double &dy);
 
 private:
     int getNumberOfNodes() {return (int)nodes.size();}

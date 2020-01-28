@@ -56,6 +56,8 @@ private slots:
 
     void on_actionScreenshot_triggered();
 
+    void on_actionGenerator_Tool_triggered();
+
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;

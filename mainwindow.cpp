@@ -15,8 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     sp=new QSplitter(Qt::Orientation::Horizontal);
     qtw = new QVTKOpenGLNativeWidget();
 
-renderWindow->SetAlphaBitPlanes(1); //?
-
+    renderWindow->SetAlphaBitPlanes(1); //?
 
     qtw->SetRenderWindow(renderWindow);
     vtkNew<vtkSphereSource> sphereSource;
@@ -27,13 +26,11 @@ renderWindow->SetAlphaBitPlanes(1); //?
     sphereActor->GetProperty()->SetColor(colors->GetColor4d("Yellow").GetData());
     sphereActor->GetProperty()->EdgeVisibilityOn();
 
-
     renderer->AddActor(sphereActor);
     renderer->SetBackground(colors->GetColor3d("LightGrey").GetData());
 
     qtw->GetRenderWindow()->AddRenderer(renderer);
     qtw->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
-
 
     pb = new ObjectPropertyBrowser(nullptr);
     pb->setActiveObject(beamParams);
@@ -41,7 +38,6 @@ renderWindow->SetAlphaBitPlanes(1); //?
     sp->addWidget(pb);
     sp->addWidget(qtw);
     setCentralWidget(sp);
-
 }
 
 MainWindow::~MainWindow()
@@ -396,4 +392,9 @@ void MainWindow::on_actionScreenshot_triggered()
     writerPNG->SetFileName("screenshot2.png");
     writerPNG->SetInputConnection(windowToImageFilter->GetOutputPort());
     writerPNG->Write();
+}
+
+void MainWindow::on_actionGenerator_Tool_triggered()
+{
+    // user generator tool to set up the scene
 }
