@@ -3,32 +3,28 @@
 #include <algorithm>
 #include "bvhn.h"
 
-std::vector<icy::Element*> icy::BVHN::broad_list;
-icy::SimpleObjectPool<std::vector<icy::kDOP24*>> icy::BVHN::kDopVectorFactory(50);
-icy::SimpleObjectPool<icy::BVHN> icy::BVHN::BVHNFactory(10000);
+icy::SimpleObjectPool<std::vector<icy::BVHN*>> icy::BVHN::VectorFactory(50);
+icy::SimpleObjectPool<icy::BVHN> icy::BVHN::BVHNFactory(50000);
 
-void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
+icy::BVHN::BVHN() {}
+
+void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
 {
     auto count = bvs->size();
-    if(count == 0) throw new std::runtime_error("bvs->size is zero in BVHN::Initialize");
+    if(count == 0) throw new std::runtime_error("bvs->size==0 in BVHN::Initialize");
+    else if(count == 1) throw new std::runtime_error("bvs->size==1 in BVHN::Initialize");
 
     box.Reset();
-    if(count == 1) {
-        // current node becomes a leaf
-        box.Expand(*bvs->front());
-        isLeaf = true;
-        return;
-    }
-
     isLeaf = false;
-    for(auto const &bv : *bvs) box.Expand(*bv); // expand box to the size of bvs collection
+
+    for(auto const &bv : *bvs) box.Expand(bv->box); // expand box to the size of bvs collection
 
     // get length, width and height of the resulting box
     double dX, dY, dZ;
     box.Dimensions(dX, dY, dZ);
 
-    std::vector<icy::kDOP24*> *left = kDopVectorFactory.take();
-    std::vector<icy::kDOP24*> *right = kDopVectorFactory.take();
+    std::vector<icy::BVHN*> *left = VectorFactory.take();
+    std::vector<icy::BVHN*> *right = VectorFactory.take();
     left->clear();
     right->clear();
     left->reserve(bvs->size());
@@ -38,18 +34,18 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
     {
         double center = box.centerX();
         for(auto const &bv : *bvs) {
-            if(bv->centerX() < center) left->push_back(bv);
+            if(bv->box.centerX() < center) left->push_back(bv);
             else right->push_back(bv);
         }
 
         // make sure that there is at least one element on each side
         if(left->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *right)
-                if(min1 >= bv->centerX()) {
-                    min1 = bv->centerX();
+                if(min1 >= bv->box.centerX()) {
+                    min1 = bv->box.centerX();
                     selected = bv;
                 }
             // move "selected" from left to right
@@ -57,11 +53,11 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
             std::remove(right->begin(), right->end(),selected);
         } else if(right->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *left)
-                if(min1 >= bv->centerX()) {
-                    min1 = bv->centerX();
+                if(min1 >= bv->box.centerX()) {
+                    min1 = bv->box.centerX();
                     selected = bv;
                 }
             // move "selected" from right to left
@@ -73,18 +69,18 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
     {
         double center = box.centerY();
         for(auto const &bv : *bvs) {
-            if(bv->centerY() < center) left->push_back(bv);
+            if(bv->box.centerY() < center) left->push_back(bv);
             else right->push_back(bv);
         }
 
         // make sure that there is at least one element on each side
         if(left->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *right)
-                if(min1 >= bv->centerY()) {
-                    min1 = bv->centerY();
+                if(min1 >= bv->box.centerY()) {
+                    min1 = bv->box.centerY();
                     selected = bv;
                 }
             // move "selected" from left to right
@@ -93,11 +89,11 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
         }
         else if(right->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *left)
-                if(min1 >= bv->centerY()) {
-                    min1 = bv->centerY();
+                if(min1 >= bv->box.centerY()) {
+                    min1 = bv->box.centerY();
                     selected = bv;
                 }
             // move "selected" from right to left
@@ -109,18 +105,18 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
     {
         double center = box.centerZ();
         for(auto const &bv : *bvs) {
-            if(bv->centerZ() < center) left->push_back(bv);
+            if(bv->box.centerZ() < center) left->push_back(bv);
             else right->push_back(bv);
         }
 
         // make sure that there is at least one element on each side
         if(left->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *right)
-                if(min1 >= bv->centerZ()) {
-                    min1 = bv->centerZ();
+                if(min1 >= bv->box.centerZ()) {
+                    min1 = bv->box.centerZ();
                     selected = bv;
                 }
             // move "selected" from left to right
@@ -129,11 +125,11 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
         }
         else if(right->size() == 0)
         {
-            kDOP24 *selected;
+            BVHN *selected;
             double min1 = DBL_MAX;
             for(auto const &bv : *left)
-                if(min1 >= bv->centerZ()) {
-                    min1 = bv->centerZ();
+                if(min1 >= bv->box.centerZ()) {
+                    min1 = bv->box.centerZ();
                     selected = bv;
                 }
             // move "selected" from right to left
@@ -142,13 +138,23 @@ void icy::BVHN::Initialize(std::vector<kDOP24*> *bvs)
         }
     }
 
-    child1 = BVHNFactory.take();
-    child1->Initialize(left);
-    kDopVectorFactory.release(left);
+    if(left->size() == 1)
+    {
+        child1 = left->front();
+    } else if(left->size() > 1) {
+        child1 = BVHNFactory.take();
+        child1->Initialize(left);
+    } else throw std::runtime_error("left.size < 1");
+    VectorFactory.release(left);
 
-    child2 = BVHNFactory.take();
-    child2->Initialize(right);
-    kDopVectorFactory.release(right);
+    if(right->size() == 1)
+    {
+        child2 = right->front();
+    } else if(right->size() > 1) {
+        child2 = BVHNFactory.take();
+        child2->Initialize(right);
+    } else throw std::runtime_error("right.size < 1");
+    VectorFactory.release(right);
 }
 
 void icy::BVHN::UpdateLeaf()
@@ -189,8 +195,8 @@ void icy::BVHN::Collide(BVHN *b)
     if(!box.Overlaps(b->box)) return;
     if (this->isLeaf && b->isLeaf)
     {
-        broad_list.push_back(elem);
-        broad_list.push_back(b->elem);
+        BVHT::broad_list.push_back(elem);
+        BVHT::broad_list.push_back(b->elem);
     }
     else if (this->isLeaf)
     {

@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include <stdexcept>
 
 icy::Mesh::Mesh()
 {
@@ -45,7 +46,22 @@ void icy::Mesh::DetectSurfaces(bool anchorsides)
 
 void icy::Mesh::IdentifySurfaceElements()
 {
+    // note: faces must be populated before this method is invoked
 
+    // reset all nodes
+    for(auto &nd : nodes) nd.isSurface = false;
+
+    // nodes that belong to faces are marked as surface nodes
+    for(auto const &fc : faces)
+        for(int i=0;i<3;i++)
+            fc.vrts[i]->isSurface = true;
+
+    for(auto &elem : elems)
+        if(elem.vrts[0]->isSurface ||
+                elem.vrts[1]->isSurface ||
+                elem.vrts[2]->isSurface ||
+                elem.vrts[3]->isSurface) elem.isSurface = true;
+        else elem.isSurface = false;
 }
 
 

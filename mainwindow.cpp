@@ -45,6 +45,12 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::showEvent( QShowEvent* event )
+{
+    ui->actionGenerator_Tool->trigger();
+}
+
+
 void MainWindow::on_actionWrite_VTU_triggered()
 {
     writer->SetFileName("beam.vtu");

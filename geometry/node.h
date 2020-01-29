@@ -25,7 +25,7 @@ public:
     double dux, duy, duz;       // un - u
 
     bool anchored;           // anchored nodes do not contribute to the stiffness matrix
-    bool isSurface;
+    bool isSurface;         // used to build a list of surface elements
 
     std::vector<icy::Face*> faces;     // Adjacent faces, if any, for collisions
 
