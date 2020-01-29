@@ -71,3 +71,49 @@ void icy::Mesh::CenterSample(double &dx, double &dy)
     dx = x_center;
     dy = y_center;
 }
+
+void icy::Mesh::Translate(double dx, double dy, double dz)
+{
+    for(auto &nd : nodes)
+    {
+        nd.x0 += dx;
+        nd.cx = nd.x0;
+
+        nd.y0 += dy;
+        nd.cy = nd.y0;
+
+        nd.z0 += dz;
+        nd.cz = nd.z0;
+    }
+    ComputeBoundingBox();
+}
+
+void icy::Mesh::CreateUGrid()
+{
+    points->Reset();
+    points->Allocate(nodes.size());
+
+    for(auto const &nd : nodes) points->InsertPoint(nd.id,nd.x0,nd.y0,nd.z0);
+    ugrid->Reset();
+    ugrid->Allocate(elems.size());
+    ugrid->SetPoints(points);
+
+    vtkIdType pts2[4];
+    for(auto const &elem : elems)
+    {
+        pts2[0] = elem.vrts[0]->id;
+        pts2[1] = elem.vrts[1]->id;
+        pts2[2] = elem.vrts[2]->id;
+        pts2[3] = elem.vrts[3]->id;
+        ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
+    }
+    dataSetMapper->SetInputData(ugrid);
+    ugridActor->SetMapper(dataSetMapper);
+    ugridActor->GetProperty()->SetColor(colors->GetColor3d("Seashell").GetData());
+    ugridActor->GetProperty()->EdgeVisibilityOn();
+}
+
+void icy::Mesh::UpdateUGrid()
+{
+
+}

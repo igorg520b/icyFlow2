@@ -4,12 +4,20 @@
 #include <QObject>
 #include <vector>
 #include <algorithm>
+#include <vtkNew.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkCellType.h>
+#include <vtkDataSetMapper.h>
+#include <vtkActor.h>
+#include <vtkProperty.h>
+#include <vtkNamedColors.h>
 #include "node.h"
 #include "element.h"
 #include "cz.h"
 #include "face.h"
 #include "surfacefragment.h"
 #include "translation.h"
+
 
 namespace icy { class Mesh; }
 
@@ -39,6 +47,11 @@ public:
     bool isIndenter = false;
     // bounding box
     double xmin, xmax, ymin, ymax, zmin, zmax;
+    vtkNew<vtkUnstructuredGrid> ugrid;
+    vtkNew<vtkDataSetMapper> dataSetMapper;
+    vtkNew<vtkActor> ugridActor;
+    vtkNew<vtkPoints> points;
+    vtkNew<vtkNamedColors> colors;
 
     Mesh();
     ~Mesh();
@@ -47,6 +60,10 @@ public:
     void IdentifySurfaceElements();
     void ConnectFaces();
     void CenterSample(double &dx, double &dy);
+    void Translate(double dx, double dy, double dz);
+
+    void CreateUGrid();
+    void UpdateUGrid();
 
 private:
     int getNumberOfNodes() {return (int)nodes.size();}

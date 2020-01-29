@@ -27,8 +27,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionGenerate"/>
-    <addaction name="actionGenerate_Beam"/>
     <addaction name="actionWrite_VTU"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionGenerator_Tool"/>
@@ -42,16 +40,6 @@
    <addaction name="menuTest"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionGenerate">
-   <property name="text">
-    <string>Generate Indenter</string>
-   </property>
-  </action>
-  <action name="actionGenerate_Beam">
-   <property name="text">
-    <string>Generate Beam</string>
-   </property>
-  </action>
   <action name="actionWrite_VTU">
    <property name="text">
     <string>Write VTU</string>

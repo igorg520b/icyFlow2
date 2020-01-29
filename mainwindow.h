@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <gmsh.h>
 #include "beamparams.h"
+#include "simulation/implicitmodel4.h"
 
 namespace model = gmsh::model;
 namespace factory = gmsh::model::occ;
@@ -48,10 +49,6 @@ public:
 
 private slots:
 
-    void on_actionGenerate_triggered();
-
-    void on_actionGenerate_Beam_triggered();
-
     void on_actionWrite_VTU_triggered();
 
     void on_actionScreenshot_triggered();
@@ -64,7 +61,6 @@ private:
     QSplitter *sp;
     ObjectPropertyBrowser *pb;
 
-    BeamParams *beamParams;
 
     // VTK objects
     vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
@@ -74,6 +70,9 @@ private:
     vtkNew<vtkUnstructuredGrid> ugrid;
     vtkNew<vtkWindowToImageFilter> windowToImageFilter;
     vtkNew<vtkPNGWriter> writerPNG;
+
+    icy::ImplicitModel4 model;
+    BeamParams beamParams;
 
 };
 #endif // MAINWINDOW_H

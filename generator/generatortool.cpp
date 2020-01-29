@@ -20,13 +20,25 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     mc->mgs.push_back(indenter);
 
     // align the indenter
+    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
+    beam->CreateUGrid();
+    indenter->CreateUGrid();
+    indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
 
+/*
+            Translation t0 = new Translation(0, 0, 0, 0);
+            Translation t1 = new Translation(0, 0, -0.6, 240);
+            mgIndenter.translationCollection.Add(t0);
+            mgIndenter.translationCollection.Add(t1);
+*/
 }
 
 void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
 {
     double CharacteristicLengthIndenter = beamParams->CharacteristicLengthIndenter;
     double l2 = beamParams->beamL2;
+    double l1 = beamParams->beamL1;
+    double a = beamParams->beamA;
     double c = beamParams->beamGap; // beam gap
     double d = beamParams->beamMargin; // beam margin
     double h = beamParams->beamThickness; // thickness
@@ -37,8 +49,9 @@ void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
     gmsh::option::setNumber("General.Terminal", 1);
     model::add("indenter1");
 
-    double dx = d;
-    double yoffset = -indsize/2;
+    double dy = l1 + c + d;
+    double dx = c+ d;
+    double yoffset = dy-a/2-indsize/2;
 
     int point3 = factory::addPoint(dx + l2, yoffset, 0+2*h, 1.0);
     int point4 = factory::addPoint(dx + l2-indsize, yoffset, 0+2*h, 1.0);
@@ -106,6 +119,7 @@ void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
         elem->vrts[2] = &(outMesh->nodes[idx2]);
         elem->vrts[3] = &(outMesh->nodes[idx3]);
     }
+    outMesh->ComputeBoundingBox();
 }
 
 void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
@@ -260,4 +274,5 @@ void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
         elem->vrts[2] = &(outMesh->nodes[idx2]);
         elem->vrts[3] = &(outMesh->nodes[idx3]);
     }
+    outMesh->ComputeBoundingBox();
 }
