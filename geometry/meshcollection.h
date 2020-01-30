@@ -7,6 +7,7 @@
 #include "element.h"
 #include "cz.h"
 #include "face.h"
+#include "simulation/bvh/bvht.h"
 
 namespace icy {
 class MeshCollection;
@@ -15,7 +16,7 @@ class MeshCollection;
 class icy::MeshCollection
 {
 public:
-    MeshCollection();
+    BVHT bvh;
     std::vector<icy::Mesh*> mgs;
 
     std::vector<icy::Node*> allNodes, activeNodes;
@@ -24,7 +25,12 @@ public:
 //    std::vector<icy::Face*> allFaces;
     std::vector<icy::Mesh*> deformables, nonDeformables, indenters;
 
+    MeshCollection();
     void Clear(); // return the collection to empty state
+    void IdentifySurfaceElements();
+    void ConstructBVH();
+
+
 
 };
 

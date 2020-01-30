@@ -20,7 +20,7 @@ public:
     FrameInfo *cf, *tcf0;
     std::vector<FrameInfo*> allFrames;
     LinearSystem linearSystem;
-    BVHT bvh;
+
 
     bool isReady = false;
 

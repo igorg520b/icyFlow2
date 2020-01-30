@@ -309,7 +309,4 @@ void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
         fc.vrts[1]=&(outMesh->nodes[idx1]);
         fc.vrts[2]=&(outMesh->nodes[idx2]);
     }
-    std::cout << "faces " << outMesh->faces.size() << std::endl;
-    std::cout << "elems " << outMesh->elems.size() << std::endl;
-    std::cout << "nodes " << outMesh->nodes.size() << std::endl;
 }

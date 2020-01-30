@@ -8,15 +8,18 @@ icy::SimpleObjectPool<icy::BVHN> icy::BVHN::BVHNFactory(50000);
 
 icy::BVHN::BVHN() {}
 
-void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
+void icy::BVHN::Initialize(std::vector<BVHN*> *bvs, int level_)
 {
+    if(level_ > 100) throw std::runtime_error("BVH level is over 100");
+    level = level_;
     auto count = bvs->size();
+    std::cout << count << std::endl;
     if(count == 0) throw new std::runtime_error("bvs->size==0 in BVHN::Initialize");
     else if(count == 1) throw new std::runtime_error("bvs->size==1 in BVHN::Initialize");
 
-    box.Reset();
     isLeaf = false;
 
+    box.Reset();
     for(auto const &bv : *bvs) box.Expand(bv->box); // expand box to the size of bvs collection
 
     // get length, width and height of the resulting box
@@ -32,6 +35,7 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
 
     if (dX >= dY && dX >= dZ)
     {
+        std::cout << "branch 1" << std::endl;
         double center = box.centerX();
         for(auto const &bv : *bvs) {
             if(bv->box.centerX() < center) left->push_back(bv);
@@ -50,7 +54,10 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from left to right
             left->push_back(selected);
-            std::remove(right->begin(), right->end(),selected);
+            size_t size_before = right->size();
+            right->erase(std::remove(right->begin(), right->end(),selected),right->end());
+            if(left->size() != 1) throw std::runtime_error("left->size() != 1");
+            if(right->size()!= (size_before-1)) throw std::runtime_error("right->size()!= (size_before-1)");
         } else if(right->size() == 0)
         {
             BVHN *selected;
@@ -62,11 +69,15 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from right to left
             right->push_back(selected);
-            std::remove(left->begin(), left->end(),selected);
+            size_t size_before = left->size();
+            left->erase(std::remove(left->begin(), left->end(),selected),left->end());
+            if(right->size() != 1) throw std::runtime_error("right->size() != 1");
+            if(left->size()!= (size_before-1)) throw std::runtime_error("left->size()!= (size_before-1)");
         }
     }
     else if(dY >= dX && dY >= dZ)
     {
+        std::cout << "branch 2" << std::endl;
         double center = box.centerY();
         for(auto const &bv : *bvs) {
             if(bv->box.centerY() < center) left->push_back(bv);
@@ -85,7 +96,10 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from left to right
             left->push_back(selected);
-            std::remove(right->begin(), right->end(),selected);
+            size_t size_before = right->size();
+            right->erase(std::remove(right->begin(), right->end(),selected),right->end());
+            if(left->size() != 1) throw std::runtime_error("left->size() != 1");
+            if(right->size()!= (size_before-1)) throw std::runtime_error("right->size()!= (size_before-1)");
         }
         else if(right->size() == 0)
         {
@@ -98,11 +112,15 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from right to left
             right->push_back(selected);
-            std::remove(left->begin(), left->end(),selected);
+            size_t size_before = left->size();
+            left->erase(std::remove(left->begin(), left->end(),selected),left->end());
+            if(right->size() != 1) throw std::runtime_error("right->size() != 1");
+            if(left->size()!= (size_before-1)) throw std::runtime_error("left->size()!= (size_before-1)");
         }
     }
     else
     {
+        std::cout << "branch 3" << std::endl;
         double center = box.centerZ();
         for(auto const &bv : *bvs) {
             if(bv->box.centerZ() < center) left->push_back(bv);
@@ -121,7 +139,10 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from left to right
             left->push_back(selected);
-            std::remove(right->begin(), right->end(),selected);
+            size_t size_before = right->size();
+            right->erase(std::remove(right->begin(), right->end(),selected),right->end());
+            if(left->size() != 1) throw std::runtime_error("left->size() != 1");
+            if(right->size()!= (size_before-1)) throw std::runtime_error("right->size()!= (size_before-1)");
         }
         else if(right->size() == 0)
         {
@@ -134,25 +155,32 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs)
                 }
             // move "selected" from right to left
             right->push_back(selected);
-            std::remove(left->begin(), left->end(),selected);
+            size_t size_before = left->size();
+            left->erase(std::remove(left->begin(), left->end(),selected),left->end());
+            if(right->size() != 1) throw std::runtime_error("right->size() != 1");
+            if(left->size()!= (size_before-1)) throw std::runtime_error("left->size()!= (size_before-1)");
         }
     }
 
     if(left->size() == 1)
     {
         child1 = left->front();
+        child1->level=level+1;
+        if(!child1->isLeaf) throw std::runtime_error("lone child is not leaf");
     } else if(left->size() > 1) {
         child1 = BVHNFactory.take();
-        child1->Initialize(left);
+        child1->Initialize(left, level+1);
     } else throw std::runtime_error("left.size < 1");
     VectorFactory.release(left);
 
     if(right->size() == 1)
     {
         child2 = right->front();
+        child2->level=level+1;
+        if(!child2->isLeaf) throw std::runtime_error("lone child is not leaf");
     } else if(right->size() > 1) {
         child2 = BVHNFactory.take();
-        child2->Initialize(right);
+        child2->Initialize(right, level+1);
     } else throw std::runtime_error("right.size < 1");
     VectorFactory.release(right);
 }

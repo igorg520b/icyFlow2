@@ -45,9 +45,10 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::showEvent( QShowEvent* event )
+void MainWindow::showEvent( QShowEvent*)
 {
     ui->actionGenerator_Tool->trigger();
+    model.mc.ConstructBVH();
 }
 
 

@@ -10,7 +10,7 @@ icy::BVHT::BVHT()
     root = new BVHN();
 }
 
-void icy::BVHT::Construct(std::vector<Element*> elems)
+void icy::BVHT::Construct(std::vector<Element*> &elems)
 {
     BVHN_Leaf_Factory.releaseAll();
     BVHN::BVHNFactory.releaseAll();
@@ -18,12 +18,14 @@ void icy::BVHT::Construct(std::vector<Element*> elems)
 
     // construct boundary volume hierarchy from a list of elements
     std::vector<BVHN*> *root_vec = BVHN::VectorFactory.take();
+    root_vec->clear();
 
     for(auto const &elem : elems)
     {
         // initialize from element
         BVHN *leafNode = BVHN_Leaf_Factory.take();
         leafNode->isLeaf = true;
+        root_vec->push_back(leafNode);
 
         kDOP24 &box = leafNode->box;
         box.Reset();
@@ -36,8 +38,7 @@ void icy::BVHT::Construct(std::vector<Element*> elems)
         nd = elem->vrts[3];
         box.Expand(nd->tx,nd->ty,nd->tz);
     }
-    root->Initialize(root_vec);
-
+    root->Initialize(root_vec, 0);
     BVHN::VectorFactory.release(root_vec);
 }
 

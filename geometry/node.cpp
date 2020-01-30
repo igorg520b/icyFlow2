@@ -20,9 +20,9 @@ icy::Node::Node()
 void icy::Node::Initialize(double x, double y, double z, int _id)
 {
     id=_id;
-    cx = x0 = x;
-    cy = y0 = y;
-    cz = z0 = z;
+    tx = cx = x0 = x;
+    ty = cy = y0 = y;
+    tz = cz = z0 = z;
 }
 
 

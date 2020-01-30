@@ -21,7 +21,7 @@ public:
     icy::BVHN *root;
 
     BVHT();
-    void Construct(std::vector<Element*> elems); // construct from a list of surface elems
+    void Construct(std::vector<Element*> &elems); // construct from a list of surface elems
     void Traverse();
 };
 
