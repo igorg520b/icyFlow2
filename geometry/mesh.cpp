@@ -123,6 +123,19 @@ void icy::Mesh::CreateUGrid()
         pts2[3] = elem.vrts[3]->id;
         ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
     }
+    /*
+     // testing
+    for(int i=0;i<(int)faces.size();i+=2)
+    {
+        Face &fc = faces[i];
+        pts2[0] = fc.vrts[0]->id;
+        pts2[1] = fc.vrts[1]->id;
+        pts2[2] = fc.vrts[2]->id;
+        ugrid->InsertNextCell(VTK_TRIANGLE, 3,pts2);
+    }
+    */
+
+
     dataSetMapper->SetInputData(ugrid);
     ugridActor->SetMapper(dataSetMapper);
     ugridActor->GetProperty()->SetColor(colors->GetColor3d("Seashell").GetData());

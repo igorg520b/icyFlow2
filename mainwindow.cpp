@@ -78,3 +78,8 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     renderer->ResetCamera();
     renderWindow->Render();
 }
+
+void MainWindow::on_actionTriangles_triggered()
+{
+
+}

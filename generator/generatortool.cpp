@@ -120,6 +120,23 @@ void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
         elem->vrts[3] = &(outMesh->nodes[idx3]);
     }
     outMesh->ComputeBoundingBox();
+
+    // get triangles
+    elementTags.clear();
+    nodeTags2.clear();
+    model::mesh::getElementsByType(2, elementTags, nodeTags2);
+
+    outMesh->faces.resize(elementTags.size());
+    for(int i=0;i<(int)elementTags.size();i++)
+    {
+        Face &fc = outMesh->faces[i];
+        int idx0 = nodeTagMap[nodeTags2[i*3+0]];
+        int idx1 = nodeTagMap[nodeTags2[i*3+1]];
+        int idx2 = nodeTagMap[nodeTags2[i*3+2]];
+        fc.vrts[0]=&(outMesh->nodes[idx0]);
+        fc.vrts[1]=&(outMesh->nodes[idx1]);
+        fc.vrts[2]=&(outMesh->nodes[idx2]);
+    }
 }
 
 void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
@@ -275,4 +292,24 @@ void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
         elem->vrts[3] = &(outMesh->nodes[idx3]);
     }
     outMesh->ComputeBoundingBox();
+
+    // get triangles
+    elementTags.clear();
+    nodeTags2.clear();
+    model::mesh::getElementsByType(2, elementTags, nodeTags2);
+
+    outMesh->faces.resize(elementTags.size());
+    for(int i=0;i<(int)elementTags.size();i++)
+    {
+        Face &fc = outMesh->faces[i];
+        int idx0 = nodeTagMap[nodeTags2[i*3+0]];
+        int idx1 = nodeTagMap[nodeTags2[i*3+1]];
+        int idx2 = nodeTagMap[nodeTags2[i*3+2]];
+        fc.vrts[0]=&(outMesh->nodes[idx0]);
+        fc.vrts[1]=&(outMesh->nodes[idx1]);
+        fc.vrts[2]=&(outMesh->nodes[idx2]);
+    }
+    std::cout << "faces " << outMesh->faces.size() << std::endl;
+    std::cout << "elems " << outMesh->elems.size() << std::endl;
+    std::cout << "nodes " << outMesh->nodes.size() << std::endl;
 }

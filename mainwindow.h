@@ -56,6 +56,8 @@ private slots:
 
     void on_actionGenerator_Tool_triggered();
 
+    void on_actionTriangles_triggered();
+
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;
