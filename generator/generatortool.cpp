@@ -18,6 +18,8 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
     mc->mgs.push_back(beam);
     mc->mgs.push_back(indenter);
+    mc->beam = beam;
+    mc->indenter = indenter;
 
     // align the indenter
     indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
@@ -35,6 +37,7 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
 void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
 {
+    outMesh->isIndenter = true;
     double CharacteristicLengthIndenter = beamParams->CharacteristicLengthIndenter;
     double l2 = beamParams->beamL2;
     double l1 = beamParams->beamL1;
@@ -44,7 +47,6 @@ void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
     double h = beamParams->beamThickness; // thickness
     double indsize = beamParams->IndenterSize; // indentor size
 
-//    gmsh::initialize();
     gmsh::clear();
     gmsh::option::setNumber("General.Terminal", 1);
     model::add("indenter1");
@@ -141,8 +143,7 @@ void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)
 
 void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
 {
-
-    double CharacteristicLengthIndenter = beamParams->CharacteristicLengthIndenter;
+    outMesh->isDeformable = true;
     double CharacteristicLengthMax = beamParams->CharacteristicLengthMax;
     double rm = beamParams->RefinementMultiplier;
     double a = beamParams->beamA; // beamA
@@ -152,7 +153,6 @@ void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
     double c = beamParams->beamGap; // beam gap
     double d = beamParams->beamMargin; // beam margin
     double h = beamParams->beamThickness; // thickness
-    double indsize = beamParams->IndenterSize; // indentor size
 
     gmsh::clear();
     gmsh::option::setNumber("General.Terminal", 1);

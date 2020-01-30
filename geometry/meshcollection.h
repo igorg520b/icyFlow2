@@ -18,6 +18,8 @@ class icy::MeshCollection
 public:
     BVHT bvh;
     std::vector<icy::Mesh*> mgs;
+    icy::Mesh* beam = nullptr;      // valid in the context of beam-indenter setup
+    icy::Mesh* indenter = nullptr;  // valid in the context of beam-indenter setup
 
     std::vector<icy::Node*> allNodes, activeNodes;
     std::vector<icy::Element*> surfaceElements, elasticElements;

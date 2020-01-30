@@ -22,7 +22,7 @@ void icy::MeshCollection::ConstructBVH()
     surfaceElements.clear();
     for(auto &mesh : mgs) {
         mesh->IdentifySurfaceElements();
-        for(auto &elem : mesh->elems) surfaceElements.push_back(&elem);
+        for(auto &elem : mesh->surfaceElements) surfaceElements.push_back(elem);
     }
 
     bvh.Construct(surfaceElements);

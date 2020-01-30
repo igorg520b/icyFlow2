@@ -107,10 +107,6 @@ endif(OPENMP_FOUND)
     geometry/mesh.h
     geometry/meshcollection.cpp
     geometry/meshcollection.h
-    geometry/surfacefragment.cpp
-    geometry/surfacefragment.h
-    geometry/translation.cpp
-    geometry/translation.h
     simulation/modelprms.cpp
     simulation/modelprms.h
     simulation/csrdictionary.cpp

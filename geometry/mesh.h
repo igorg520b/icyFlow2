@@ -36,7 +36,6 @@ public:
     std::vector<Element> elems;
     std::vector<CZ> czs;
     std::vector<Face> faces;
-    std::vector<SurfaceFragment> surfaceFragments;
 
     // the is is a subset of elems
     std::vector<Element*> surfaceElements; // elements that can potentially come in contact
@@ -56,7 +55,7 @@ public:
     Mesh();
     ~Mesh();
     void ComputeBoundingBox();
-    void DetectSurfaces(bool anchorsides);
+    void AnchorSides();
     void IdentifySurfaceElements();
     void ConnectFaces();
     void CenterSample(double &dx, double &dy);

@@ -14,7 +14,7 @@ public:
     explicit FrameInfo(QObject *parent = nullptr);
 
 signals:
-
+    void propertyChanged();
 };
 
 #endif // FRAMEINFO_H

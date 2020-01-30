@@ -13,7 +13,6 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs, int level_)
     if(level_ > 100) throw std::runtime_error("BVH level is over 100");
     level = level_;
     auto count = bvs->size();
-    std::cout << count << std::endl;
     if(count == 0) throw new std::runtime_error("bvs->size==0 in BVHN::Initialize");
     else if(count == 1) throw new std::runtime_error("bvs->size==1 in BVHN::Initialize");
 
@@ -35,7 +34,6 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs, int level_)
 
     if (dX >= dY && dX >= dZ)
     {
-        std::cout << "branch 1" << std::endl;
         double center = box.centerX();
         for(auto const &bv : *bvs) {
             if(bv->box.centerX() < center) left->push_back(bv);
@@ -77,7 +75,6 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs, int level_)
     }
     else if(dY >= dX && dY >= dZ)
     {
-        std::cout << "branch 2" << std::endl;
         double center = box.centerY();
         for(auto const &bv : *bvs) {
             if(bv->box.centerY() < center) left->push_back(bv);
@@ -120,7 +117,6 @@ void icy::BVHN::Initialize(std::vector<BVHN*> *bvs, int level_)
     }
     else
     {
-        std::cout << "branch 3" << std::endl;
         double center = box.centerZ();
         for(auto const &bv : *bvs) {
             if(bv->box.centerZ() < center) left->push_back(bv);

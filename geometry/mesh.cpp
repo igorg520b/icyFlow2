@@ -39,9 +39,43 @@ void icy::Mesh::ComputeBoundingBox()
 }
 
 
-void icy::Mesh::DetectSurfaces(bool anchorsides)
+void icy::Mesh::AnchorSides()
 {
+/*
+            surfaceFragments.Clear();
+            // sequential ids for faces
+            for (int i = 0; i < faces.Count; i++) faces[i].id = i;
 
+            for (int i = 0; i < 6; i++) surfaceFragments.Add(new SurfaceFragment() { id = i });
+            surfaceFragments[0].name = "top";
+            surfaceFragments[1].name = "bottom";
+            surfaceFragments[2].name = "xmax";
+            surfaceFragments[3].name = "xmin";
+            surfaceFragments[4].name = "ymax";
+            surfaceFragments[5].name = "ymin";
+
+            foreach (Face f in faces)
+            {
+                if (f.vrts.All(nd => nd.z0 == zmax)) surfaceFragments[0].faces.Add(f.id);
+                else if (f.vrts.All(nd => nd.z0 == zmin)) surfaceFragments[1].faces.Add(f.id);
+                else if (f.vrts.All(nd => nd.x0 == xmax)) surfaceFragments[2].faces.Add(f.id);
+                else if (f.vrts.All(nd => nd.x0 == xmin)) surfaceFragments[3].faces.Add(f.id);
+                else if (f.vrts.All(nd => nd.y0 == ymax)) surfaceFragments[4].faces.Add(f.id);
+                else if (f.vrts.All(nd => nd.y0 == ymin)) surfaceFragments[5].faces.Add(f.id);
+            }
+            foreach (SurfaceFragment sf in surfaceFragments) { sf.allFaces = faces; sf.ComputeArea(); }
+            //            surfaceFragments[0].sensor = true;
+            //            surfaceFragments[0].role = SurfaceFragment.SurfaceRole.Anchored;
+            //            surfaceFragments[0].dz = -0.23;
+            //           surfaceFragments[1].role = SurfaceFragment.SurfaceRole.Anchored;
+            if (anchorsides)
+            {
+                surfaceFragments[2].role = SurfaceFragment.SurfaceRole.Anchored;
+                surfaceFragments[3].role = SurfaceFragment.SurfaceRole.Anchored;
+                surfaceFragments[4].role = SurfaceFragment.SurfaceRole.Anchored;
+                surfaceFragments[5].role = SurfaceFragment.SurfaceRole.Anchored;
+            }
+*/
 }
 
 void icy::Mesh::IdentifySurfaceElements()
@@ -67,7 +101,7 @@ void icy::Mesh::IdentifySurfaceElements()
 
 void icy::Mesh::ConnectFaces()
 {
-
+throw std::runtime_error("not implemented");
 }
 
 void icy::Mesh::CenterSample(double &dx, double &dy)
@@ -124,7 +158,7 @@ void icy::Mesh::CreateUGrid()
         ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
     }
     /*
-     // testing
+     // testing - draw some faces
     for(int i=0;i<(int)faces.size();i+=2)
     {
         Face &fc = faces[i];
@@ -144,5 +178,5 @@ void icy::Mesh::CreateUGrid()
 
 void icy::Mesh::UpdateUGrid()
 {
-
+    throw std::runtime_error("not implemented");
 }
