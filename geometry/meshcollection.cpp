@@ -9,11 +9,17 @@ void icy::MeshCollection::Clear()
 {
     for(auto &mesh : mgs) delete mesh;
     mgs.clear();
-}
 
-void icy::MeshCollection::IdentifySurfaceElements()
-{
+    allNodes.clear();
+    activeNodes.clear();
 
+    nonFailedCZs.clear();
+    allCZs.clear();
+    failedCZs.clear();
+
+    surfaceElements.clear();
+    elasticElements.clear();
+    beam=indenter=nullptr;
 }
 
 void icy::MeshCollection::ConstructBVH()
@@ -26,4 +32,14 @@ void icy::MeshCollection::ConstructBVH()
     }
 
     bvh.Construct(surfaceElements);
+}
+
+
+void icy::MeshCollection::Prepare()
+{
+// populate allNodes, activeNodes;
+
+    // populate elasticElements
+
+    // populate nonFailedCZs, allCZs, failedCZs;
 }

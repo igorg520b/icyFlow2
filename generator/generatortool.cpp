@@ -20,6 +20,7 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     mc->mgs.push_back(indenter);
     mc->beam = beam;
     mc->indenter = indenter;
+    beam->AnchorSides();
 
     // align the indenter
     indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);

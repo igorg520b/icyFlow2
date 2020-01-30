@@ -107,11 +107,9 @@ endif(OPENMP_FOUND)
     geometry/mesh.h
     geometry/meshcollection.cpp
     geometry/meshcollection.h
-    simulation/modelprms.cpp
     simulation/modelprms.h
     simulation/csrdictionary.cpp
     simulation/csrdictionary.h
-    simulation/frameinfo.cpp
     simulation/frameinfo.h
     simulation/implicitmodel4.cpp
     simulation/implicitmodel4.h

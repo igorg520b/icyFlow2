@@ -15,8 +15,6 @@
 #include "element.h"
 #include "cz.h"
 #include "face.h"
-#include "surfacefragment.h"
-#include "translation.h"
 
 
 namespace icy { class Mesh; }

@@ -22,13 +22,12 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_phi_t WRITE set_phi_t READ get_phi_t)
     Q_PROPERTY(double cz_sigma_max WRITE set_sigma_max READ get_sigma_max)
     Q_PROPERTY(double cz_tau_max WRITE set_tau_max READ get_tau_max)
-    Q_PROPERTY(double cz_deln READ get_deln)
-    Q_PROPERTY(double cz_delt READ get_delt)
+    Q_PROPERTY(double cz_deln READ get_del_n)
+    Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    ModelPrms();
     double IndentationVelocity = 0.0001; // 0.1 mm/s
-    double InitialTimeStep = 0.025;
+    double InitialTimeStep = 0.01;
     int MaxSteps = 300;
 
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
@@ -48,7 +47,6 @@ private:
     double f_tn, f_tt;
     double rn, rt;       // lambda_n, lambda_t
     double p_m, p_n;
-    double deln, delt;
     double pMtn, pMnt; // < phi_t - phi_n >, < phi_n - phi_t >
     double gam_n, gam_t;
     double sf[3][3];

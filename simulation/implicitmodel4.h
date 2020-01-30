@@ -17,10 +17,9 @@ class icy::ImplicitModel4
 public:
     MeshCollection mc;
     ModelPrms prms;
-    FrameInfo *cf, *tcf0;
-    std::vector<FrameInfo*> allFrames;
+    FrameInfo cf, tcf0;
+    std::vector<FrameInfo> allFrames;
     LinearSystem linearSystem;
-
 
     bool isReady = false;
 
@@ -31,9 +30,8 @@ public:
 private:
     bool explodes, diverges;
 
-    void PrepareToCompute();
+    void _prepare();    // this is called once
     void _beginStep();
-    void _positionNonDeformables(double time);
     void _addCollidingNodesToStructure();
     bool _checkDamage();
     bool _checkDivergence();

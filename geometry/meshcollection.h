@@ -25,11 +25,11 @@ public:
     std::vector<icy::Element*> surfaceElements, elasticElements;
     std::vector<icy::CZ*> nonFailedCZs, allCZs, failedCZs;
 //    std::vector<icy::Face*> allFaces;
-    std::vector<icy::Mesh*> deformables, nonDeformables, indenters;
+//    std::vector<icy::Mesh*> deformables, nonDeformables, indenters;
 
     MeshCollection();
     void Clear(); // return the collection to empty state
-    void IdentifySurfaceElements();
+    void Prepare();
     void ConstructBVH();
 
 
