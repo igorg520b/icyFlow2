@@ -3,9 +3,7 @@
 
 #include <QObject>
 
-namespace icy {
-class FrameInfo;
-}
+namespace icy { class FrameInfo; }
 
 class icy::FrameInfo : public QObject
 {
@@ -19,6 +17,8 @@ public:
     int nCZFailed;
     int nCZDamaged;
     int nCollisions;
+    int nCZ_Initial;
+
 
     // time
     int StepNumber;
@@ -39,15 +39,28 @@ public:
     double Error0;
 
     void Reset() {
-        nCZFailed = nCZDamaged = nCollisions = 0;
+        nCZ_Initial = nCZFailed = nCZDamaged = nCollisions = 0;
         TimeStep = SimulationTime = 0;
         SimulationIntegerTime = StepsWithCurrentFactor = 0;
         StepNumber = -1;
         TimeScaleFactor = 1;
         TimeScaleFactorThisStep = 1;
+
     }
 
     int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }
+
+    void CopyFrom(FrameInfo &other) {
+        Reset();
+        StepNumber = other.StepNumber;
+        SimulationTime = other.SimulationTime;
+        SimulationIntegerTime = other.SimulationIntegerTime;
+        StepsWithCurrentFactor = other.StepsWithCurrentFactor;
+        TimeScaleFactor = other.TimeScaleFactor;
+        nCZ_Initial = other.nCZ_Initial;
+        nCZFailed = other.nCZFailed;
+    }
+
 
 signals:
     void propertyChanged();

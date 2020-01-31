@@ -13,6 +13,29 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(int sim_MaxSteps MEMBER MaxSteps NOTIFY propertyChanged)
     Q_PROPERTY(double sim_IndentationVelocity MEMBER IndentationVelocity NOTIFY propertyChanged)
 
+    // integration
+    Q_PROPERTY(double intg_NewmarkBeta MEMBER NewmarkBeta NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_NewmarkGamma MEMBER NewmarkGamma NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_ConvergenceEpsilon MEMBER ConvergenceEpsilon NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_ConvergenceCutoff MEMBER ConvergenceCutoff NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_maxDamagePerStep MEMBER maxDamagePerStep NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_maxFailPerStep MEMBER maxFailPerStep NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_maxIterations MEMBER maxIterations NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_minIterations MEMBER minIterations NOTIFY propertyChanged)
+//    Q_PROPERTY(double intg_gravity MEMBER gravity NOTIFY propertyChanged)
+
+    // collisions
+    Q_PROPERTY(double coll_penaltyK MEMBER penaltyK NOTIFY propertyChanged)
+    Q_PROPERTY(double coll_DistanceEpsilon MEMBER DistanceEpsilon NOTIFY propertyChanged)
+    Q_PROPERTY(double coll_ReconstructBVH MEMBER ReconstructBVH NOTIFY propertyChanged)
+
+    // material
+    Q_PROPERTY(double mat_Y MEMBER Y NOTIFY propertyChanged)
+    Q_PROPERTY(double mat_rho MEMBER rho NOTIFY propertyChanged)
+    Q_PROPERTY(double mat_dampingMass MEMBER dampingMass NOTIFY propertyChanged)
+    Q_PROPERTY(double mat_dampingStiffness MEMBER dampingStiffness NOTIFY propertyChanged)
+    Q_PROPERTY(double mat_nu MEMBER nu NOTIFY propertyChanged)
+
     // cz
     Q_PROPERTY(double cz_alpha WRITE setCZAlpha READ getCZAlpha)
     Q_PROPERTY(double cz_beta WRITE setCZBeta READ getCZBeta)
@@ -26,31 +49,51 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    double IndentationVelocity = 0.0001; // 0.1 mm/s
-    double InitialTimeStep = 0.01;
+    double IndentationVelocity = -1;//0.0001; // 0.1 mm/s
+    double InitialTimeStep = 0.1;
     int MaxSteps = 300;
-
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
-private:
+    // material
+    double Y = 5e9;
+    double rho = 916.2;
+    double dampingMass = 0.0005;
+    double dampingStiffness = 0.0005;
+    double nu = 0.3;
+
+    // integration
+    double NewmarkBeta = 0.5;
+    double NewmarkGamma = 1.0;
+    double ConvergenceEpsilon = 0.005;
+    double ConvergenceCutoff = 1E-8;
+    double maxDamagePerStep = 0.01;
+    double maxFailPerStep = 0.01;
+    int maxIterations = 10;
+    int minIterations = 3;
+//    double gravity = -9.8;
+
+    // collisions
+    double penaltyK = 30000;
+    double DistanceEpsilon = 1E-15;
+    int ReconstructBVH = 10;
+
     // cz parameters
-    double _alpha = 3, _beta = 3, _lambda_n = 0.02, _lambda_t = 0.02;
-    double _phi_n = 30, _phi_t = 30;
-    double _sigma_max = 4e5, _tau_max = 15e5;
+    double _alpha = 4, _beta = 4, _lambda_n = 0.015, _lambda_t = 0.015;
+    double _phi_n = 3, _phi_t = 3; // fracture energy
+    double _sigma_max = 120000, _tau_max = 140000;
     double _del_n = 0, _del_t = 0;
 
     // computed variables
     double totalVolume;
     double E[6][6];
     double M[12][12];
-    double G_fn, G_ft; // fracture energy
-    double f_tn, f_tt;
-    double rn, rt;       // lambda_n, lambda_t
     double p_m, p_n;
     double pMtn, pMnt; // < phi_t - phi_n >, < phi_n - phi_t >
     double gam_n, gam_t;
     double sf[3][3];
     double B[3][18];
+
+    private:
 
     void setCZAlpha(double value) { _alpha=value; Recompute(); emit propertyChanged(); }
     double getCZAlpha() {return _alpha;}

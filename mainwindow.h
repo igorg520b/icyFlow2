@@ -58,6 +58,8 @@ private slots:
 
     void on_actionTriangles_triggered();
 
+    void on_actionSteps100_triggered();
+
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;

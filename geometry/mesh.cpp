@@ -153,5 +153,26 @@ void icy::Mesh::CreateUGrid()
 
 void icy::Mesh::UpdateUGrid()
 {
-    throw std::runtime_error("not implemented");
+//    points->Reset();
+    for(auto const &nd : nodes) {
+        points->SetPoint(nd.id,nd.cx,nd.cy,nd.cz);
+//        points->InsertPoint(nd.id,nd.cx,nd.cy,nd.cz);
+    }
+    points->Modified();
+//    ugrid->Modified();
+/*    ugrid->Reset();
+    ugrid->SetPoints(points);
+        vtkIdType pts2[4];
+    for(auto const &elem : elems)
+    {
+        pts2[0] = elem.vrts[0]->id;
+        pts2[1] = elem.vrts[1]->id;
+        pts2[2] = elem.vrts[2]->id;
+        pts2[3] = elem.vrts[3]->id;
+        ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
+    }
+*/
+//    dataSetMapper->SetInputData(ugrid);
+//    ugridActor->SetMapper(dataSetMapper);
+//    std::cout << "updating nodes" << std::endl;
 }

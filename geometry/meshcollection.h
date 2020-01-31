@@ -31,6 +31,7 @@ public:
     void Clear(); // return the collection to empty state
     void Prepare();
     void ConstructBVH();
+    void UpdateActors(); // transfer current nodal positions to vtk for rendering
 
 
 
