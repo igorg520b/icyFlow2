@@ -30,7 +30,6 @@
     <addaction name="actionWrite_VTU"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionGenerator_Tool"/>
-    <addaction name="actionTriangles"/>
     <addaction name="actionSteps100"/>
    </widget>
    <widget class="QMenu" name="menuTest">
@@ -55,11 +54,6 @@
   <action name="actionGenerator_Tool">
    <property name="text">
     <string>Generator Tool</string>
-   </property>
-  </action>
-  <action name="actionTriangles">
-   <property name="text">
-    <string>Triangles</string>
    </property>
   </action>
   <action name="actionSteps100">

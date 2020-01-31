@@ -56,8 +56,6 @@ private slots:
 
     void on_actionGenerator_Tool_triggered();
 
-    void on_actionTriangles_triggered();
-
     void on_actionSteps100_triggered();
 
 private:

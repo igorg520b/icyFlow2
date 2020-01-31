@@ -49,11 +49,7 @@ void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
     ui->actionGenerator_Tool->trigger();
-//    model.mc.ConstructBVH();
-//    model.Step();
-//    ui->actionSteps100->trigger();
-//    on_actionSteps100_triggered();
-            renderWindow->Render();
+    ui->actionSteps100->trigger();
 }
 
 
@@ -83,11 +79,6 @@ void MainWindow::on_actionGenerator_Tool_triggered()
 
     renderer->ResetCamera();
     renderWindow->Render();
-}
-
-void MainWindow::on_actionTriangles_triggered()
-{
-
 }
 
 void MainWindow::on_actionSteps100_triggered()
