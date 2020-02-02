@@ -125,6 +125,8 @@ endif(OPENMP_FOUND)
     simulation/GteSymmetricEigensolver3x3.h
     simulation/pardiso_wrapper.cpp
     SimpleObjectPool.h
+    backgroundworker.cpp
+    backgroundworker.h
   )
 
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})

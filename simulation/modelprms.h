@@ -49,9 +49,9 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    double IndentationVelocity = 0.3;//0.0001; // 0.1 mm/s
+    double IndentationVelocity = -0.3;//0.0001; // 0.1 mm/s
     double InitialTimeStep = 0.1;
-    int MaxSteps = 300;
+    int MaxSteps = 10;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material

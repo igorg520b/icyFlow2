@@ -1,4 +1,6 @@
 #include "implicitmodel4.h"
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>         // std::chrono::seconds
 
 icy::ImplicitModel4::ImplicitModel4()
 {
@@ -64,7 +66,7 @@ void icy::ImplicitModel4::_adjustTimeStep(){}
 void icy::ImplicitModel4::_acceptFrame(){}
 
 
-void icy::ImplicitModel4::Step()
+bool icy::ImplicitModel4::Step()
 {
     if(!isReady) _prepare();
     _beginStep();
@@ -75,8 +77,12 @@ void icy::ImplicitModel4::Step()
     mc.ConstructBVH();                  // this should _not_ be called on every step
 
     mc.bvh.Traverse();  // traverse BVH
-    std::cout << "broad list size " << icy::BVHT::broad_list.size() << std::endl;
+//    std::cout << "broad list size " << icy::BVHT::broad_list.size() << std::endl;
 
+    std::this_thread::sleep_for (std::chrono::milliseconds(500));
     cf.SimulationTime += prms.InitialTimeStep;
+    cf.StepNumber++;
+
+    return false; // step not aborted
 
 }

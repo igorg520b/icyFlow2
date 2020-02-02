@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -30,12 +30,12 @@
     <addaction name="actionWrite_VTU"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionGenerator_Tool"/>
-    <addaction name="actionSteps100"/>
    </widget>
    <widget class="QMenu" name="menuTest">
     <property name="title">
      <string>Simulation</string>
     </property>
+    <addaction name="actionPause_Resume"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTest"/>
@@ -56,9 +56,12 @@
     <string>Generator Tool</string>
    </property>
   </action>
-  <action name="actionSteps100">
+  <action name="actionPause_Resume">
    <property name="text">
-    <string>Steps100</string>
+    <string>Pause/Resume</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
    </property>
   </action>
  </widget>

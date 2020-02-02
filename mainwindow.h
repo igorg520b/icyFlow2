@@ -6,6 +6,7 @@
 #include <QSizePolicy>
 #include <QPushButton>
 #include <QSplitter>
+#include <QLabel>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNamedColors.h>
@@ -31,6 +32,7 @@
 #include <gmsh.h>
 #include "beamparams.h"
 #include "simulation/implicitmodel4.h"
+#include "backgroundworker.h"
 
 namespace model = gmsh::model;
 namespace factory = gmsh::model::occ;
@@ -48,6 +50,9 @@ public:
     ~MainWindow();
     void showEvent( QShowEvent* event ) override;
 
+public slots:
+    void updateGUI(bool aborted);
+
 private slots:
 
     void on_actionWrite_VTU_triggered();
@@ -56,13 +61,15 @@ private slots:
 
     void on_actionGenerator_Tool_triggered();
 
-    void on_actionSteps100_triggered();
+    void on_actionPause_Resume_triggered();
 
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;
     QSplitter *sp;
     ObjectPropertyBrowser *pb;
+    QLabel *statusPausedOrRunning;
+    QLabel *statusFrameNumber;
 
 
     // VTK objects
@@ -70,12 +77,12 @@ private:
     vtkNew<vtkRenderer> renderer;
     vtkNew<vtkNamedColors> colors;
     vtkNew<vtkXMLUnstructuredGridWriter> writer;
-    vtkNew<vtkUnstructuredGrid> ugrid;
     vtkNew<vtkWindowToImageFilter> windowToImageFilter;
     vtkNew<vtkPNGWriter> writerPNG;
 
     icy::ImplicitModel4 model;
     BeamParams beamParams;
+    icy::BackgroundWorker* worker;
 
 };
 #endif // MAINWINDOW_H

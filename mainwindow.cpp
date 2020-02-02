@@ -8,8 +8,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    gmsh::initialize();
+    statusPausedOrRunning = new QLabel("paused");
+    statusFrameNumber = new QLabel("-");
 
+    ui->statusbar->addWidget(statusPausedOrRunning);
+    ui->statusbar->addWidget(statusFrameNumber);
+
+    gmsh::initialize();
 
     sp=new QSplitter(Qt::Orientation::Horizontal);
     qtw = new QVTKOpenGLNativeWidget();
@@ -37,10 +42,16 @@ MainWindow::MainWindow(QWidget *parent)
     sp->addWidget(pb);
     sp->addWidget(qtw);
     setCentralWidget(sp);
+
+    worker = new icy::BackgroundWorker(&model);
+    connect(worker, SIGNAL(stepCompleted(bool)), this, SLOT(updateGUI(bool)));
+            //    connect(&thread, SIGNAL(renderedImage(QImage,double)), this, SLOT(updatePixmap(QImage,double)));
+
 }
 
 MainWindow::~MainWindow()
 {
+    delete worker;
     delete ui;
 }
 
@@ -49,19 +60,33 @@ void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
     ui->actionGenerator_Tool->trigger();
-    ui->actionSteps100->trigger();
+//    ui->actionSteps100->trigger();
+}
+
+void MainWindow::updateGUI(bool aborted)
+{
+    if(aborted) statusPausedOrRunning->setText("aborted");
+    if(!worker->running) statusPausedOrRunning->setText("paused");
+    else statusPausedOrRunning->setText("running");
+
+    statusFrameNumber->setText(QString::number(model.cf.StepNumber));
+    model.mc.UpdateActors();
+    renderWindow->Render();
 }
 
 
 void MainWindow::on_actionWrite_VTU_triggered()
 {
+    throw std::runtime_error("NI");
     writer->SetFileName("beam.vtu");
-    writer->SetInputData(ugrid);
+//    writer->SetInputData(ugrid);
     writer->Write();
 }
 
 void MainWindow::on_actionScreenshot_triggered()
 {
+    throw std::runtime_error("NI");
+
     windowToImageFilter->SetInput(renderWindow);
     windowToImageFilter->SetScale(3);
     writerPNG->SetFileName("screenshot2.png");
@@ -81,11 +106,9 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     renderWindow->Render();
 }
 
-void MainWindow::on_actionSteps100_triggered()
+void MainWindow::on_actionPause_Resume_triggered()
 {
-    for(int i=0;i<10;i++) {
-        model.Step();
-        model.mc.UpdateActors();
-        renderWindow->Render();
-    }
+    worker->toggle();
+    if(worker->timeToPause)statusPausedOrRunning->setText("stopping");
+    else statusPausedOrRunning->setText("resuming");
 }

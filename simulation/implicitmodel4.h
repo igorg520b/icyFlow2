@@ -25,7 +25,7 @@ public:
 
     ImplicitModel4();
     void Clear();
-    void Step();
+    bool Step();    // return true if aborted
 
 private:
     bool explodes, diverges;
