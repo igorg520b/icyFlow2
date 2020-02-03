@@ -18,6 +18,7 @@ public:
     int nCZDamaged;
     int nCollisions;
     int nCZ_Initial;
+    int ActiveNodes;
 
 
     // time
@@ -25,7 +26,7 @@ public:
     double SimulationTime;
     int TimeScaleFactor;
     const int Parts = 1024*32;
-    int SimulationIntegerTime;  // // measures time in 1/Parts intervals of InitialTimeStep
+    unsigned long SimulationIntegerTime;  // // measures time in 1/Parts intervals of InitialTimeStep
     double TimeStep;// time difference between current frame and last frame
     int StepsWithCurrentFactor; // time steps left with current factor (if TSF > 1)
     int TimeScaleFactorThisStep = 1;    // Time scale used for this step
@@ -39,13 +40,12 @@ public:
     double Error0;
 
     void Reset() {
-        nCZ_Initial = nCZFailed = nCZDamaged = nCollisions = 0;
+        ActiveNodes = nCZ_Initial = nCZFailed = nCZDamaged = nCollisions = 0;
         TimeStep = SimulationTime = 0;
         SimulationIntegerTime = StepsWithCurrentFactor = 0;
         StepNumber = -1;
         TimeScaleFactor = 1;
         TimeScaleFactorThisStep = 1;
-
     }
 
     int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }
@@ -61,6 +61,15 @@ public:
         nCZFailed = other.nCZFailed;
     }
 
+    void IncrementTime(double initialTimestep)
+    {
+        // we use integer increments to avoid dealing with doubles
+        int ticks = Parts / TimeScaleFactor;
+        SimulationIntegerTime += ticks;
+        TimeStep = initialTimestep / (double) TimeScaleFactor;
+        SimulationTime = initialTimestep * (double)SimulationIntegerTime / Parts;
+        StepNumber++;
+    }
 
 signals:
     void propertyChanged();

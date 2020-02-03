@@ -124,6 +124,8 @@ endif(OPENMP_FOUND)
     simulation/point_triangle_distance.cpp
     simulation/GteSymmetricEigensolver3x3.h
     simulation/pardiso_wrapper.cpp
+    simulation/numbercrunching.cpp
+    simulation/numbercrunching.h
     SimpleObjectPool.h
     backgroundworker.cpp
     backgroundworker.h

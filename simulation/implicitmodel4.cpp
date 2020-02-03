@@ -46,10 +46,16 @@ void icy::ImplicitModel4::_prepare()
 
 void icy::ImplicitModel4::_beginStep()
 {
+    // prepare tentative entry about the simulation step
     tcf0.CopyFrom(cf); // copy current frame data
+    tcf0.IncrementTime(prms.InitialTimeStep);
+    tcf0.ActiveNodes = (int)mc.activeNodes.size();
 
     // position the indenter
-    for(auto &nd : mc.indenter->nodes) {nd.cz = nd.tz = nd.z0 - tcf0.SimulationTime*prms.IndentationVelocity;}
+    for(auto &nd : mc.indenter->nodes) {
+        nd.unz = nd.uz = - tcf0.SimulationTime*prms.IndentationVelocity;
+        nd.cz = nd.tz = nd.z0 + nd.uz;
+    }
 }
 
 
@@ -63,25 +69,71 @@ void icy::ImplicitModel4::_XtoDU(){}
 
 void icy::ImplicitModel4::_adjustTimeStep(){}
 
-void icy::ImplicitModel4::_acceptFrame(){}
+void icy::ImplicitModel4::_acceptFrame()
+{
+    cf.CopyFrom(tcf0);
+}
+
+void icy::ImplicitModel4::_assemble()
+{
+    for(auto &nd : mc.allNodes) nd->fx = nd->fz = nd->fy = 0;
+
+    // assemble elements
+
+    // assemble cohesive zones
+}
+
+void icy::ImplicitModel4::_narrowPhase()
+{
+
+}
+
+void icy::ImplicitModel4::_collisionResponse()
+{
+
+}
+
+void icy::ImplicitModel4::_transferUpdatedState()
+{
+
+}
 
 
 bool icy::ImplicitModel4::Step()
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // for testing
+
     if(!isReady) _prepare();
-    _beginStep();
 
-//    for(auto &nd : mc.activeNodes) nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
+    do {
+        _beginStep();
 
-    linearSystem.csrd.ClearDynamic();
-    mc.ConstructBVH();                  // this should _not_ be called on every step
+        for(auto &nd : mc.activeNodes) nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
 
-    mc.bvh.Traverse();  // traverse BVH
-//    std::cout << "broad list size " << icy::BVHT::broad_list.size() << std::endl;
+        mc.ConstructBVH();                  // this should _not_ be called on every step
+        mc.bvh.Traverse();  // traverse BVH
+        _narrowPhase(); // narrow phase
 
-    std::this_thread::sleep_for (std::chrono::milliseconds(500));
-    cf.SimulationTime += prms.InitialTimeStep;
-    cf.StepNumber++;
+        linearSystem.csrd.ClearDynamic();
+        _addCollidingNodesToStructure();  // add colliding nodes to structure
+        linearSystem.CreateStructure();
+
+        _assemble(); // prepare and compute forces
+        explodes = _checkDamage();
+        if(!explodes) {
+            _collisionResponse();
+//            linearSystem.Solve();
+            diverges = _checkDivergence();
+            _XtoDU();
+            tcf0.IterationsPerformed++;
+        }
+    } while(false);
+
+    cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
+    _adjustTimeStep();
+    _transferUpdatedState();
+    _acceptFrame();
+
 
     return false; // step not aborted
 
