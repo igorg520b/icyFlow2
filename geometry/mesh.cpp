@@ -76,7 +76,11 @@ void icy::Mesh::IdentifySurfaceElements()
 
 void icy::Mesh::ConnectFaces()
 {
-throw std::runtime_error("not implemented");
+    for(auto &nd : this->nodes) nd.faces.clear();
+    for(auto &f : faces)
+        for(int i=0;i<3;i++)
+            f.vrts[i]->faces.push_back(&f);
+
 }
 
 void icy::Mesh::CenterSample(double &dx, double &dy)

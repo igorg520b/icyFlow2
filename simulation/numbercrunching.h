@@ -21,11 +21,10 @@ public:
     // narrow phase
     static const double EPS;
 
-    static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc,
-        std::vector<CPResult> &cprList);
+    static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc);
 
-    // collision response
-    static void CollisionResponse(LinearSystem &ls, std::vector<CPResult> &cprList,
+    // collision response (collision data stored in cprList)
+    static void CollisionResponse(LinearSystem &ls,
                                   double DistanceEpsilon, double k);
 
 private:
@@ -35,6 +34,7 @@ private:
     static std::vector<int> resultingList; // results of NarrowPhaseTwoElems
     static std::unordered_set<long long> NL2set;       // Tuple ( node# inside element, which element)
     static std::vector<long long> NL2vector;
+    static std::vector<CPResult> cprList;
 
     inline static void Bvalues(double x0, double y0, double z0,
         double x1, double y1, double z1,
@@ -51,12 +51,24 @@ private:
 
     static int NarrowPhaseTwoElems(Element *tetra1, Element *tetra2);
     static Face* FindClosestFace(Node *nd, Element *elem);
+
+    // distance triangle-to-node
     static double dtn(
                 double f1x, double f1y, double f1z,
                 double f2x, double f2y, double f2z,
                 double f3x, double f3y, double f3z,
                 double ndx, double ndy, double ndz);
 
+    static double DOT(double (&v1)[3], double (&v2)[3]) { return (v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]); }
+
+    static void SUB(double (&dest)[3], double (&v1)[3], double (&v2)[3])
+    {
+        dest[0] = v1[0] - v2[0];
+        dest[1] = v1[1] - v2[1];
+        dest[2] = v1[2] - v2[2];
+    }
+
+    static double clamp(double n) { return n <= 0 ? 0 : n >= 1 ? 1 : n; }
     // collision response
     static void OneCollision(double distanceEpsilonSqared, double k, CPResult &res);
 };

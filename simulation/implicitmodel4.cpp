@@ -1,4 +1,6 @@
 #include "implicitmodel4.h"
+#include "numbercrunching.h"
+#include "bvh/bvht.h"
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
@@ -23,7 +25,7 @@ void icy::ImplicitModel4::_prepare()
     // re-create static contents of the linear system
     mc.Prepare();   // populate activeNodes
     linearSystem.csrd.ClearStatic();
-    linearSystem.csrd.ClearDynamic();
+//    linearSystem.csrd.ClearDynamic();
 
     // add entries for elastic elements to mesh collection
     // in general, it would be better have a collection for deformables
@@ -38,9 +40,6 @@ void icy::ImplicitModel4::_prepare()
             }
         }
     }
-
-
-
     isReady = true;
 }
 
@@ -85,7 +84,6 @@ void icy::ImplicitModel4::_assemble()
 
 void icy::ImplicitModel4::_narrowPhase()
 {
-
 }
 
 void icy::ImplicitModel4::_collisionResponse()
@@ -110,9 +108,9 @@ bool icy::ImplicitModel4::Step()
 
         for(auto &nd : mc.activeNodes) nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
 
-        mc.ConstructBVH();                  // this should _not_ be called on every step
-        mc.bvh.Traverse();  // traverse BVH
-        _narrowPhase(); // narrow phase
+        mc.ConstructBVH();                                              // this should _not_ be called on every step
+        mc.bvh.Traverse();                                              // traverse BVH
+        NumberCrunching::NarrowPhase(icy::BVHT::broad_list, mc);        // narrow phase
 
         linearSystem.csrd.ClearDynamic();
         _addCollidingNodesToStructure();  // add colliding nodes to structure

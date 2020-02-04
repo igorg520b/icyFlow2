@@ -46,13 +46,14 @@ void icy::MeshCollection::Prepare()
     allNodes.clear();
     activeNodes.clear();
 
-
     allNodes.reserve(100000);
     activeNodes.reserve(100000);
 
     int count = 0;
+    int globalCount = 0;
     for(auto const &mesh : mgs) {
         for(auto &node : mesh->nodes) {
+            node.globalNodeId = globalCount++;
             allNodes.push_back(&node);
             if(!node.anchored) {
                 node.altId = count++;
@@ -60,6 +61,7 @@ void icy::MeshCollection::Prepare()
             }
             else node.altId = -1;
         }
+        mesh->ConnectFaces();
     }
 
 

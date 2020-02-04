@@ -7,14 +7,14 @@ const double icy::NumberCrunching::EPS = 1e-10;
 std::vector<int> icy::NumberCrunching::resultingList;
 std::unordered_set<long long> icy::NumberCrunching::NL2set;
 std::vector<long long> icy::NumberCrunching::NL2vector;
+std::vector<icy::CPResult> icy::NumberCrunching::cprList;
 
 icy::NumberCrunching::NumberCrunching()
 {
 
 }
 
-void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc,
-    std::vector<CPResult> &cprList)
+void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc)
 {
     int nTetra = broadList.size();
     if(nTetra % 2 != 0) throw std::runtime_error("broarList.size is odd");
@@ -51,7 +51,7 @@ void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCol
     NL2vector.reserve(nPairs);
     NL2vector.insert(NL2vector.end(), NL2set.begin(),NL2set.end());
 
-#pragma openmp parallel for
+#pragma omp parallel for
     for(int i=0;i<nPairs;i++) {
         long long value = NL2vector[i];
         long nodeIdx = (long)(value >> 32);
@@ -69,7 +69,117 @@ double icy::NumberCrunching::dtn(
             double f3x, double f3y, double f3z,
         double ndx, double ndy, double ndz)
 {
-    throw std::runtime_error("NI");
+
+    double t0[3], t1[3], t2[3];
+    double edge0[3], edge1[3];
+    double v0[3], sourcePosition[3];
+
+    t0[0] = f1x; t0[1] = f1y; t0[2] = f1z;
+    t1[0] = f2x; t1[1] = f2y; t1[2] = f2z;
+    t2[0] = f3x; t2[1] = f3y; t2[2] = f3z;
+    sourcePosition[0] = ndx; sourcePosition[1] = ndy; sourcePosition[2] = ndz;
+
+    SUB(edge0, t1, t0);
+    SUB(edge1, t2, t0);
+    SUB(v0, t0, sourcePosition);
+
+    double a = DOT(edge0, edge0);
+    double b = DOT(edge0, edge1);
+    double c = DOT(edge1, edge1);
+    double d = DOT(edge0, v0);
+    double e = DOT(edge1, v0);
+
+    double det = a * c - b * b;
+    double s = b * e - c * d;
+    double t = b * d - a * e;
+
+    if (s + t < det)
+    {
+        if (s < 0)
+        {
+            if (t < 0)
+            {
+                if (d < 0)
+                {
+                    s = clamp(-d / a);
+                    t = 0;
+                }
+                else
+                {
+                    s = 0;
+                    t = clamp(-e / c);
+                }
+            }
+            else
+            {
+                s = 0;
+                t = clamp(-e / c);
+            }
+        }
+        else if (t < 0)
+        {
+            s = clamp(-d / a);
+            t = 0;
+        }
+        else
+        {
+            double invDet = 1.0 / det;
+            s *= invDet;
+            t *= invDet;
+        }
+    }
+    else
+    {
+        if (s < 0)
+        {
+            double tmp0 = b + d;
+            double tmp1 = c + e;
+            if (tmp1 > tmp0)
+            {
+                double numer = tmp1 - tmp0;
+                double denom = a - 2 * b + c;
+                s = clamp(numer / denom);
+                t = 1 - s;
+            }
+            else
+            {
+                t = clamp(-e / c);
+                s = 0;
+            }
+        }
+        else if (t < 0)
+        {
+            if (a + d > b + e)
+            {
+                double numer = c + e - b - d;
+                double denom = a - 2 * b + c;
+                s = clamp(numer / denom);
+                t = 1 - s;
+            }
+            else
+            {
+                s = clamp(-e / c);
+                t = 0;
+            }
+        }
+        else
+        {
+            double numer = c + e - b - d;
+            double denom = a - 2 * b + c;
+            s = clamp(numer / denom);
+            t = 1 - s;
+        }
+    }
+
+    double d1[3];
+
+    d1[0] = t0[0] + s * edge0[0] + t * edge1[0] - sourcePosition[0];
+    d1[1] = t0[1] + s * edge0[1] + t * edge1[1] - sourcePosition[1];
+    d1[2] = t0[2] + s * edge0[2] + t * edge1[2] - sourcePosition[2];
+
+    double sqdist = d1[0] * d1[0] + d1[1] * d1[1] + d1[2] * d1[2];
+
+    return sqdist; // squared
 }
 
 icy::Face* icy::NumberCrunching::FindClosestFace(Node *nd, Element *elem)
@@ -321,8 +431,7 @@ void icy::NumberCrunching::OneCollision(double distanceEpsilonSqared, double k, 
             res.dfi[i][j] = res.dfi[j][i] = k * sd[i][j] / 2;
 }
 
-void icy::NumberCrunching::CollisionResponse(LinearSystem &ls,
-                             std::vector<CPResult> &cprList, double DistanceEpsilon, double k)
+void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEpsilon, double k)
 {
     double distanceEpsilonSqared = DistanceEpsilon*DistanceEpsilon;
     int N = (int)cprList.size();
