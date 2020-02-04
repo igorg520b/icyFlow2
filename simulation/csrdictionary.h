@@ -31,6 +31,20 @@ public:
     int offset(int row, int column);        // returns the id of an i-j pair (pairs are consecutively numbered)
     void Assert();                          // check matrix consistency
 
+    // for testing
+    int staticCount() {
+        int result = 0;
+        for(auto &row : rows_staticNeighbors) result+=row.size();
+        return result;
+    }
+
+    int dynamicCount() {
+        int result = 0;
+        for(auto &row : rows_dynamicNeighbors) result+=row.size();
+        return result;
+    }
+
+
 private:
     int maxRowIndex = -1;   // maximum row index, zero-based, equal to resulting matrix height minus 1
     std::vector<std::map<int,int>> rows_pcsr;   // per row mappings between columns and offset in "values"

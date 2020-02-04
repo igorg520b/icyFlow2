@@ -26,6 +26,7 @@ void icy::BVHT::Construct(std::vector<Element*> &elems)
         BVHN *leafNode = BVHN_Leaf_Factory.take();
         leafNode->isLeaf = true;
         leafNode->elem = elem;
+        elem->FindAdjFaces();
         root_vec->push_back(leafNode);
 
         kDOP24 &box = leafNode->box;

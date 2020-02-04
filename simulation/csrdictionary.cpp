@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 #include "csrdictionary.h"
 
 icy::CSRDictionary::CSRDictionary()
@@ -59,7 +60,7 @@ void icy::CSRDictionary::CreateStructure()
     rows_pcsr.resize(N);
 
     // unite and sort neighbors
-    #pragma omp parallel for
+#pragma omp parallel for
     for(int i=0;i<N;i++)
     {
         rows_pcsr[i].clear();
@@ -70,9 +71,13 @@ void icy::CSRDictionary::CreateStructure()
         std::set<int> &staticNeighbors = rows_staticNeighbors[i];
         std::set<int> &dynamicNeighbors = rows_dynamicNeighbors[i];
 
+//        if(dynamicNeighbors.size() != 0) std::cout << "row " << i << "; st " << staticNeighbors.size() << "; dy " << dynamicNeighbors.size();
+
         std::set_union(staticNeighbors.begin(),staticNeighbors.end(),
                        dynamicNeighbors.begin(),dynamicNeighbors.end(),
                        std::back_inserter(sortedAllNeighbors));
+
+//        if(dynamicNeighbors.size() != 0) std::cout << "; union " << sortedAllNeighbors.size() << std::endl;
     }
 
     // count non-zero entries

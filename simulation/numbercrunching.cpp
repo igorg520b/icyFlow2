@@ -48,7 +48,7 @@ void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCol
     NL2vector.reserve(nPairs);
     NL2vector.insert(NL2vector.end(), NL2set.begin(),NL2set.end());
 
-// #pragma omp parallel for
+#pragma omp parallel for
     for(int i=0;i<nPairs;i++) {
         long long value = NL2vector[i];
         int nodeIdx = (int)(value >> 32);

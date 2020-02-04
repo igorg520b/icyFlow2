@@ -135,8 +135,10 @@ bool icy::ImplicitModel4::Step()
         mc.bvh.Traverse();                                              // traverse BVH
         NumberCrunching::NarrowPhase(icy::BVHT::broad_list, mc);        // narrow phase
         _addCollidingNodesToStructure();  // add colliding nodes to structure
+//        std::cout << "static " << linearSystem.csrd.staticCount();
+//        std::cout << "; dynamic " << linearSystem.csrd.dynamicCount() << std::endl;
         linearSystem.CreateStructure();
-        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
+//        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
 
         _assemble(); // prepare and compute forces
         explodes = _checkDamage();
