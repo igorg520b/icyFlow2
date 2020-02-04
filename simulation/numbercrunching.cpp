@@ -9,10 +9,7 @@ std::unordered_set<long long> icy::NumberCrunching::NL2set;
 std::vector<long long> icy::NumberCrunching::NL2vector;
 std::vector<icy::CPResult> icy::NumberCrunching::cprList;
 
-icy::NumberCrunching::NumberCrunching()
-{
-
-}
+//icy::NumberCrunching::NumberCrunching() {}
 
 void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc)
 {
@@ -51,11 +48,11 @@ void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCol
     NL2vector.reserve(nPairs);
     NL2vector.insert(NL2vector.end(), NL2set.begin(),NL2set.end());
 
-#pragma omp parallel for
+// #pragma omp parallel for
     for(int i=0;i<nPairs;i++) {
         long long value = NL2vector[i];
-        long nodeIdx = (long)(value >> 32);
-        long elemIdx = (long)value;
+        int nodeIdx = (int)(value >> 32);
+        int elemIdx = (int)(value & 0xffffffff);
         Node *nd = mc.allNodes[nodeIdx];
         cprList[i].nd = nd;
         cprList[i].fc = FindClosestFace(nd, mc.surfaceElements[elemIdx]);
@@ -186,6 +183,7 @@ icy::Face* icy::NumberCrunching::FindClosestFace(Node *nd, Element *elem)
 {
     double smallestDistance = DBL_MAX;
     Face *closestFace = nullptr;
+    if(elem->adjFaces.size() == 0) throw std::runtime_error("adjacent faces of teh element not initialized");
 
     for(auto const &f : elem->adjFaces) {
         double dist = dtn(f->vrts[0]->tx, f->vrts[0]->ty, f->vrts[0]->tz,
@@ -198,6 +196,7 @@ icy::Face* icy::NumberCrunching::FindClosestFace(Node *nd, Element *elem)
             closestFace = f;
         }
     }
+    if(closestFace == nullptr) throw std::runtime_error("closest face not found");
     return closestFace;
 }
 

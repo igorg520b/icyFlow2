@@ -58,9 +58,32 @@ void icy::ImplicitModel4::_beginStep()
 }
 
 
-void icy::ImplicitModel4::_addCollidingNodesToStructure(){}
+void icy::ImplicitModel4::_addCollidingNodesToStructure()
+{
+    linearSystem.csrd.ClearDynamic();
+    int count = (int)NumberCrunching::cprList.size();
+    for(int k=0;k<count;k++) {
+        CPResult &cpr = NumberCrunching::cprList[k];
+        Node *nd = cpr.nd;
+        Face *fc = cpr.fc;
 
-bool icy::ImplicitModel4::_checkDamage(){}
+        Node *nds[4] = {nd, fc->vrts[0], fc->vrts[1], fc->vrts[2]};
+
+        for(int i=0;i<4;i++) {
+            Node *n1 = nds[i];
+            for(int j=0;j<4;j++) {
+                Node *n2 = nds[j];
+                if(!n1->anchored && !n2->anchored && (n2->altId > n1->altId))
+                    linearSystem.csrd.AddDynamic(n1->altId,n2->altId);
+            }
+        }
+    }
+}
+
+bool icy::ImplicitModel4::_checkDamage()
+{
+    return false; // not implemented
+}
 
 bool icy::ImplicitModel4::_checkDivergence(){}
 
@@ -111,10 +134,9 @@ bool icy::ImplicitModel4::Step()
         mc.ConstructBVH();                                              // this should _not_ be called on every step
         mc.bvh.Traverse();                                              // traverse BVH
         NumberCrunching::NarrowPhase(icy::BVHT::broad_list, mc);        // narrow phase
-
-        linearSystem.csrd.ClearDynamic();
         _addCollidingNodesToStructure();  // add colliding nodes to structure
         linearSystem.CreateStructure();
+        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
 
         _assemble(); // prepare and compute forces
         explodes = _checkDamage();

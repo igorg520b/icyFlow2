@@ -16,10 +16,11 @@ class CPResult;
 class icy::NumberCrunching
 {
 public:
-    NumberCrunching();
+//    NumberCrunching();
 
     // narrow phase
     static const double EPS;
+    static std::vector<CPResult> cprList;
 
     static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc);
 
@@ -34,7 +35,6 @@ private:
     static std::vector<int> resultingList; // results of NarrowPhaseTwoElems
     static std::unordered_set<long long> NL2set;       // Tuple ( node# inside element, which element)
     static std::vector<long long> NL2vector;
-    static std::vector<CPResult> cprList;
 
     inline static void Bvalues(double x0, double y0, double z0,
         double x1, double y1, double z1,
