@@ -470,13 +470,28 @@ void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEp
 
 
 //======================= LINEAR TETRAHEDRON
-void icy::NumberCrunching::AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms)
+void icy::NumberCrunching::AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h)
 {
+    const double (&E)[6][6] = prms.E;
+    const double rho = prms.rho;
+    const double dampingMass = prms.dampingMass;
+    const double dampingStiffness = prms.dampingStiffness;
+    const double NewmarkBeta = prms.NewmarkBeta;
+    const double NewmarkGamma = prms.NewmarkGamma;
+    const double (&M)[12][12] = prms.M;
+
+    int N = elasticElements.size();
+//#pragma omp parallel for
+    for(int i=0;i<N;i++)
+    {
+        icy::Element *elem = elasticElements[i];
+        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h, NewmarkBeta, NewmarkGamma, M);
+    }
 }
 
 void icy::NumberCrunching::ElementElasticity(
         Element *elem,
-        const double (&E)[6][6], const double gravity, const double rho,
+        const double (&E)[6][6], const double rho,
 const double dampingMass, const double dampingStiffness, const double h,
 const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
 {
@@ -506,12 +521,11 @@ const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
 
     F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses, E);
 
-    double gravityForcePerNode = gravity * rho * V / 4;
-
-    rhs[2] += gravityForcePerNode;
-    rhs[5] += gravityForcePerNode;
-    rhs[8] += gravityForcePerNode;
-    rhs[11] += gravityForcePerNode;
+//    double gravityForcePerNode = gravity * rho * V / 4;
+//    rhs[2] += gravityForcePerNode;
+//    rhs[5] += gravityForcePerNode;
+ //   rhs[8] += gravityForcePerNode;
+ //   rhs[11] += gravityForcePerNode;
 
     // assemble the effective stiffness matrix Keff = M/(h^2 beta) + RKRt + D * gamma /(h beta)
     // where D is the damping matrix D = a M + b K
