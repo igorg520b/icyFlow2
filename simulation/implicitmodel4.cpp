@@ -106,6 +106,8 @@ void icy::ImplicitModel4::_assemble()
 
     // assemble elements
 
+//    CPU_Linear_Tetrahedron.AssembleElems(linearSystem, tcf0, mc, prms);
+//    CPU_PPR_CZ.AssembleCZs(linearSystem, tcf0, mc, prms);
     // assemble cohesive zones
 
     // assemble collisions

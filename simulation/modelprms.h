@@ -31,10 +31,10 @@ class icy::ModelPrms : public QObject
 
     // material
     Q_PROPERTY(double mat_Y MEMBER Y NOTIFY propertyChanged)
-    Q_PROPERTY(double mat_rho MEMBER rho NOTIFY propertyChanged)
+    Q_PROPERTY(double mat_rho WRITE set_rho READ get_rho)
+    Q_PROPERTY(double mat_nu WRITE set_nu READ get_nu)
     Q_PROPERTY(double mat_dampingMass MEMBER dampingMass NOTIFY propertyChanged)
     Q_PROPERTY(double mat_dampingStiffness MEMBER dampingStiffness NOTIFY propertyChanged)
-    Q_PROPERTY(double mat_nu MEMBER nu NOTIFY propertyChanged)
 
     // cz
     Q_PROPERTY(double cz_alpha WRITE setCZAlpha READ getCZAlpha)
@@ -85,16 +85,30 @@ public:
 
     // computed variables
     double totalVolume;
-    double E[6][6];
-    double M[12][12];
+    double M[12][12];   // mass distribution matrix (needs to be multiplied by mass of individual elements)
     double p_m, p_n;
     double pMtn, pMnt; // < phi_t - phi_n >, < phi_n - phi_t >
     double gam_n, gam_t;
     double sf[3][3];
     double B[3][18];
+    double E[6][6]={}; // recompute when nu or rho changes
 
-    private:
+    ModelPrms() {
+        // initialize M
+        double coeff = 1.0 / 20.0;
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                for (int m = 0; m < 3; m++)
+                {
+                    int col = i * 3 + m;
+                    int row = j * 3 + m;
+                    M[col][row] = (col == row) ? 2 * coeff : coeff;
+                }
+        Recompute();
+        RecomputeE();
+    }
 
+private:
     void setCZAlpha(double value) { _alpha=value; Recompute(); emit propertyChanged(); }
     double getCZAlpha() {return _alpha;}
     void setCZBeta(double value) { _beta=value; Recompute(); emit propertyChanged(); }
@@ -143,6 +157,19 @@ public:
         nThreshold = _del_n * _lambda_n;
         tThreshold = _del_t * _lambda_t;
     }
+
+    void RecomputeE()
+    {
+        double coeff1 = Y / ((1.0 + nu) * (1.0 - 2.0 * nu));
+        E[0][0] = E[1][1] = E[2][2] = (1.0 - nu) * coeff1;
+        E[0][1] = E[0][2] = E[1][2] = E[1][0] = E[2][0] = E[2][1] = nu * coeff1;
+        E[3][3] = E[4][4] = E[5][5] = (0.5 - nu) * coeff1;
+    }
+
+    void set_rho(double value) {rho = value; RecomputeE(); emit propertyChanged(); }
+    double get_rho() {return rho;}
+    void set_nu(double value) {nu = value; RecomputeE(); emit propertyChanged(); }
+    double get_nu() {return nu;}
 
 signals:
     void propertyChanged();

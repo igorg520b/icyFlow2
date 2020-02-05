@@ -1,6 +1,8 @@
 #include "numbercrunching.h"
 #include <stdexcept>
 #include <cfloat>
+#include <cmath>
+
 
 const double icy::NumberCrunching::EPS = 1e-10;
 
@@ -8,8 +10,8 @@ std::vector<int> icy::NumberCrunching::resultingList;
 std::unordered_set<long long> icy::NumberCrunching::NL2set;
 std::vector<long long> icy::NumberCrunching::NL2vector;
 std::vector<icy::CPResult> icy::NumberCrunching::cprList;
+SymmetricEigensolver3x3<double> icy::NumberCrunching::solver;
 
-//icy::NumberCrunching::NumberCrunching() {}
 
 void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc)
 {
@@ -466,6 +468,251 @@ void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEp
     }
 }
 
+
+//======================= LINEAR TETRAHEDRON
+void icy::NumberCrunching::AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms)
+{
+}
+
+void icy::NumberCrunching::ElementElasticity(Element *elem)
+{
+
+}
+
+
+void icy::NumberCrunching::fastRotationMatrix(
+        double p0x, double p0y, double p0z,
+        double p1x, double p1y, double p1z,
+        double p2x, double p2y, double p2z,
+        double &r11, double &r12, double &r13,
+        double &r21, double &r22, double &r23,
+        double &r31, double &r32, double &r33)
+{
+    double d10x = p1x - p0x;
+    double d10y = p1y - p0y;
+    double d10z = p1z - p0z;
+
+    double mag = sqrt(d10x*d10x + d10y*d10y + d10z*d10z);
+    r11 = d10x / mag;
+    r21 = d10y / mag;
+    r31 = d10z / mag;
+
+    // p2-p0
+    double wx = p2x - p0x;
+    double wy = p2y - p0y;
+    double wz = p2z - p0z;
+
+    // cross product
+    double cx = -d10z * wy + d10y * wz;
+    double cy = d10z * wx - d10x * wz;
+    double cz = -d10y * wx + d10x * wy;
+
+    mag = sqrt(cx*cx + cy*cy + cz*cz);
+    r12 = cx / mag;
+    r22 = cy / mag;
+    r32 = cz / mag;
+
+    r13 = r22 * r31 - r21 * r32;
+    r23 = -r12 * r31 + r11 * r32;
+    r33 = r12 * r21 - r11 * r22;
+    mag = sqrt(r13*r13 + r23*r23 + r33*r33);
+    r13 /= mag;
+    r23 /= mag;
+    r33 /= mag;
+}
+
+void icy::NumberCrunching::multABd(
+        double a11, double a12, double a13,
+        double a21, double a22, double a23,
+        double a31, double a32, double a33,
+        double b11, double b12, double b13,
+        double b21, double b22, double b23,
+        double b31, double b32, double b33,
+        double &m11, double &m12, double &m13,
+        double &m21, double &m22, double &m23,
+        double &m31, double &m32, double &m33)
+{
+    m11 = a11*b11 + a12*b21 + a13*b31; m12 = a11*b12 + a12*b22 + a13*b32; m13 = a11*b13 + a12*b23 + a13*b33;
+    m21 = a21*b11 + a22*b21 + a23*b31; m22 = a21*b12 + a22*b22 + a23*b32; m23 = a21*b13 + a22*b23 + a23*b33;
+    m31 = a31*b11 + a32*b21 + a33*b31; m32 = a31*b12 + a32*b22 + a33*b32; m33 = a31*b13 + a32*b23 + a33*b33;
+}
+
+void icy::NumberCrunching::multAX(
+        double a11, double a12, double a13,
+        double a21, double a22, double a23,
+        double a31, double a32, double a33,
+        double x1, double x2, double x3,
+        double &y1, double &y2, double &y3)
+{
+    y1 = x1 * a11 + x2 * a12 + x3 * a13;
+    y2 = x1 * a21 + x2 * a22 + x3 * a23;
+    y3 = x1 * a31 + x2 * a32 + x3 * a33;
+}
+
+
+void icy::NumberCrunching::F_and_Df_Corotational(
+    const double(&x0)[12], const double(&xc)[12],
+    double(&f)[12], double(&Df)[12][12], double &V,
+double(&sigma)[6], double (&principal_str)[3], const double (&E)[6][6])
+{
+    // Colorational formulation:
+    // f = RK(Rt xc - x0)
+    // Df = R K Rt
+
+    // calculate K
+    double x12, x13, x14, x23, x24, x34;
+    double y12, y13, y14, y23, y24, y34;
+    double z12, z13, z14, z23, z24, z34;
+    double a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4;
+    double Jdet;
+
+    x12 = x0[0] - x0[3]; x13 = x0[0] - x0[6]; x14 = x0[0] - x0[9]; x23 = x0[3] - x0[6]; x24 = x0[3] - x0[9]; x34 = x0[6] - x0[9];
+    y12 = x0[1] - x0[4]; y13 = x0[1] - x0[7]; y14 = x0[1] - x0[10]; y23 = x0[4] - x0[7]; y24 = x0[4] - x0[10]; y34 = x0[7] - x0[10];
+    z12 = x0[2] - x0[5]; z13 = x0[2] - x0[8]; z14 = x0[2] - x0[11]; z23 = x0[5] - x0[8]; z24 = x0[5] - x0[11]; z34 = x0[8] - x0[11];
+
+    Jdet = -(x12 * (y23 * z34 - y34 * z23) + x23 * (y34 * z12 - y12 * z34) + x34 * (y12 * z23 - y23 * z12));
+    V = Jdet / 6.;
+
+    a1 = y24 * z23 - y23 * z24; b1 = x23 * z24 - x24 * z23; c1 = x24 * y23 - x23 * y24;
+    a2 = y13 * z34 - y34 * z13; b2 = x34 * z13 - x13 * z34; c2 = x13 * y34 - x34 * y13;
+    a3 = y24 * z14 - y14 * z24; b3 = x14 * z24 - x24 * z14; c3 = x24 * y14 - x14 * y24;
+    a4 = -y13 * z12 + y12 * z13; b4 = -x12 * z13 + x13 * z12; c4 = -x13 * y12 + x12 * y13;
+
+    a1 /= Jdet; a2 /= Jdet; a3 /= Jdet; a4 /= Jdet;
+    b1 /= Jdet; b2 /= Jdet; b3 /= Jdet; b4 /= Jdet;
+    c1 /= Jdet; c2 /= Jdet; c3 /= Jdet; c4 /= Jdet;
+
+    double B[6][12] = {
+        { a1, 0, 0, a2, 0, 0, a3, 0, 0, a4, 0, 0 },
+        { 0, b1, 0, 0, b2, 0, 0, b3, 0, 0, b4, 0 },
+        { 0, 0, c1, 0, 0, c2, 0, 0, c3, 0, 0, c4 },
+        { b1, a1, 0, b2, a2, 0, b3, a3, 0, b4, a4, 0 },
+        { 0, c1, b1, 0, c2, b2, 0, c3, b3, 0, c4, b4 },
+        { c1, 0, a1, c2, 0, a2, c3, 0, a3, c4, 0, a4 } };
+
+    double BtE[12][6] = {}; // result of multiplication (Bt x E)
+    for (int r = 0; r < 12; r++)
+        for (int c = 0; c < 6; c++)
+            for (int i = 0; i < 6; i++) BtE[r][c] += B[i][r] * E[i][c];
+
+    // K = Bt x E x B x V
+    double K[12][12] = {};
+    for (int r = 0; r < 12; r++)
+        for (int c = 0; c < 12; c++)
+            for (int i = 0; i < 6; i++) K[r][c] += BtE[r][i] * B[i][c] * V;
+
+    double R0[3][3], R1[3][3], R[3][3];
+    fastRotationMatrix(
+        x0[0], x0[1], x0[2],
+        x0[3], x0[4], x0[5],
+        x0[6], x0[7], x0[8],
+        R0[0][0], R0[0][1], R0[0][2],
+        R0[1][0], R0[1][1], R0[1][2],
+        R0[2][0], R0[2][1], R0[2][2]);
+
+    fastRotationMatrix(
+        xc[0], xc[1], xc[2],
+        xc[3], xc[4], xc[5],
+        xc[6], xc[7], xc[8],
+        R1[0][0], R1[0][1], R1[0][2],
+        R1[1][0], R1[1][1], R1[1][2],
+        R1[2][0], R1[2][1], R1[2][2]);
+
+    multABd(
+        R1[0][0], R1[0][1], R1[0][2],
+        R1[1][0], R1[1][1], R1[1][2],
+        R1[2][0], R1[2][1], R1[2][2],
+        R0[0][0], R0[1][0], R0[2][0],
+        R0[0][1], R0[1][1], R0[2][1],
+        R0[0][2], R0[1][2], R0[2][2],
+        R[0][0], R[0][1], R[0][2],
+        R[1][0], R[1][1], R[1][2],
+        R[2][0], R[2][1], R[2][2]);
+
+    double RK[12][12] = {};
+    double RKRt[12][12] = {};
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            // RK = R * K
+            for (int k = 0; k < 3; k++)
+                for (int l = 0; l < 3; l++) {
+                    for (int m = 0; m < 3; m++)
+                        RK[3 * i + k][3 * j + l] += R[k][m] * K[3 * i + m][3 * j + l];
+                }
+
+            // RKRT = RK * R^T
+            for (int k = 0; k < 3; k++)
+                for (int l = 0; l < 3; l++) {
+                    for (int m = 0; m < 3; m++)
+                        RKRt[3 * i + k][3 * j + l] += RK[3 * i + k][3 * j + m] * R[l][m];
+                }
+        }
+
+    // xr = Rt xc
+    double xr[12] = {};
+    multAX(R[0][0], R[1][0], R[2][0],
+        R[0][1], R[1][1], R[2][1],
+        R[0][2], R[1][2], R[2][2],
+        xc[0], xc[1], xc[2],
+        xr[0], xr[1], xr[2]);
+    multAX(R[0][0], R[1][0], R[2][0],
+        R[0][1], R[1][1], R[2][1],
+        R[0][2], R[1][2], R[2][2],
+        xc[3], xc[4], xc[5],
+        xr[3], xr[4], xr[5]);
+    multAX(R[0][0], R[1][0], R[2][0],
+        R[0][1], R[1][1], R[2][1],
+        R[0][2], R[1][2], R[2][2],
+        xc[6], xc[7], xc[8],
+        xr[6], xr[7], xr[8]);
+    multAX(R[0][0], R[1][0], R[2][0],
+        R[0][1], R[1][1], R[2][1],
+        R[0][2], R[1][2], R[2][2],
+        xc[9], xc[10], xc[11],
+        xr[9], xr[10], xr[11]);
+
+    for (int i = 0; i < 12; i++) xr[i] -= x0[i];
+
+    // f = RK(Rt pm - mx)
+    // Df = RKRt
+    for (int i = 0; i < 12; i++)
+        for (int j = 0; j < 12; j++) {
+            f[i] += RK[i][j] * xr[j];
+            Df[i][j] = RKRt[i][j];
+        }
+
+    // calculation of strain (rotation excluded) e = B.xr
+    // B[6][12]
+    double e[6] = {};
+    for (int j = 0; j < 6; j++)
+        for (int i = 0; i < 12; i++)
+            e[j] += B[j][i] * xr[i];
+
+    // calculation of stress (rotation excluded) s = E.e
+    // E[6][6]
+    sigma[0]=sigma[1]=sigma[2]=sigma[3]=sigma[4]=sigma[5]=0;
+    for (int j = 0; j < 6; j++)
+        for (int i = 0; i < 6; i++)
+            sigma[j] += E[i][j] * e[i];
+
+    // compute principal stresses
+    Eigenvalues(sigma[0], sigma[1], sigma[2], sigma[3], sigma[4], sigma[5], principal_str);
+}
+
+void icy::NumberCrunching::Eigenvalues(
+        double xx, double yy, double zz,
+        double xy, double yz, double zx,
+        double* eigenvalues)
+{
+    std::array<double, 3> eval;
+    std::array<std::array<double, 3>, 3> evec;
+    solver(xx, xy, zx, yy, yz, zz, false, -1, eval, evec);
+    eigenvalues[0] = eval[0];
+    eigenvalues[1] = eval[1];
+    eigenvalues[2] = eval[2];
+}
 
 
 

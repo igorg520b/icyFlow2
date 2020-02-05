@@ -24,7 +24,10 @@ public:
     std::unordered_set<icy::Face*> adjFaces; // Collection of adjacent faces for collision detection (only on surface elements)
     double stress[6]={};
     double principal_stresses[3]={};
-    // public CPU_Linear_Tetrahedron.ElementExtension extension; // any additional data
+
+    // storage space for parallel computaiton/assembly of elastic forces and derivatives
+    double rhs[12];
+    double lhs[12][12]; // store left-hand side of the linearized equation of motion
 
     Element();
     void FindAdjFaces();
