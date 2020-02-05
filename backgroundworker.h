@@ -31,6 +31,7 @@ private:
     QMutex mutex;
     QWaitCondition condition;
     ImplicitModel4 *model;
+    bool kill = false;
 };
 
 #endif // BACKGROUNDWORKER_H

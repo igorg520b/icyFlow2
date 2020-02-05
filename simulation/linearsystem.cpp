@@ -31,6 +31,7 @@ void icy::LinearSystem::CreateStructure()
     memset(rhs, 0, sizeof(double)*dxSize());
     memset(dx, 0, sizeof(double)*dxSize());
     memset(vals, 0, sizeof(double)*dvalsSize());
+    Assert();
 }
 
 void icy::LinearSystem::Solve()
@@ -41,7 +42,6 @@ void icy::LinearSystem::Solve()
     const int dim = 3;
     const int param4 = 0;
 
-    Assert();
     int mklResult = SolveDouble3(csrd.csr_cols, csrd.csr_rows,
                                  vals, csrd.N, rhs, dx,
                                  mklMatrixType, param4, dim, verbosity, check);
@@ -58,6 +58,10 @@ double icy::LinearSystem::NormOfDx()
 void icy::LinearSystem::AddToRHS(int atWhichIndex, double d0, double d1, double d2)
 {
     if (atWhichIndex < 0) return;
+//    if(std::isnan(d0)) throw std::runtime_error("d0 is nan");
+//    if(std::isnan(d1)) throw std::runtime_error("d1 is nan");
+//    if(std::isnan(d2)) throw std::runtime_error("d2 is nan");
+
     int i3 = atWhichIndex*3;
 
     if(i3 + 2 >= csrd.N * 3)
@@ -73,6 +77,18 @@ void icy::LinearSystem::AddToLHS_Symmetric(int row, int column,
         double a20, double a21, double a22)
 {
     if (row > column || row < 0 || column < 0) return;
+/*
+    if(std::isnan(a00) ||
+            std::isnan(a01) ||
+            std::isnan(a02) ||
+            std::isnan(a10) ||
+            std::isnan(a11) ||
+            std::isnan(a12) ||
+            std::isnan(a20) ||
+            std::isnan(a21) ||
+            std::isnan(a22))
+        throw std::runtime_error("lhs element is nan");
+*/
 
     int offset = csrd.offset(row, column);
     if(offset >= csrd.nnz) throw std::runtime_error("offset >=csrd.nnz");

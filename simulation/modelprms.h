@@ -85,7 +85,7 @@ public:
 
     // computed variables
     double totalVolume;
-    double M[12][12];   // mass distribution matrix (needs to be multiplied by mass of individual elements)
+    double M[12][12] = {};   // mass distribution matrix (needs to be multiplied by mass of individual elements)
     double p_m, p_n;
     double pMtn, pMnt; // < phi_t - phi_n >, < phi_n - phi_t >
     double gam_n, gam_t;
@@ -95,6 +95,7 @@ public:
 
     ModelPrms() {
         // initialize M
+
         double coeff = 1.0 / 20.0;
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)

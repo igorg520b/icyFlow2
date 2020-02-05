@@ -470,24 +470,7 @@ void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEp
 
 
 //======================= LINEAR TETRAHEDRON
-void icy::NumberCrunching::AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h)
-{
-    const double (&E)[6][6] = prms.E;
-    const double rho = prms.rho;
-    const double dampingMass = prms.dampingMass;
-    const double dampingStiffness = prms.dampingStiffness;
-    const double NewmarkBeta = prms.NewmarkBeta;
-    const double NewmarkGamma = prms.NewmarkGamma;
-    const double (&M)[12][12] = prms.M;
 
-    int N = elasticElements.size();
-//#pragma omp parallel for
-    for(int i=0;i<N;i++)
-    {
-        icy::Element *elem = elasticElements[i];
-        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h, NewmarkBeta, NewmarkGamma, M);
-    }
-}
 
 void icy::NumberCrunching::ElementElasticity(
         Element *elem,
@@ -541,7 +524,13 @@ const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
         for (int j = 0; j < 12; j++)
         {
             rhs[i] -= (M[i][j] * rhoV * dampingMass + Df[i][j] * dampingStiffness) * vn[j] + (M[i][j] * rhoV * an[j]);
+            if(std::isnan(rhs[i]))
+                std::cout << "elementelasticity: rhs is nan" << std::endl;
+            if(std::isnan(Df[i][j]))
+                std::cout << "elementelasticity: dfi is nan" << std::endl;
             lhs[i][j] = Df[i][j] * stiffCoeff + M[i][j] * massCoeff;
+            if(std::isnan(lhs[i][j]))
+                std::cout << "elementelasticity: lhs is nan" << std::endl;
         }
     }
 }
@@ -744,11 +733,17 @@ double(&sigma)[6], double (&principal_str)[3], const double (&E)[6][6])
 
     // f = RK(Rt pm - mx)
     // Df = RKRt
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 12; i++) {
         for (int j = 0; j < 12; j++) {
             f[i] += RK[i][j] * xr[j];
             Df[i][j] = RKRt[i][j];
+
+            if(std::isnan(Df[i][j]))
+                std::cout << "dfij is nan" << std::endl;
         }
+        if(std::isnan(f[i]))
+            std::cout << "fi is nan" << std::endl;
+    }
 
     // calculation of strain (rotation excluded) e = B.xr
     // B[6][12]
@@ -781,5 +776,44 @@ void icy::NumberCrunching::Eigenvalues(
     eigenvalues[2] = eval[2];
 }
 
+void icy::NumberCrunching::AssembleElems(
+        LinearSystem &ls,
+        std::vector<Element*> &elasticElements, ModelPrms &prms, double h)
+{
+    const double (&E)[6][6] = prms.E;
+    const double rho = prms.rho;
+    const double dampingMass = prms.dampingMass;
+    const double dampingStiffness = prms.dampingStiffness;
+    const double NewmarkBeta = prms.NewmarkBeta;
+    const double NewmarkGamma = prms.NewmarkGamma;
+    const double (&M)[12][12] = prms.M;
 
+    int N = elasticElements.size();
+//#pragma omp parallel for
+    for(int i=0;i<N;i++)
+    {
+        icy::Element *elem = elasticElements[i];
+        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h, NewmarkBeta, NewmarkGamma, M);
+    }
+
+    // distribute into linear system
+    for(auto const &elem : elasticElements)
+    {
+        double (&lhs)[12][12] = elem->lhs;
+        double (&rhs)[12] = elem->rhs;
+        for(int r=0;r<4;r++)
+        {
+            int ni = elem->vrts[r]->altId;
+            ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
+            for (int c=0;c<4;c++)
+            {
+                int nj = elem->vrts[c]->altId;
+                ls.AddToLHS_Symmetric(ni, nj,
+                lhs[r * 3 + 0][c * 3 + 0], lhs[r * 3 + 0][c * 3 + 1], lhs[r * 3 + 0][c * 3 + 2],
+                lhs[r * 3 + 1][c * 3 + 0], lhs[r * 3 + 1][c * 3 + 1], lhs[r * 3 + 1][c * 3 + 2],
+                lhs[r * 3 + 2][c * 3 + 0], lhs[r * 3 + 2][c * 3 + 1], lhs[r * 3 + 2][c * 3 + 2]);
+            }
+        }
+    }
+}
 

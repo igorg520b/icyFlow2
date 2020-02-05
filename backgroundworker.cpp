@@ -8,7 +8,10 @@ icy::BackgroundWorker::BackgroundWorker(ImplicitModel4 *model, QObject *parent)
 
 icy::BackgroundWorker::~BackgroundWorker()
 {
-    terminate();
+//    terminate();
+    kill = true;
+    condition.wakeOne();
+    wait();
 }
 
 
@@ -37,7 +40,9 @@ void icy::BackgroundWorker::run()
         running = true;
         mutex.unlock();
 
+        if(kill) break;
         bool aborted = model->Step();
+        if(kill) break;
         if(aborted || model->cf.StepNumber >= model->prms.MaxSteps) timeToPause = true;
         emit stepCompleted(aborted);    // notify GUI that a step was completed
     }

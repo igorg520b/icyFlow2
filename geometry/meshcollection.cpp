@@ -66,7 +66,8 @@ void icy::MeshCollection::Prepare()
 
 
     // populate elasticElements
-
+    elasticElements.clear();
+    for(auto &elem : beam->elems) elasticElements.push_back(&elem);
 
     // populate nonFailedCZs, allCZs, failedCZs;
 

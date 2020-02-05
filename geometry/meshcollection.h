@@ -25,16 +25,12 @@ public:
     std::vector<icy::Element*> surfaceElements, elasticElements;
     std::vector<icy::CZ*> nonFailedCZs, allCZs, failedCZs;
 //    std::vector<icy::Face*> allFaces;
-//    std::vector<icy::Mesh*> deformables, nonDeformables, indenters;
 
     MeshCollection();
     void Clear(); // return the collection to empty state
     void Prepare();
     void ConstructBVH();
     void UpdateActors(); // transfer current nodal positions to vtk for rendering
-
-
-
 };
 
 #endif // MESHCOLLECTION_H

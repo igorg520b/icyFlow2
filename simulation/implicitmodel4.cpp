@@ -85,7 +85,10 @@ bool icy::ImplicitModel4::_checkDamage()
     return false; // not implemented
 }
 
-bool icy::ImplicitModel4::_checkDivergence(){}
+bool icy::ImplicitModel4::_checkDivergence()
+{
+    return false;
+}
 
 void icy::ImplicitModel4::_XtoDU(){}
 
@@ -105,23 +108,16 @@ void icy::ImplicitModel4::_assemble()
     for(auto &nd : mc.allNodes) nd->fx = nd->fz = nd->fy = 0;
 
     // assemble elements
+    if(tcf0.TimeStep == 0)
+        throw std::runtime_error("time step is zero");
+    NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
-//    CPU_Linear_Tetrahedron.AssembleElems(linearSystem, tcf0, mc, prms);
-//    CPU_PPR_CZ.AssembleCZs(linearSystem, tcf0, mc, prms);
     // assemble cohesive zones
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
-void icy::ImplicitModel4::_narrowPhase()
-{
-}
-
-void icy::ImplicitModel4::_collisionResponse()
-{
-
-}
 
 void icy::ImplicitModel4::_transferUpdatedState()
 {
@@ -148,7 +144,7 @@ bool icy::ImplicitModel4::Step()
         _assemble(); // prepare and compute forces
         explodes = _checkDamage();
         if(!explodes) {
-//            linearSystem.Solve();
+            linearSystem.Solve();
             diverges = _checkDivergence();
             _XtoDU();
             tcf0.IterationsPerformed++;

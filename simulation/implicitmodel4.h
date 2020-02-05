@@ -40,8 +40,6 @@ private:
     void _adjustTimeStep();
     void _acceptFrame();
     void _assemble();
-    void _narrowPhase();
-    void _collisionResponse();
     void _transferUpdatedState();
 
 };

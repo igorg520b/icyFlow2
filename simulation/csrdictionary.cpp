@@ -89,6 +89,8 @@ void icy::CSRDictionary::CreateStructure()
         csr_rows_size = N+1;
         delete csr_rows;
         csr_rows = new int[csr_rows_size];
+        if(csr_rows == nullptr)
+            throw std::runtime_error("csr_rows allocation error");
     }
 
     if(csr_cols_size < nnz) {
@@ -122,7 +124,10 @@ void icy::CSRDictionary::Assert()
     if(csr_rows[0] != 0) throw std::runtime_error("rows[0] != 0");
     if(csr_rows[N] != nnz) throw std::runtime_error("rows[N] != nnz");
     for (int i = 1; i < N + 1; i++)
-        if (csr_rows[i] <= csr_rows[i - 1]) throw std::runtime_error("rows[i] is not increasing");
+        if (csr_rows[i] <= csr_rows[i - 1]) {
+            std::cout << csr_rows[0] << "; " << csr_rows[1]<< "; " << csr_rows[2] << std::endl;
+            throw std::runtime_error("rows[i] is not increasing");
+        }
 
     // verify columns array, upper triangular
     for (int i = 0; i < N; i++)
