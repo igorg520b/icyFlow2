@@ -57,7 +57,7 @@ double icy::LinearSystem::NormOfDx()
 
 void icy::LinearSystem::AddToRHS(int atWhichIndex, double d0, double d1, double d2)
 {
-    if (atWhichIndex < 0) throw std::runtime_error("atWhichIndex < 0");
+    if (atWhichIndex < 0) return;
     int i3 = atWhichIndex*3;
 
     if(i3 + 2 >= csrd.N * 3)
@@ -72,8 +72,7 @@ void icy::LinearSystem::AddToLHS_Symmetric(int row, int column,
         double a10, double a11, double a12,
         double a20, double a21, double a22)
 {
-    if (row > column || row < 0 || column < 0)
-        throw std::runtime_error("AddToLHS: row/column index error");
+    if (row > column || row < 0 || column < 0) return;
 
     int offset = csrd.offset(row, column);
     if(offset >= csrd.nnz) throw std::runtime_error("offset >=csrd.nnz");

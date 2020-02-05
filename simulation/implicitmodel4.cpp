@@ -98,11 +98,18 @@ void icy::ImplicitModel4::_acceptFrame()
 
 void icy::ImplicitModel4::_assemble()
 {
+    linearSystem.CreateStructure();
+    //        std::cout << "static " << linearSystem.csrd.staticCount();
+    //        std::cout << "; dynamic " << linearSystem.csrd.dynamicCount() << std::endl;
+    //        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
     for(auto &nd : mc.allNodes) nd->fx = nd->fz = nd->fy = 0;
 
     // assemble elements
 
     // assemble cohesive zones
+
+    // assemble collisions
+    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
 void icy::ImplicitModel4::_narrowPhase()
@@ -135,15 +142,10 @@ bool icy::ImplicitModel4::Step()
         mc.bvh.Traverse();                                              // traverse BVH
         NumberCrunching::NarrowPhase(icy::BVHT::broad_list, mc);        // narrow phase
         _addCollidingNodesToStructure();  // add colliding nodes to structure
-//        std::cout << "static " << linearSystem.csrd.staticCount();
-//        std::cout << "; dynamic " << linearSystem.csrd.dynamicCount() << std::endl;
-        linearSystem.CreateStructure();
-//        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
 
         _assemble(); // prepare and compute forces
         explodes = _checkDamage();
         if(!explodes) {
-            _collisionResponse();
 //            linearSystem.Solve();
             diverges = _checkDivergence();
             _XtoDU();

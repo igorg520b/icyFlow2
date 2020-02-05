@@ -435,7 +435,7 @@ void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEp
     double distanceEpsilonSqared = DistanceEpsilon*DistanceEpsilon;
     int N = (int)cprList.size();
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for(int i=0;i<N;i++) OneCollision(distanceEpsilonSqared, k, cprList[i]);
 
     // distribute the values into linear system
