@@ -474,11 +474,16 @@ void icy::NumberCrunching::AssembleElems(LinearSystem &ls, std::vector<Element*>
 {
 }
 
-void icy::NumberCrunching::ElementElasticity(Element *elem, const double (&E)[6][6])
+void icy::NumberCrunching::ElementElasticity(
+        Element *elem,
+        const double (&E)[6][6], const double gravity, const double rho,
+const double dampingMass, const double dampingStiffness, const double h,
+const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
 {
     double V, x0[12], xc[12], vn[12], an[12];
     double f[12]={};
     double Df[12][12]={};
+    double (&lhs)[12][12] = elem->lhs;
     double (&rhs)[12] = elem->rhs;
     for(int i=0;i<12;i++) rhs[i] = 0;
 
@@ -500,64 +505,31 @@ void icy::NumberCrunching::ElementElasticity(Element *elem, const double (&E)[6]
     }
 
     F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses, E);
-/*
 
-            double* vn = stackalloc double[12];
-            double* an = stackalloc double[12];
-            double* xc = stackalloc double[12];
-            double* x0 = stackalloc double[12];
-            for (int i = 0; i < 4; i++)
-            {
-                Node nd = elem.vrts[i];
-                xc[i * 3 + 0] = nd.tx;
-                xc[i * 3 + 1] = nd.ty;
-                xc[i * 3 + 2] = nd.tz;
-                x0[i * 3 + 0] = nd.x0;
-                x0[i * 3 + 1] = nd.y0;
-                x0[i * 3 + 2] = nd.z0;
-                vn[i * 3 + 0] = nd.vnx;
-                vn[i * 3 + 1] = nd.vny;
-                vn[i * 3 + 2] = nd.vnz;
-                an[i * 3 + 0] = nd.anx;
-                an[i * 3 + 1] = nd.any;
-                an[i * 3 + 2] = nd.anz;
-            }
+    double gravityForcePerNode = gravity * rho * V / 4;
 
-            // out params
-            double* f = stackalloc double[12];
-            double* Df = stackalloc double[144];
-            F_and_Df_Corotational2(x0, xc, f, Df, elem.stress, out double V);
+    rhs[2] += gravityForcePerNode;
+    rhs[5] += gravityForcePerNode;
+    rhs[8] += gravityForcePerNode;
+    rhs[11] += gravityForcePerNode;
 
-            ElementExtension ex = elem.extension;
-            ex.Clear();
-            double[] rhs = ex.rhs;
-            double[,] lhs = ex.lhs;
+    // assemble the effective stiffness matrix Keff = M/(h^2 beta) + RKRt + D * gamma /(h beta)
+    // where D is the damping matrix D = a M + b K
+    double rhoV = rho * V;
+    double massCoeff = rhoV * (1.0 / (h * h) + dampingMass * NewmarkGamma / h) / NewmarkBeta;
+    double stiffCoeff = 1.0 + dampingStiffness * NewmarkGamma / (h * NewmarkBeta);
 
-            double gravityForcePerNode = gravity * rho * V / 4;
-            rhs[2] = gravityForcePerNode;
-            rhs[5] = gravityForcePerNode;
-            rhs[8] = gravityForcePerNode;
-            rhs[11] = gravityForcePerNode;
-
-            // assemble the effective stiffness matrix Keff = M/(h^2 beta) + RKRt + D * gamma /(h beta)
-            // where D is the damping matrix D = a M + b K
-            double rhoV = rho * V;
-            double massCoeff = rhoV * (1.0 / (h * h) + dampingMass * NewmarkGamma / h) / NewmarkBeta;
-            double stiffCoeff = 1.0 + dampingStiffness * NewmarkGamma / (h * NewmarkBeta);
-
-            // add damping component to rhs
-            // D = M[i][j] * V * dampingMass + RKRt[i][j] * dampingStiffness
-            for (int i = 0; i < 12; i++)
-            {
-                rhs[i] -= f[i];
-                for (int j = 0; j < 12; j++)
-                {
-                    rhs[i] -= (M[i,j] * rhoV * dampingMass + Df[i*12 + j] * dampingStiffness) * vn[j] + (M[i,j] * rhoV * an[j]);
-                    lhs[i,j] = Df[i*12+j] * stiffCoeff + M[i,j] * massCoeff;
-                }
-            }
-*/
-    throw std::runtime_error("NI");
+    // add damping component to rhs
+    // D = M[i][j] * V * dampingMass + RKRt[i][j] * dampingStiffness
+    for (int i = 0; i < 12; i++)
+    {
+        rhs[i] -= f[i];
+        for (int j = 0; j < 12; j++)
+        {
+            rhs[i] -= (M[i][j] * rhoV * dampingMass + Df[i][j] * dampingStiffness) * vn[j] + (M[i][j] * rhoV * an[j]);
+            lhs[i][j] = Df[i][j] * stiffCoeff + M[i][j] * massCoeff;
+        }
+    }
 }
 
 

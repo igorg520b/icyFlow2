@@ -119,7 +119,11 @@ private:
         double xy, double yz, double zx,
         double* eigenvalues);
 
-    static void ElementElasticity(Element *elem, const double (&E)[6][6]);
+    static void ElementElasticity(
+            Element *elem,
+            const double (&E)[6][6], const double gravity, const double rho,
+    const double dampingMass, const double dampingStiffness, const double h,
+    const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12]);
 };
 
 
