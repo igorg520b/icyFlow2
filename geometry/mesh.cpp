@@ -41,12 +41,17 @@ void icy::Mesh::ComputeBoundingBox()
 
 void icy::Mesh::AnchorSides()
 {
+    auto almostEqual = [](double val1, double val2) {return ((val1-val2) < 1e-10 && (val2-val1) < 1e-10);};
+
     ComputeBoundingBox();
+    int count = 0;
     for(auto &nd : nodes) {
-        if(nd.x0 == xmin || nd.x0 == xmax ||
-                nd.y0 == ymin || nd.y0 == ymax ||
-                nd.z0 == zmin || nd.z0 == zmax) nd.anchored = true;
+        if(almostEqual(nd.x0,xmin) || almostEqual(nd.x0, xmax) ||
+                almostEqual(nd.y0, ymin) || almostEqual(nd.y0, ymax))
+        { nd.anchored = true; count++;}
     }
+//    std::cout << "nodes anchored: " << count << std::endl;
+//    std::cout << "bounding box (" << xmin << "," << ymin << "," << zmin << ")  (" << xmax << "," << ymax << "," << zmax << ");" << std::endl;
 }
 
 void icy::Mesh::IdentifySurfaceElements()
@@ -157,26 +162,8 @@ void icy::Mesh::CreateUGrid()
 
 void icy::Mesh::UpdateUGrid()
 {
-//    points->Reset();
     for(auto const &nd : nodes) {
         points->SetPoint(nd.id,nd.cx,nd.cy,nd.cz);
-//        points->InsertPoint(nd.id,nd.cx,nd.cy,nd.cz);
     }
     points->Modified();
-//    ugrid->Modified();
-/*    ugrid->Reset();
-    ugrid->SetPoints(points);
-        vtkIdType pts2[4];
-    for(auto const &elem : elems)
-    {
-        pts2[0] = elem.vrts[0]->id;
-        pts2[1] = elem.vrts[1]->id;
-        pts2[2] = elem.vrts[2]->id;
-        pts2[3] = elem.vrts[3]->id;
-        ugrid->InsertNextCell(VTK_TETRA, 4,pts2);
-    }
-*/
-//    dataSetMapper->SetInputData(ugrid);
-//    ugridActor->SetMapper(dataSetMapper);
-//    std::cout << "updating nodes" << std::endl;
 }

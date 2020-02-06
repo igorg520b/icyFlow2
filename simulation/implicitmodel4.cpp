@@ -40,6 +40,7 @@ void icy::ImplicitModel4::_prepare()
             }
         }
     }
+    std::cout << "static csrd size " << linearSystem.csrd.staticCount() << std::endl;
     isReady = true;
 }
 
@@ -54,6 +55,24 @@ void icy::ImplicitModel4::_beginStep()
     for(auto &nd : mc.indenter->nodes) {
         nd.unz = nd.uz = - tcf0.SimulationTime*prms.IndentationVelocity;
         nd.cz = nd.tz = nd.z0 + nd.uz;
+    }
+
+    // initial displacement guess for active nodes
+
+    double h = tcf0.TimeStep;
+    double hsq2 = h * h / 2;
+    for(auto &nd : mc.activeNodes) {
+        nd->dux = nd->vx*h;
+        nd->duy = nd->vy*h;
+        nd->duz = nd->vz*h;
+    }
+
+    // for testing
+    for(auto &nd : mc.beam->nodes) {
+        if(nd.anchored) {
+            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
+            nd.cz = nd.tz = nd.z0 + nd.uz;
+        }
     }
 }
 
@@ -90,13 +109,23 @@ bool icy::ImplicitModel4::_checkDivergence()
     return false;
 }
 
-void icy::ImplicitModel4::_XtoDU(){}
+void icy::ImplicitModel4::_XtoDU()
+{
+    for(auto &nd : mc.activeNodes) {
+        int idx = nd->altId;
+        nd->dux += linearSystem.dx[nd->altId*3+0];
+        nd->duy += linearSystem.dx[nd->altId*3+1];
+        nd->duz += linearSystem.dx[nd->altId*3+2];
+    }
+}
 
 void icy::ImplicitModel4::_adjustTimeStep(){}
 
 void icy::ImplicitModel4::_acceptFrame()
 {
     cf.CopyFrom(tcf0);
+    for(auto &nd : mc.allNodes)
+        nd->AcceptTentativeValues(tcf0.TimeStep);
 }
 
 void icy::ImplicitModel4::_assemble()
@@ -108,14 +137,13 @@ void icy::ImplicitModel4::_assemble()
     for(auto &nd : mc.allNodes) nd->fx = nd->fz = nd->fy = 0;
 
     // assemble elements
-    if(tcf0.TimeStep == 0)
-        throw std::runtime_error("time step is zero");
+    if(tcf0.TimeStep == 0) throw std::runtime_error("time step is zero");
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
     // assemble cohesive zones
 
     // assemble collisions
-    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
+//    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
 
@@ -127,7 +155,7 @@ void icy::ImplicitModel4::_transferUpdatedState()
 
 bool icy::ImplicitModel4::Step()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // for testing
+//    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // for testing
 
     if(!isReady) _prepare();
 
@@ -149,7 +177,7 @@ bool icy::ImplicitModel4::Step()
             _XtoDU();
             tcf0.IterationsPerformed++;
         }
-    } while(false);
+    } while(tcf0.IterationsPerformed<5);
 
     cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
     _adjustTimeStep();

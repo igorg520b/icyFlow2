@@ -63,7 +63,7 @@ void icy::MeshCollection::Prepare()
         }
         mesh->ConnectFaces();
     }
-
+    std::cout << "active nodes: " << activeNodes.size() << std::endl;
 
     // populate elasticElements
     elasticElements.clear();
@@ -71,14 +71,6 @@ void icy::MeshCollection::Prepare()
 
     // populate nonFailedCZs, allCZs, failedCZs;
 
-    // surface elements
-    /*
-            // this is done after surface elements are marked
-            List<Element> surfaceElementList = new List<Element>(mgs.Sum(mg => mg.surfaceElements.Count));
-            foreach (Mesh mg in mgs) surfaceElementList.AddRange(mg.surfaceElements);
-            surfaceElements = surfaceElementList.ToArray();
-            for (int i = 0; i < surfaceElements.Length; i++) surfaceElements[i].globalElementId = i;
-*/
 }
 
 

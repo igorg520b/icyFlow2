@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 icy::LinearSystem::LinearSystem()
 {
@@ -37,21 +38,63 @@ void icy::LinearSystem::CreateStructure()
 void icy::LinearSystem::Solve()
 {
     const int mklMatrixType = -2; // -2 for symmetric indefinite
-    const int check = 0;
-    const int verbosity = 0;
+    const int check = 1;
+    const int verbosity = 1;
     const int dim = 3;
     const int param4 = 0;
+//    std::cout << "solving with N=" << csrd.N << std::endl;
 
+    std::cout << "norm of rhs " << NormOfRHS() << std::endl;
+    std::cout << "norm of lhs " << NormOfLHS() << std::endl;
+
+    printout();
     int mklResult = SolveDouble3(csrd.csr_cols, csrd.csr_rows,
                                  vals, csrd.N, rhs, dx,
                                  mklMatrixType, param4, dim, verbosity, check);
-    if(mklResult != 0) throw std::runtime_error("MKL solver error");
+    std::cout << "norm of dx " << NormOfDx() << std::endl;
+
+    if(mklResult != 0)
+        throw std::runtime_error("MKL solver error");
+
+}
+
+void icy::LinearSystem::testSolve()
+{
+    const int mklMatrixType = -2; // -2 for symmetric indefinite
+    const int check = 1;
+    const int verbosity = 1;
+    const int dim = 3;
+    const int param4 = 0;
+//    std::cout << "solving with N=" << csrd.N << std::endl;
+
+    double dx_test[12] = {};
+    int mklResult = SolveDouble3(test_cols, test_rows,
+                                 test_lhs, 4, test_rhs, dx,
+                                 mklMatrixType, param4, dim, verbosity, check);
+
+    if(mklResult != 0)
+        throw std::runtime_error("MKL solver error");
+
 }
 
 double icy::LinearSystem::NormOfDx()
 {
     double result = 0;
     for (int i = 0; i < dxSize(); i++) result += dx[i] * dx[i];
+    return result;
+}
+
+double icy::LinearSystem::NormOfRHS()
+{
+    double result = 0;
+    for (int i = 0; i < dxSize(); i++) result += rhs[i] * rhs[i];
+    return result;
+}
+
+double icy::LinearSystem::NormOfLHS()
+{
+    double result = 0;
+    for (int i = 0; i < dvalsSize(); i++) result += vals[i] * vals[i];
     return result;
 }
 
@@ -77,6 +120,10 @@ void icy::LinearSystem::AddToLHS_Symmetric(int row, int column,
         double a20, double a21, double a22)
 {
     if (row > column || row < 0 || column < 0) return;
+
+    if(row >= csrd.N ) throw std::runtime_error("LHS: row out of range");
+    if(column >= csrd.N ) throw std::runtime_error("LHS: row out of range");
+
 /*
     if(std::isnan(a00) ||
             std::isnan(a01) ||
@@ -126,7 +173,7 @@ int icy::LinearSystem::SolveDouble3(int *ja, int *ia, double *a,
 
     MKL_INT mtype = _mtype;       // Real symmetric matrix: -2;  real unsymmetric: 11
     MKL_INT nrhs = 1;     // Number of right hand sides.
-    void *pt[64];
+    void *pt[64] = {};
     MKL_INT iparm[64] = {};
     MKL_INT maxfct, mnum, phase, error, msglvl;
     MKL_INT i;
@@ -162,11 +209,32 @@ int icy::LinearSystem::SolveDouble3(int *ja, int *ia, double *a,
     phase = 13;
     PARDISO(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, b, x, &error);
 
-    // clean up (?)
-    /*
-    phase = -1;
+    if(error != 0)
+        throw std::runtime_error("MKL solver error");
+
+    phase = -1; //clean up
     double ddum;
     PARDISO(pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
-*/
+    if(error != 0)
+        throw std::runtime_error("MKL solver error");
     return error;
+}
+
+void icy::LinearSystem::printout() {
+    std::cout << "N " << csrd.N << "; nnz " << csrd.nnz << std::endl;
+    std::cout << "rows: ";
+    for(int i=0;i<csrd.N+1;i++) std::cout << csrd.csr_rows[i] << ", ";
+    std::cout << std::endl;
+    std::cout << "cols: ";
+    for(int i=0;i<csrd.nnz;i++) std::cout << csrd.csr_cols[i] << ", ";
+    std::cout << std::endl;
+
+    std::cout << "RHS: ";
+    for(int i=0;i<csrd.N*3;i++) std::cout << rhs[i] << ", ";
+    std::cout << std::endl;
+
+    std::cout << "LHS: ";
+    for(int i=0;i<csrd.nnz*9;i++) std::cout << vals[i] << ", ";
+    std::cout << std::endl;
+
 }

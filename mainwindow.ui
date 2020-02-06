@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -36,6 +36,7 @@
      <string>Simulation</string>
     </property>
     <addaction name="actionPause_Resume"/>
+    <addaction name="actionStep"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTest"/>
@@ -62,6 +63,14 @@
    </property>
    <property name="shortcut">
     <string>F3</string>
+   </property>
+  </action>
+  <action name="actionStep">
+   <property name="text">
+    <string>Step</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
    </property>
   </action>
  </widget>

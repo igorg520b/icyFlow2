@@ -63,6 +63,8 @@ private slots:
 
     void on_actionPause_Resume_triggered();
 
+    void on_actionStep_triggered();
+
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;

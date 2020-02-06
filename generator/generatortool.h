@@ -22,6 +22,7 @@ private:
     GeneratorTool() {}
     static void GenerateIndenter(BeamParams *beamParams, Mesh *output);
     static void GenerateBeam(BeamParams *beamParams, Mesh *output);
+    static void GenerateTest(BeamParams *beamParams, Mesh *output);
 
 };
 

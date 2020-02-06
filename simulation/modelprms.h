@@ -57,8 +57,8 @@ public:
     // material
     double Y = 5e9;
     double rho = 916.2;
-    double dampingMass = 0.0005;
-    double dampingStiffness = 0.0005;
+    double dampingMass = 0;//0.0005;
+    double dampingStiffness = 0;//0.0005;
     double nu = 0.3;
 
     // integration

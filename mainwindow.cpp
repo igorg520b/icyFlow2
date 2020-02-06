@@ -45,8 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     worker = new icy::BackgroundWorker(&model);
     connect(worker, SIGNAL(stepCompleted(bool)), this, SLOT(updateGUI(bool)));
-            //    connect(&thread, SIGNAL(renderedImage(QImage,double)), this, SLOT(updatePixmap(QImage,double)));
-
 }
 
 MainWindow::~MainWindow()
@@ -61,6 +59,7 @@ void MainWindow::showEvent( QShowEvent*)
     // for testing
     ui->actionGenerator_Tool->trigger();
 //    ui->actionSteps100->trigger();
+    model.linearSystem.testSolve();
 }
 
 void MainWindow::updateGUI(bool aborted)
@@ -100,7 +99,8 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     icy::GeneratorTool::GenerateLBeamSetup(&beamParams, &model.mc);
     renderer->RemoveAllViewProps();
     renderer->AddActor(model.mc.mgs[0]->ugridActor);
-    renderer->AddActor(model.mc.mgs[1]->ugridActor);
+
+    //    renderer->AddActor(model.mc.mgs[1]->ugridActor);
 
     renderer->ResetCamera();
     renderWindow->Render();
@@ -111,4 +111,10 @@ void MainWindow::on_actionPause_Resume_triggered()
     worker->toggle();
     if(worker->timeToPause)statusPausedOrRunning->setText("stopping");
     else statusPausedOrRunning->setText("resuming");
+}
+
+void MainWindow::on_actionStep_triggered()
+{
+    model.Step();
+    updateGUI(false);
 }
