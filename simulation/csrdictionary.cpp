@@ -60,7 +60,7 @@ void icy::CSRDictionary::CreateStructure()
     rows_pcsr.resize(N);
 
     // unite and sort neighbors
-#pragma omp parallel for
+#//pragma omp parallel for
     for(int i=0;i<N;i++)
     {
         rows_pcsr[i].clear();
@@ -76,6 +76,8 @@ void icy::CSRDictionary::CreateStructure()
         std::set_union(staticNeighbors.begin(),staticNeighbors.end(),
                        dynamicNeighbors.begin(),dynamicNeighbors.end(),
                        std::back_inserter(sortedAllNeighbors));
+        if(rows_sortedAllNeighbors[i].size()==0)
+            std::cout << "no entries in row " << i << std::endl;
 
 //        if(dynamicNeighbors.size() != 0) std::cout << "; union " << sortedAllNeighbors.size() << std::endl;
     }
@@ -105,6 +107,8 @@ void icy::CSRDictionary::CreateStructure()
     for(int i=0,count=0;i<N;i++)
     {
         csr_rows[i] = count;
+        if(rows_sortedAllNeighbors[i].size() == 0)
+            throw std::runtime_error("rows_sortedAllNeighbors[i].size() == 0");
         for(int const &local_column : rows_sortedAllNeighbors[i])
         {
             rows_pcsr[i][local_column] = count;
