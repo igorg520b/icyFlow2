@@ -11,6 +11,7 @@
 #include <vtkActor.h>
 #include <vtkProperty.h>
 #include <vtkNamedColors.h>
+#include <vtkDoubleArray.h>
 #include "node.h"
 #include "element.h"
 #include "cz.h"
@@ -49,6 +50,7 @@ public:
     vtkNew<vtkActor> ugridActor;
     vtkNew<vtkPoints> points;
     vtkNew<vtkNamedColors> colors;
+    vtkNew<vtkDoubleArray> principalStresses;
 
     Mesh();
     ~Mesh();

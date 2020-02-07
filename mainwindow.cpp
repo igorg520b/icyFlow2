@@ -74,16 +74,13 @@ void MainWindow::updateGUI(bool aborted)
 
 void MainWindow::on_actionWrite_VTU_triggered()
 {
-    throw std::runtime_error("NI");
     writer->SetFileName("beam.vtu");
-//    writer->SetInputData(ugrid);
+    writer->SetInputData(model.mc.beam->ugrid);
     writer->Write();
 }
 
 void MainWindow::on_actionScreenshot_triggered()
 {
-    throw std::runtime_error("NI");
-
     windowToImageFilter->SetInput(renderWindow);
     windowToImageFilter->SetScale(3);
     writerPNG->SetFileName("screenshot2.png");

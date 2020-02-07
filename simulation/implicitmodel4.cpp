@@ -200,7 +200,10 @@ void icy::ImplicitModel4::_assemble()
 
 void icy::ImplicitModel4::_transferUpdatedState()
 {
+    for(int i=0;i<mc.beam->elems.size();i++) {
+        // update principal stresses
 
+    }
 }
 
 

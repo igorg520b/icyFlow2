@@ -1,6 +1,7 @@
 #include<algorithm>
 #include "meshcollection.h"
 
+
 icy::MeshCollection::MeshCollection()
 {
 
@@ -70,6 +71,12 @@ void icy::MeshCollection::Prepare()
     for(auto &elem : beam->elems) elasticElements.push_back(&elem);
 
     // populate nonFailedCZs, allCZs, failedCZs;
+
+    // beam data
+    beam->principalStresses->Reset();
+    beam->principalStresses->Resize(beam->elems.size());
+
+    beam->ugrid->GetCellData()->SetScalars(beam->principalStresses);
 
 }
 

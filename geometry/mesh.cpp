@@ -3,7 +3,8 @@
 
 icy::Mesh::Mesh()
 {
-
+    principalStresses->SetName("principal_stresses");
+    principalStresses->SetNumberOfComponents(1);
 }
 
 icy::Mesh::~Mesh()
