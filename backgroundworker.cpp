@@ -10,6 +10,7 @@ icy::BackgroundWorker::~BackgroundWorker()
 {
 //    terminate();
     kill = true;
+    model->kill = true;
     condition.wakeOne();
     wait();
 }

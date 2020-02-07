@@ -22,6 +22,7 @@ public:
     LinearSystem linearSystem;
 
     bool isReady = false;
+    bool kill = false;
 
     ImplicitModel4();
     void Clear();

@@ -38,6 +38,7 @@ public:
     int AttemptsTaken;
     double RelativeError;
     double Error0;
+    bool ConvergenceReached;
 
     void Reset() {
         ActiveNodes = nCZ_Initial = nCZFailed = nCZDamaged = nCollisions = 0;
@@ -46,6 +47,7 @@ public:
         StepNumber = -1;
         TimeScaleFactor = 1;
         TimeScaleFactorThisStep = 1;
+        ConvergenceReached = false;
     }
 
     int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }

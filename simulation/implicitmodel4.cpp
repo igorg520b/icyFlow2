@@ -50,6 +50,8 @@ void icy::ImplicitModel4::_beginStep()
     tcf0.CopyFrom(cf); // copy current frame data
     tcf0.IncrementTime(prms.InitialTimeStep);
     tcf0.ActiveNodes = (int)mc.activeNodes.size();
+    tcf0.ConvergenceReached = false;
+    tcf0.IterationsPerformed = 0;
 
     // position the indenter
     for(auto &nd : mc.indenter->nodes) {
@@ -68,12 +70,12 @@ void icy::ImplicitModel4::_beginStep()
     }
 
     // for testing
-    for(auto &nd : mc.beam->nodes) {
-        if(nd.anchored) {
-            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
-            nd.cz = nd.tz = nd.z0 + nd.uz;
-        }
-    }
+//    for(auto &nd : mc.beam->nodes) {
+//        if(nd.anchored) {
+//            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
+//            nd.cz = nd.tz = nd.z0 + nd.uz;
+ //       }
+ //   }
 }
 
 
@@ -106,20 +108,72 @@ bool icy::ImplicitModel4::_checkDamage()
 
 bool icy::ImplicitModel4::_checkDivergence()
 {
-    return false;
+    bool divergence;
+    double cutoff = prms.ConvergenceCutoff; // somewhat arbitrary constant
+    double norm = linearSystem.NormOfDx();
+    if (tcf0.IterationsPerformed == 0)
+    {
+        tcf0.Error0 = norm;
+        if (tcf0.Error0 == 0) tcf0.Error0 = prms.ConvergenceEpsilon;
+        tcf0.ConvergenceReached = false;
+        divergence = false;
+    }
+    else if (norm < cutoff)
+    {
+        tcf0.ConvergenceReached = true;
+        tcf0.RelativeError = -1;
+        divergence = false;
+    }
+    else
+    {
+        if(tcf0.Error0 == 0) throw std::runtime_error("tcf0.Error0 == 0");
+        tcf0.RelativeError = sqrt(norm / tcf0.Error0);
+        if (tcf0.RelativeError <= prms.ConvergenceEpsilon) tcf0.ConvergenceReached = true;
+        divergence = (tcf0.RelativeError > 1.01); // return true diverges
+    }
+    return divergence;
 }
 
 void icy::ImplicitModel4::_XtoDU()
 {
     for(auto &nd : mc.activeNodes) {
-        int idx = nd->altId;
-        nd->dux += linearSystem.dx[nd->altId*3+0];
-        nd->duy += linearSystem.dx[nd->altId*3+1];
-        nd->duz += linearSystem.dx[nd->altId*3+2];
+        int idx3 = nd->altId*3;
+        nd->dux += linearSystem.dx[idx3+0];
+        nd->duy += linearSystem.dx[idx3+1];
+        nd->duz += linearSystem.dx[idx3+2];
     }
 }
 
-void icy::ImplicitModel4::_adjustTimeStep(){}
+void icy::ImplicitModel4::_adjustTimeStep()
+{
+    const int holdFactorDelay = 4;
+    cf.AttemptsTaken++;
+    if (explodes)
+    {
+        cf.TimeScaleFactor *= 2;
+        if (cf.TimeScaleFactor > cf.Parts) cf.TimeScaleFactor = cf.Parts;
+        std::cout << "explodes, new sf: " << cf.TimeScaleFactor << std::endl;
+        cf.StepsWithCurrentFactor = holdFactorDelay;
+    }
+    else if ((diverges || !tcf0.ConvergenceReached) && tcf0.TimeScaleFactor < cf.Parts && prms.maxIterations > 1)
+    {
+        // does not converge
+        cf.TimeScaleFactor *= 2;
+        cf.StepsWithCurrentFactor = holdFactorDelay;
+        std::cout << "double ts: diverges " << diverges << "; convergenceReached " << tcf0.ConvergenceReached << "; factor " << cf.TimeScaleFactor << std::endl;
+    }
+    else if (tcf0.ConvergenceReached && cf.TimeScaleFactor > 1)
+    {
+        // converges
+        if (tcf0.StepsWithCurrentFactor > 0) tcf0.StepsWithCurrentFactor--;
+        else
+        {
+            tcf0.TimeScaleFactor /= 2;
+            if (tcf0.TimeScaleFactor < 1) tcf0.TimeScaleFactor = 1;
+            tcf0.StepsWithCurrentFactor = 2;
+        }
+    }
+}
 
 void icy::ImplicitModel4::_acceptFrame()
 {
@@ -131,9 +185,6 @@ void icy::ImplicitModel4::_acceptFrame()
 void icy::ImplicitModel4::_assemble()
 {
     linearSystem.CreateStructure();
-    //        std::cout << "static " << linearSystem.csrd.staticCount();
-    //        std::cout << "; dynamic " << linearSystem.csrd.dynamicCount() << std::endl;
-    //        std::cout << "structure; N " << linearSystem.csrd.N << "; nnz " << linearSystem.csrd.nnz << std::endl;
     for(auto &nd : mc.allNodes) nd->fx = nd->fz = nd->fy = 0;
 
     // assemble elements
@@ -143,7 +194,7 @@ void icy::ImplicitModel4::_assemble()
     // assemble cohesive zones
 
     // assemble collisions
-//    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
+    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
 
@@ -155,12 +206,14 @@ void icy::ImplicitModel4::_transferUpdatedState()
 
 bool icy::ImplicitModel4::Step()
 {
+    kill = false;
+
 //    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // for testing
 
     if(!isReady) _prepare();
+    _beginStep();
 
     do {
-        _beginStep();
 
         for(auto &nd : mc.activeNodes) nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
 
@@ -171,20 +224,30 @@ bool icy::ImplicitModel4::Step()
 
         _assemble(); // prepare and compute forces
         explodes = _checkDamage();
-        if(!explodes) {
-            linearSystem.Solve();
-            diverges = _checkDivergence();
-            _XtoDU();
-            tcf0.IterationsPerformed++;
-        }
-    } while(tcf0.IterationsPerformed<5);
+        if(kill) { std::cout << "killing "; return true; }
+        linearSystem.Solve();
+        if(kill) { std::cout << "killing "; return true; }
+        diverges = _checkDivergence();
+        _XtoDU();
+        tcf0.IterationsPerformed++;
+        std::cout << "iteration " << tcf0.IterationsPerformed;
+        std::cout << "; convergence " << tcf0.ConvergenceReached << std:: endl;
+    } while(tcf0.IterationsPerformed < prms.minIterations ||
+      (!explodes && !diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
 
+    if(kill) { std::cout << "killing "; return true; }
     cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
     _adjustTimeStep();
-    _transferUpdatedState();
-    _acceptFrame();
+
+    if (prms.maxIterations == 1 ||
+        tcf0.TimeScaleFactor == tcf0.Parts ||
+        (!tcf0.ConvergenceReached && tcf0.TimeScaleFactor >= tcf0.Parts) ||
+        (!explodes && !diverges && tcf0.ConvergenceReached))
+    {
+        _transferUpdatedState();
+        _acceptFrame();
+    }
 
 
     return false; // step not aborted
-
 }

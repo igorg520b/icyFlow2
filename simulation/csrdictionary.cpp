@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -60,7 +61,7 @@ void icy::CSRDictionary::CreateStructure()
     rows_pcsr.resize(N);
 
     // unite and sort neighbors
-#//pragma omp parallel for
+#pragma omp parallel for
     for(int i=0;i<N;i++)
     {
         rows_pcsr[i].clear();

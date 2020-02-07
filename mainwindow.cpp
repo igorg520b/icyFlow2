@@ -57,9 +57,7 @@ MainWindow::~MainWindow()
 void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
-//    ui->actionGenerator_Tool->trigger();
-
-//    model.linearSystem.testSolve();
+    ui->actionGenerator_Tool->trigger();
 }
 
 void MainWindow::updateGUI(bool aborted)
@@ -99,8 +97,7 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     icy::GeneratorTool::GenerateLBeamSetup(&beamParams, &model.mc);
     renderer->RemoveAllViewProps();
     renderer->AddActor(model.mc.mgs[0]->ugridActor);
-
-    //    renderer->AddActor(model.mc.mgs[1]->ugridActor);
+    renderer->AddActor(model.mc.mgs[1]->ugridActor);
 
     renderer->ResetCamera();
     renderWindow->Render();

@@ -39,19 +39,19 @@ void icy::LinearSystem::Solve()
 {
     const int mklMatrixType = -2; // -2 for symmetric indefinite
     const int check = 1;
-    const int verbosity = 1;
+    const int verbosity = 0;
     const int dim = 3;
     const int param4 = 0;
 //    std::cout << "solving with N=" << csrd.N << std::endl;
 
-    std::cout << "norm of rhs " << NormOfRHS() << std::endl;
-    std::cout << "norm of lhs " << NormOfLHS() << std::endl;
+//    std::cout << "norm of rhs " << NormOfRHS() << std::endl;
+//    std::cout << "norm of lhs " << NormOfLHS() << std::endl;
 
-    printout();
+//    printout();
     int mklResult = SolveDouble3(csrd.csr_cols, csrd.csr_rows,
                                  vals, csrd.N, rhs, dx,
                                  mklMatrixType, param4, dim, verbosity, check);
-    std::cout << "norm of dx " << NormOfDx() << std::endl;
+//    std::cout << "norm of dx " << NormOfDx() << std::endl;
 
     if(mklResult != 0)
         throw std::runtime_error("MKL solver error");

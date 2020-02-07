@@ -8,8 +8,8 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
     // generate beam
     Mesh *beam = new Mesh();
-//    GeneratorTool::GenerateBeam(beamParams, beam);
-    GeneratorTool::GenerateTest(beamParams, beam);
+    GeneratorTool::GenerateBeam(beamParams, beam);
+//    GeneratorTool::GenerateTest(beamParams, beam);
     beam->setObjectName("beam");
 
     // generate indenter
@@ -25,8 +25,8 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     for(auto &nd : indenter->nodes) nd.anchored = true;
 
     // align the indenter
-//    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
-    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 0.05);
+    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
+//    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 0.05);
     beam->CreateUGrid();
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
