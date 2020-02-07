@@ -57,9 +57,9 @@ MainWindow::~MainWindow()
 void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
-    ui->actionGenerator_Tool->trigger();
-//    ui->actionSteps100->trigger();
-    model.linearSystem.testSolve();
+//    ui->actionGenerator_Tool->trigger();
+
+//    model.linearSystem.testSolve();
 }
 
 void MainWindow::updateGUI(bool aborted)
