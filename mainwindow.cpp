@@ -22,19 +22,19 @@ MainWindow::MainWindow(QWidget *parent)
     renderWindow->SetAlphaBitPlanes(1); //?
 
     qtw->SetRenderWindow(renderWindow);
-    vtkNew<vtkSphereSource> sphereSource;
-    vtkNew<vtkPolyDataMapper> sphereMapper;
-    sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
-    vtkNew<vtkActor> sphereActor;
-    sphereActor->SetMapper(sphereMapper);
-    sphereActor->GetProperty()->SetColor(colors->GetColor4d("Yellow").GetData());
-    sphereActor->GetProperty()->EdgeVisibilityOn();
+//    vtkNew<vtkSphereSource> sphereSource;
+//    vtkNew<vtkPolyDataMapper> sphereMapper;
+//    sphereMapper->SetInputConnection(sphereSource->GetOutputPort());
+//    vtkNew<vtkActor> sphereActor;
+//    sphereActor->SetMapper(sphereMapper);
+//    sphereActor->GetProperty()->SetColor(colors->GetColor4d("Yellow").GetData());
+//    sphereActor->GetProperty()->EdgeVisibilityOn();
 
-    renderer->AddActor(sphereActor);
+//    renderer->AddActor(sphereActor);
     renderer->SetBackground(colors->GetColor3d("LightGrey").GetData());
 
     qtw->GetRenderWindow()->AddRenderer(renderer);
-    qtw->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
+//    qtw->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
 
     pb = new ObjectPropertyBrowser(nullptr);
     pb->setActiveObject(&beamParams);

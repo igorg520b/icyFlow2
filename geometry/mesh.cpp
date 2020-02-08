@@ -3,8 +3,7 @@
 
 icy::Mesh::Mesh()
 {
-    principalStresses->SetName("principal_stresses");
-    principalStresses->SetNumberOfComponents(1);
+
 }
 
 icy::Mesh::~Mesh()
@@ -167,4 +166,16 @@ void icy::Mesh::UpdateUGrid()
         points->SetPoint(nd.id,nd.cx,nd.cy,nd.cz);
     }
     points->Modified();
+}
+
+void icy::Mesh::UpdateGridData()
+{
+    // transfer computed variables onto the grid for vtk display and analysis in paraview
+    for(int i=0;i<(int)nodes.size();i++) verticalDisplacements_nodes->SetValue(i, nodes[i].uz);
+
+    for(int i=0;i<(int)elems.size();i++) {
+        Element *elem = &elems[i];
+        principalStresses_cells->SetTuple3(i, elem->principal_stresses[0], elem->principal_stresses[1], elem->principal_stresses[2]);
+    }
+
 }

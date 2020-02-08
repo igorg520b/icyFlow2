@@ -8,6 +8,10 @@
 #include "linearsystem.h"
 #include "bvh/bvht.h"
 
+#include <vtkCellData.h>
+#include <vtkPointData.h>
+#include <vtkDoubleArray.h>
+
 namespace icy {
 class ImplicitModel4;
 }

@@ -180,6 +180,7 @@ void icy::ImplicitModel4::_acceptFrame()
     cf.CopyFrom(tcf0);
     for(auto &nd : mc.allNodes)
         nd->AcceptTentativeValues(tcf0.TimeStep);
+
 }
 
 void icy::ImplicitModel4::_assemble()

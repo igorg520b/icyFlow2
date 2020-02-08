@@ -1,5 +1,7 @@
 #include<algorithm>
 #include "meshcollection.h"
+#include <vtkCellData.h>
+#include <vtkPointData.h>
 
 
 icy::MeshCollection::MeshCollection()
@@ -73,10 +75,19 @@ void icy::MeshCollection::Prepare()
     // populate nonFailedCZs, allCZs, failedCZs;
 
     // beam data
-    beam->principalStresses->Reset();
-    beam->principalStresses->Resize(beam->elems.size());
+    beam->principalStresses_cells->Reset();
+    beam->principalStresses_cells->SetName("principal_stresses");
+    beam->principalStresses_cells->SetNumberOfComponents(3);
+//    beam->principalStresses_cells->Resize(beam->elems.size());
+    beam->principalStresses_cells->SetNumberOfTuples(beam->elems.size());
+    beam->ugrid->GetCellData()->SetScalars(beam->principalStresses_cells);
 
-    beam->ugrid->GetCellData()->SetScalars(beam->principalStresses);
+    beam->verticalDisplacements_nodes->Reset();
+    beam->verticalDisplacements_nodes->SetName("vertical_displacements");
+    beam->verticalDisplacements_nodes->SetNumberOfComponents(1);
+    beam->verticalDisplacements_nodes->Resize(beam->nodes.size());
+    beam->verticalDisplacements_nodes->SetNumberOfValues(beam->nodes.size());
+    beam->ugrid->GetPointData()->SetScalars(beam->verticalDisplacements_nodes);
 
 }
 
@@ -84,4 +95,5 @@ void icy::MeshCollection::Prepare()
 void icy::MeshCollection::UpdateActors()
 {
     for(auto &mesh : mgs) mesh->UpdateUGrid();
+    beam->UpdateGridData();
 }

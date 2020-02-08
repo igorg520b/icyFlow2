@@ -8,7 +8,6 @@
 #include "cz.h"
 #include "face.h"
 #include "simulation/bvh/bvht.h"
-#include <vtkCellData.h>
 
 namespace icy {
 class MeshCollection;

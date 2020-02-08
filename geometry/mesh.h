@@ -50,7 +50,8 @@ public:
     vtkNew<vtkActor> ugridActor;
     vtkNew<vtkPoints> points;
     vtkNew<vtkNamedColors> colors;
-    vtkNew<vtkDoubleArray> principalStresses;
+    vtkNew<vtkDoubleArray> principalStresses_cells;
+    vtkNew<vtkDoubleArray> verticalDisplacements_nodes;
 
     Mesh();
     ~Mesh();
@@ -63,6 +64,7 @@ public:
 
     void CreateUGrid();
     void UpdateUGrid();
+    void UpdateGridData();
 
 private:
     int getNumberOfNodes() {return (int)nodes.size();}
