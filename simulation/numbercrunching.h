@@ -33,6 +33,8 @@ public:
     // linear tetrahedron
     static void AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h);
 
+    // cohesive zones
+
 private:
 
     // narrow phase
@@ -125,6 +127,60 @@ private:
             const double (&E)[6][6], const double rho,
     const double dampingMass, const double dampingStiffness, const double h,
     const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12]);
+
+
+    // cohesive zones
+    inline static double Tn_(
+            const double Dn, const double Dt,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t,
+            const double pMtn);
+
+    inline static double Tt_(
+            const double Dn, const double Dt,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t,
+            const double pMnt);
+
+    inline static double Dnn_(
+            double opn, double opt,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t,
+            const double pMtn);
+
+    inline static double Dtt_(
+            double opn, double opt,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t,
+            const double pMnt);
+
+    inline static double Dnt_(
+            double opn, double opt,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t);
+
+    inline static void cohesive_law(
+            bool &cz_contact, bool &cz_failed,
+            double &pmax, double &tmax, const double opn, const double opt,
+            double &Tn, double &Tt, double &Dnn,
+            double &Dtt, double &Dnt, double &Dtn,
+            const double deln, const double delt,
+            const double p_m, const double p_n,
+            const double alpha, const double beta,
+            const double gam_n, const double gam_t,
+            const double f_tt, const double f_tn,
+            const double pMtn, const double pMnt);
+
 };
 
 

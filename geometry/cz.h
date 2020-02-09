@@ -19,8 +19,16 @@ public:
     double pmax[3]={};
     double tmax[3]={};
     bool failed = false;
-//    double avgDn, avgDt, avgTn, avgTt; // average traction-separations for subsequent analysis
-//    double maxAvgDn, maxAvgDt;
+    double avgDn, avgDt, avgTn, avgTt; // average traction-separations for subsequent analysis
+    double maxAvgDn, maxAvgDt;
+
+    // these need to be reset before assembly (tentative values)
+    bool _contact, _failed, _damaged;
+    double _avgDn, _avgDt, _avgTn, _avgTt;
+    double _pmax, _tmax;
+    double pmax_[3], tmax_[3];
+    double rhs[18];
+    double lhs[18][18];
 
     CZ();
 };
