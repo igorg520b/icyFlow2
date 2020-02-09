@@ -127,7 +127,6 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     simulation/bvh/kdop24.h
     simulation/point_triangle_distance.cpp
     simulation/GteSymmetricEigensolver3x3.h
-    simulation/pardiso_wrapper.cpp
     simulation/numbercrunching.cpp
     simulation/numbercrunching.h
     SimpleObjectPool.h
