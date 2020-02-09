@@ -15,6 +15,7 @@ using namespace gte;
 namespace icy {
 class NumberCrunching;
 class CPResult;
+class ModelPrms;
 }
 
 class icy::NumberCrunching
@@ -25,6 +26,7 @@ public:
     static const double EPS;
     static std::vector<CPResult> cprList;
 
+
     static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc);
 
     // collision response (collision data stored in cprList)
@@ -34,6 +36,7 @@ public:
     static void AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h);
 
     // cohesive zones
+    static void AssembleCZs(LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms, double h);
 
 private:
 
@@ -130,56 +133,25 @@ private:
 
 
     // cohesive zones
-    inline static double Tn_(
-            const double Dn, const double Dt,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t,
-            const double pMtn);
+    // these are copied from ModelPrms
+    static double deln, delt, p_m, p_n, alpha, beta, gam_n, gam_t, tau_max, sigma_max, pMtn, pMnt, lambda_n, lambda_t;
+    static double B[3][3][18];
 
-    inline static double Tt_(
-            const double Dn, const double Dt,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t,
-            const double pMnt);
 
-    inline static double Dnn_(
-            double opn, double opt,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t,
-            const double pMtn);
-
-    inline static double Dtt_(
-            double opn, double opt,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t,
-            const double pMnt);
-
-    inline static double Dnt_(
-            double opn, double opt,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t);
+    inline static double Tn_(const double Dn, const double Dt);
+    inline static double Tt_(const double Dn, const double Dt);
+    inline static double Dnn_(const double opn, const double opt);
+    inline static double Dtt_(const double opn, const double opt);
+    inline static double Dnt_(const double opn, const double opt);
 
     inline static void cohesive_law(
+            const double opn, const double opt,
             bool &cz_contact, bool &cz_failed,
-            double &pmax, double &tmax, const double opn, const double opt,
+            double &pmax, double &tmax,
             double &Tn, double &Tt, double &Dnn,
-            double &Dtt, double &Dnt, double &Dtn,
-            const double deln, const double delt,
-            const double p_m, const double p_n,
-            const double alpha, const double beta,
-            const double gam_n, const double gam_t,
-            const double f_tt, const double f_tn,
-            const double pMtn, const double pMnt);
+            double &Dtt, double &Dnt, double &Dtn);
+
+    static void CZForce(CZ *cz, double h);
 
 };
 

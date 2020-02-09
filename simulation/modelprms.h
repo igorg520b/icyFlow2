@@ -3,8 +3,12 @@
 
 #include <QObject>
 #include <cmath>
+#include "numbercrunching.h"
 
-namespace icy { class ModelPrms; }
+namespace icy {
+class ModelPrms;
+class NumberCrunching;
+}
 
 class icy::ModelPrms : public QObject
 {
@@ -78,10 +82,10 @@ public:
     int ReconstructBVH = 10;
 
     // cz parameters
-    double _alpha = 4, _beta = 4, _lambda_n = 0.015, _lambda_t = 0.015;
-    double _phi_n = 3, _phi_t = 3; // fracture energy
-    double _sigma_max = 120000, _tau_max = 140000;
-    double _del_n = 0, _del_t = 0;
+    double alpha = 4, beta = 4, lambda_n = 0.015, lambda_t = 0.015;
+    double phi_n = 3, phi_t = 3; // fracture energy
+    double sigma_max = 120000, tau_max = 140000;
+    double del_n = 0, del_t = 0;
 
     // computed variables
     double totalVolume;
@@ -159,53 +163,53 @@ public:
     }
 
 private:
-    void setCZAlpha(double value) { _alpha=value; Recompute(); emit propertyChanged(); }
-    double getCZAlpha() {return _alpha;}
-    void setCZBeta(double value) { _beta=value; Recompute(); emit propertyChanged(); }
-    double getCZBeta() {return _beta;}
-    void set_lambda_n(double value) {_lambda_n = value; Recompute(); emit propertyChanged(); }
-    double get_lambda_n() {return _lambda_n;}
-    void set_lambda_t(double value) {_lambda_t = value; Recompute(); emit propertyChanged(); }
-    double get_lambda_t() {return _lambda_t;}
-    void set_phi_n(double value) {_phi_n = value; Recompute(); emit propertyChanged(); }
-    double get_phi_n() {return _phi_n;}
-    void set_phi_t(double value) {_phi_t = value; Recompute(); emit propertyChanged(); }
-    double get_phi_t() {return _phi_t;}
-    void set_sigma_max(double value) {_sigma_max = value; Recompute(); emit propertyChanged(); }
-    double get_sigma_max() {return _sigma_max;}
-    void set_tau_max(double value) {_tau_max = value; Recompute(); emit propertyChanged(); }
-    double get_tau_max() {return _tau_max;}
-    double get_del_n() {return _del_n;}
-    double get_del_t() {return _del_t;}
+    void setCZAlpha(double value) { alpha=value; Recompute(); emit propertyChanged(); }
+    double getCZAlpha() {return alpha;}
+    void setCZBeta(double value) { beta=value; Recompute(); emit propertyChanged(); }
+    double getCZBeta() {return beta;}
+    void set_lambda_n(double value) {lambda_n = value; Recompute(); emit propertyChanged(); }
+    double get_lambda_n() {return lambda_n;}
+    void set_lambda_t(double value) {lambda_t = value; Recompute(); emit propertyChanged(); }
+    double get_lambda_t() {return lambda_t;}
+    void set_phi_n(double value) {phi_n = value; Recompute(); emit propertyChanged(); }
+    double get_phi_n() {return phi_n;}
+    void set_phi_t(double value) {phi_t = value; Recompute(); emit propertyChanged(); }
+    double get_phi_t() {return phi_t;}
+    void set_sigma_max(double value) {sigma_max = value; Recompute(); emit propertyChanged(); }
+    double get_sigma_max() {return sigma_max;}
+    void set_tau_max(double value) {tau_max = value; Recompute(); emit propertyChanged(); }
+    double get_tau_max() {return tau_max;}
+    double get_del_n() {return del_n;}
+    double get_del_t() {return del_t;}
 
     double Macaulay(double a, double b) { if (a > b) return a - b; else return 0; }
 
     void Recompute()
     {
-        pMnt = Macaulay(_phi_n, _phi_t);
-        pMtn = Macaulay(_phi_t, _phi_n);
+        pMnt = Macaulay(phi_n, phi_t);
+        pMtn = Macaulay(phi_t, phi_n);
 
-        double rn_sq = _lambda_n * _lambda_n;
-        double rt_sq = _lambda_t * _lambda_t;
-        p_m = (_alpha * (_alpha - 1.0) * rn_sq) / (1.0 - _alpha * rn_sq);
-        p_n = (_beta * (_beta - 1.0) * rt_sq) / (1.0 - _beta * rt_sq);
+        double rn_sq = lambda_n * lambda_n;
+        double rt_sq = lambda_t * lambda_t;
+        p_m = (alpha * (alpha - 1.0) * rn_sq) / (1.0 - alpha * rn_sq);
+        p_n = (beta * (beta - 1.0) * rt_sq) / (1.0 - beta * rt_sq);
 
-        if (_phi_n < _phi_t)
+        if (phi_n < phi_t)
         {
-            gam_n = pow(_alpha / p_m, p_m);
-            gam_t = -_phi_t * pow(_beta / p_n, p_n);
+            gam_n = pow(alpha / p_m, p_m);
+            gam_t = -phi_t * pow(beta / p_n, p_n);
         }
         else
         {
-            gam_n = -_phi_n * pow(_alpha / p_m, p_m);
-            gam_t = pow(_beta / p_n, p_n);
+            gam_n = -phi_n * pow(alpha / p_m, p_m);
+            gam_t = pow(beta / p_n, p_n);
         }
 
-        _del_n = (_phi_n / _sigma_max) * _alpha * _lambda_n * pow((1.0 - _lambda_n), (_alpha - 1.0)) * ((_alpha / p_m) + 1.0) * pow(((_alpha / p_m) * _lambda_n + 1.0), (p_m - 1.0));
-        _del_t = (_phi_t / _tau_max) * _beta * _lambda_t * pow((1.0 - _lambda_t), (_beta - 1.0)) * ((_beta / p_n) + 1.0) * pow(((_beta / p_n) * _lambda_t + 1.0), (p_n - 1.0));
+        del_n = (phi_n / sigma_max) * alpha * lambda_n * pow((1.0 - lambda_n), (alpha - 1.0)) * ((alpha / p_m) + 1.0) * pow(((alpha / p_m) * lambda_n + 1.0), (p_m - 1.0));
+        del_t = (phi_t / tau_max) * beta * lambda_t * pow((1.0 - lambda_t), (beta - 1.0)) * ((beta / p_n) + 1.0) * pow(((beta / p_n) * lambda_t + 1.0), (p_n - 1.0));
 
-        nThreshold = _del_n * _lambda_n;
-        tThreshold = _del_t * _lambda_t;
+        nThreshold = del_n * lambda_n;
+        tThreshold = del_t * lambda_t;
     }
 
     void RecomputeE()

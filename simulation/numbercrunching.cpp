@@ -820,14 +820,335 @@ void icy::NumberCrunching::AssembleElems(
 
 // cohesive zones ===========================
 
+double icy::NumberCrunching::deln;
+double icy::NumberCrunching::delt;
+double icy::NumberCrunching::p_m;
+double icy::NumberCrunching::p_n;
+double icy::NumberCrunching::alpha;
+double icy::NumberCrunching::beta;
+double icy::NumberCrunching::gam_n;
+double icy::NumberCrunching::gam_t;
+double icy::NumberCrunching::tau_max;
+double icy::NumberCrunching::sigma_max;
+double icy::NumberCrunching::pMtn;
+double icy::NumberCrunching::pMnt;
+double icy::NumberCrunching::lambda_n;
+double icy::NumberCrunching::lambda_t;
+double icy::NumberCrunching::B[3][3][18] = {};
 
-double icy::NumberCrunching::Tn_(
-        const double Dn, const double Dt,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t,
-        const double pMtn)
+
+void icy::NumberCrunching::AssembleCZs(LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms, double h)
+{
+    deln=prms.del_n;
+    delt = prms.del_t;
+    p_m = prms.p_m;
+    p_n = prms.p_n;
+    alpha = prms.alpha;
+    beta = prms.beta;
+    gam_n = prms.gam_n;
+    gam_t = prms.gam_t;
+    tau_max = prms.tau_max;
+    sigma_max = prms.sigma_max;
+    pMtn = prms.pMtn;
+    pMnt = prms.pMnt;
+    lambda_n = prms.lambda_n;
+    lambda_t = prms.lambda_t;
+
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            for(int k=0;k<18;k++) B[i][j][k] = prms.B[i][j][k];
+
+    int N = czs.size();
+#pragma omp parallel for
+    for(int i=0;i<N;i++)
+    {
+        icy::CZ *cz = czs[i];
+        CZForce(cz, h);
+    }
+
+/*
+    // distribute into linear system
+    for(auto const &elem : elasticElements)
+    {
+        double (&lhs)[12][12] = elem->lhs;
+        double (&rhs)[12] = elem->rhs;
+        for(int r=0;r<4;r++)
+        {
+            int ni = elem->vrts[r]->altId;
+            ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
+            for (int c=0;c<4;c++)
+            {
+                int nj = elem->vrts[c]->altId;
+                ls.AddToLHS_Symmetric(ni, nj,
+                lhs[r * 3 + 0][c * 3 + 0], lhs[r * 3 + 0][c * 3 + 1], lhs[r * 3 + 0][c * 3 + 2],
+                lhs[r * 3 + 1][c * 3 + 0], lhs[r * 3 + 1][c * 3 + 1], lhs[r * 3 + 1][c * 3 + 2],
+                lhs[r * 3 + 2][c * 3 + 0], lhs[r * 3 + 2][c * 3 + 1], lhs[r * 3 + 2][c * 3 + 2]);
+            }
+        }
+    }
+  */
+
+    /*
+            // distribute results into linear system
+            foreach(CZ cz in mc.nonFailedCZs)
+            {
+                CZResult czr = cz.extension;
+                if (czr.failed || cz.failed) continue;
+                double[,] lhs = czr.Keff;
+                double[] rhs = czr.rhs;
+                for (int r = 0; r < 6; r++)
+                {
+                    int ni = cz.vrts[r].altId;
+                    ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
+                    for (int c = 0; c < 6; c++)
+                    {
+                        int nj = cz.vrts[c].altId;
+                        ls.AddToLHS_Symmetric(ni, nj,
+                        lhs[r * 3 + 0, c * 3 + 0], lhs[r * 3 + 0, c * 3 + 1], lhs[r * 3 + 0, c * 3 + 2],
+                        lhs[r * 3 + 1, c * 3 + 0], lhs[r * 3 + 1, c * 3 + 1], lhs[r * 3 + 1, c * 3 + 2],
+                        lhs[r * 3 + 2, c * 3 + 0], lhs[r * 3 + 2, c * 3 + 1], lhs[r * 3 + 2, c * 3 + 2]);
+                    }
+                }
+            }
+
+            cf.nCZDamaged = mc.nonFailedCZs.Sum(cz => cz.extension.damaged ? 1 : 0);
+            cf.nCZFailedThisStep = mc.nonFailedCZs.Sum(cz => cz.extension.failed ? 1 : 0);
+
+*/
+
+    throw std::runtime_error("NI");
+}
+
+void icy::NumberCrunching::CZForce(CZ *cz, double h)
+{
+    throw std::runtime_error("NI");
+
+    // clear temp variables
+
+/*
+
+            double* x0 = stackalloc double[18];
+            double* un = stackalloc double[18];
+            double* xc = stackalloc double[18];
+            double* xr = stackalloc double[18];
+
+            for (int i=0;i<6;i++)
+            {
+                Node nd = cz.vrts[i];
+                x0[i * 3 + 0] = nd.x0;
+                x0[i * 3 + 1] = nd.y0;
+                x0[i * 3 + 2] = nd.z0;
+                un[i * 3 + 0] = nd.unx;
+                un[i * 3 + 1] = nd.uny;
+                un[i * 3 + 2] = nd.unz;
+                xc[i * 3 + 0] = nd.tx;
+                xc[i * 3 + 1] = nd.ty;
+                xc[i * 3 + 2] = nd.tz;
+            }
+
+            double* mpc = stackalloc double[9]; // midplane
+            for (int i = 0; i < 9; i++) mpc[i] = (xc[i] + xc[i + 9]) * 0.5;
+
+            // rotation matrix of midplane
+            double* R = stackalloc double[9];
+            double a_Jacob;
+
+            CZRotationMatrix(
+                mpc[0], mpc[1], mpc[2],
+                mpc[3], mpc[4], mpc[5],
+                mpc[6], mpc[7], mpc[8],
+                out R[0], out R[1], out R[2],
+                out R[3], out R[4], out R[5],
+                out R[6], out R[7], out R[8],
+                out a_Jacob);
+
+            // xr = R xc
+            for (int i = 0; i < 6; i++)
+                multAX(
+                    R[0], R[1], R[2],
+                    R[3], R[4], R[5],
+                    R[6], R[7], R[8],
+                    xc[i * 3 + 0], xc[i * 3 + 1], xc[i * 3 + 2],
+                    out xr[i * 3 + 0], out xr[i * 3 + 1], out xr[i * 3 + 2]);
+
+            bool* cz_contact_gp = stackalloc bool[3];
+            bool* cz_failed_gp = stackalloc bool[3];
+
+            double avgDn, avgDt, avgTn, avgTt; // preserve average traction-separations for analysis
+            avgDn = avgDt = avgTn = avgTt = 0;
+
+            CZResult r = cz.extension;
+            r.Clear();
+            for(int i=0;i<3;i++) { r.pmax[i] = cz.pmax[i];  r.tmax[i] = cz.tmax[i]; }
+
+            // loop over 3 Gauss points
+            for (int gpt = 0; gpt < 3; gpt++)
+            {
+                // shear and normal local opening displacements
+                double dt1, dt2, dn;
+                dt1 = dt2 = dn = 0;
+                for (int i = 0; i < 3; i++)
+                {
+                    dt1 += (xr[i * 3 + 0] - xr[i * 3 + 9]) * sf[i, gpt];
+                    dt2 += (xr[i * 3 + 1] - xr[i * 3 + 10]) * sf[i, gpt];
+                    dn += (xr[i * 3 + 2] - xr[i * 3 + 11]) * sf[i, gpt];
+                }
+                double opn = dn;
+                double opt = Sqrt(dt1 * dt1 + dt2 * dt2);
+
+                double Tn, Tt, Dnn, Dtt, Dnt, Dtn;
+
+                cohesive_law(
+                out cz_contact_gp[gpt],
+                out cz_failed_gp[gpt],
+                ref r.pmax[gpt],
+                ref r.tmax[gpt],
+                opn, opt,
+                out Tn, out Tt, out Dnn, out Dtt, out Dnt, out Dtn, prms);
+
+                // preserve average traction-separations for analysis
+                avgDn += opn / 3;
+                avgDt += opt / 3;
+                avgTn += Tn / 3;
+                avgTt += Tt / 3;
+
+                double* T = stackalloc double[3];
+                double* T_d = stackalloc double[9]; // 3x3 matrix
+
+                if (opt < 1e-20)
+                {
+                    T[2] = Tn;
+                    T_d[0*3+ 0] = Dtt;
+                    T_d[1 * 3 + 1] = Dtt;
+                    T_d[2 * 3 + 2] = Dnn;
+
+                    T_d[1 * 3 + 0] = T_d[0 * 3 + 1] = 0;
+
+                    T_d[2 * 3 + 0] = Dtn;
+                    T_d[0 * 3 + 2] = Dnt;
+                    T_d[2 * 3 + 1] = Dtn;
+                    T_d[1 * 3 + 2] = Dnt;
+                }
+                else
+                {
+                    T[0] = Tt * dt1 / opt;
+                    T[1] = Tt * dt2 / opt;
+                    T[2] = Tn;
+
+                    double opt_sq = opt * opt;
+                    double opt_cu = opt_sq * opt;
+                    double delu00 = dt1 * dt1;
+                    double delu10 = dt2 * dt1;
+                    double delu11 = dt2 * dt2;
+
+                    T_d[0 * 3 + 0] = Dtt * delu00 / opt_sq + Tt * delu11 / opt_cu;
+                    T_d[1 * 3 + 1] = Dtt * delu11 / opt_sq + Tt * delu00 / opt_cu;
+                    T_d[2 * 3 + 2] = Dnn;
+
+                    T_d[1 * 3 + 0] = T_d[0 * 3 + 1] = Dtt * delu10 / opt_sq - Tt * delu10 / opt_cu;
+
+                    T_d[2 * 3 + 0] = Dtn * dt1 / opt;
+                    T_d[0 * 3 + 2] = Dnt * dt1 / opt;
+                    T_d[2 * 3 + 1] = Dtn * dt2 / opt;
+                    T_d[1 * 3 + 2] = Dnt * dt2 / opt;
+                }
+
+                // RHS
+                // BtT = Bt x T x (-GP_W)
+                const double GP_W = 1.0 / 3.0; // Gauss point weight
+
+                double* BtT = stackalloc double[18];
+                for (int i = 0; i < 18; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        BtT[i] += B[gpt, j, i] * T[j];
+                    }
+                    BtT[i] *= -(GP_W * a_Jacob);
+                }
+
+                // rotate BtT
+                double* rhs_gp = stackalloc double[18];
+                for (int i = 0; i < 6; i++)
+                {
+                    multAX(R[0 * 3 + 0], R[1 * 3 + 0], R[2 * 3 + 0],
+                        R[0 * 3 + 1], R[1 * 3 + 1], R[2 * 3 + 1],
+                        R[0 * 3 + 2], R[1 * 3 + 2], R[2 * 3 + 2],
+                        BtT[i * 3 + 0], BtT[i * 3 + 1], BtT[i * 3 + 2],
+                        out rhs_gp[i * 3 + 0], out rhs_gp[i * 3 + 1], out rhs_gp[i * 3 + 2]);
+                }
+
+                // add to rhs
+                for (int i = 0; i < 18; i++) r.rhs[i] += rhs_gp[i];
+
+                // STIFFNESS MATRIX
+                // compute Bt x T_d x GP_W
+                double* BtTd = stackalloc double[18*3];
+                for (int row = 0; row < 18; row++)
+                    for (int col = 0; col < 3; col++)
+                    {
+                        for (int k = 0; k < 3; k++) BtTd[row*3+ col] += B[gpt, k, row] * T_d[k * 3 + col];
+                        BtTd[row*3+ col] *= (GP_W * a_Jacob);
+                    }
+
+                // BtTdB = BtTd x B
+                double* BtTdB = stackalloc double[18* 18];
+                for (int row = 0; row < 18; row++)
+                    for (int col = 0; col < 18; col++)
+                        for (int k = 0; k < 3; k++)
+                            BtTdB[row*18+ col] += BtTd[row*3+ k] * B[gpt, k, col];
+
+                double* TrMtBtTdB = stackalloc double[18*18];
+
+                // Keff
+                for (int i = 0; i < 6; i++)
+                    for (int j = 0; j < 6; j++)
+                    {
+                        // TrMtBtTdB = TrMt x BtTdB
+                        for (int k = 0; k < 3; k++)
+                            for (int l = 0; l < 3; l++)
+                            {
+                                for (int m = 0; m < 3; m++)
+                                    TrMtBtTdB[(3 * i + k)*18 +(3 * j + l)] += R[m*3+ k] * BtTdB[(3 * i + m)*18+(3 * j + l)];
+                            }
+
+                        // Keff = TrMt x BtTdB x TrM
+                        for (int k = 0; k < 3; k++)
+                            for (int l = 0; l < 3; l++)
+                            {
+                                for (int m = 0; m < 3; m++)
+                                    r.Keff[3 * i + k, 3 * j + l] += TrMtBtTdB[(3 * i + k)*18 +(3 * j + m)] * R[m*3+ l];
+                            }
+                    }
+            }
+
+            // the following approach to pmax, tmax is somewhat experimental
+            r.pmax_ = Max(Max(r.pmax[0], r.pmax[1]), r.pmax[2]);
+            r.tmax_ = Max(Max(r.tmax[0], r.tmax[1]), r.tmax[2]);
+            r.avgDn = avgDn;
+            r.avgDt = avgDt;
+            r.avgTn = avgTn;
+            r.avgTt = avgTt;
+
+            // detect damaged state
+            r.damaged = false;
+            for (int i = 0; i < 3; i++)
+            {
+                if (r.pmax[i] >= prms.deln * prms.rn || r.tmax[i] >= prms.delt * prms.rt)
+                {
+                    r.damaged = true;
+                    break;
+                }
+            }
+
+            r.failed = cz_failed_gp[0] || cz_failed_gp[1] || cz_failed_gp[2];
+            r.contact = cz_contact_gp[0] || cz_contact_gp[1] || cz_contact_gp[2];
+            if (r.failed) r.damaged = false;
+
+*/
+}
+
+double icy::NumberCrunching::Tn_(const double Dn, const double Dt)
 {
     double Dndn = Dn / deln;
     double Dtdt = Dt / delt;
@@ -839,13 +1160,7 @@ double icy::NumberCrunching::Tn_(
     return pr1 * pr2 * pr3;
 }
 
-double icy::NumberCrunching::Tt_(
-        const double Dn, const double Dt,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t,
-        const double pMnt)
+double icy::NumberCrunching::Tt_(const double Dn, const double Dt)
 {
     double Dndn = Dn / deln;
     double Dtdt = Dt / delt;
@@ -857,13 +1172,7 @@ double icy::NumberCrunching::Tt_(
     return pr1 * pr2 * pr3;
 }
 
-double icy::NumberCrunching::Dnn_(
-        double opn, double opt,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t,
-        const double pMtn)
+double icy::NumberCrunching::Dnn_(const double opn, const double opt)
 {
     double coeff = gam_n / (deln * deln);
     double expr1 = (p_m * p_m - p_m) * pow(1.0 - (opn / deln), alpha) * pow((p_m / alpha) + (opn / deln), p_m - 2.0);
@@ -874,13 +1183,7 @@ double icy::NumberCrunching::Dnn_(
     return result;
 }
 
-double icy::NumberCrunching::Dtt_(
-        double opn, double opt,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t,
-        const double pMnt)
+double icy::NumberCrunching::Dtt_(const double opn, const double opt)
 {
     double coeff = gam_t / (delt * delt);
     double expr1 = (p_n * p_n - p_n) * pow(1.0 - (opt / delt), beta) * pow((p_n / beta) + (opt / delt), p_n - 2.0);
@@ -891,12 +1194,7 @@ double icy::NumberCrunching::Dtt_(
     return result;
 }
 
-double icy::NumberCrunching::Dnt_(
-        double opn, double opt,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t)
+double icy::NumberCrunching::Dnt_(const double opn, const double opt)
 {
     double coeff = gam_n * gam_t / (deln * delt);
     double expr1 = p_m * pow(1.0 - (opn / deln), alpha) * pow((p_m / alpha) + (opn / deln), p_m - 1.0);
@@ -908,16 +1206,11 @@ double icy::NumberCrunching::Dnt_(
 }
 
 void icy::NumberCrunching::cohesive_law(
+        const double opn, const double opt,
         bool &cz_contact, bool &cz_failed,
-        double &pmax, double &tmax, const double opn, const double opt,
+        double &pmax, double &tmax,
         double &Tn, double &Tt, double &Dnn,
-        double &Dtt, double &Dnt, double &Dtn,
-        const double deln, const double delt,
-        const double p_m, const double p_n,
-        const double alpha, const double beta,
-        const double gam_n, const double gam_t,
-        const double f_tt, const double f_tn,
-        const double pMtn, const double pMnt)
+        double &Dtt, double &Dnt, double &Dtn)
 {
     Tn = Tt = Dnn = Dtt = Dnt = Dtn = 0;
     if (opn > deln || opt > delt)
@@ -930,37 +1223,37 @@ void icy::NumberCrunching::cohesive_law(
     cz_failed = false;
     const double epsilon = -1e-9;
     const double epsilon2 = 0.05; // if traction is <5% of max, CZ fails
-    double threshold_tangential = f_tt * epsilon2;
-    double threshold_normal = f_tn * epsilon2;
+    double threshold_tangential = tau_max * epsilon2;
+    double threshold_normal = sigma_max * epsilon2;
 
     if (cz_contact)
     {
         Dnt = 0;
         if (pmax != 0)
         {
-            double peakTn = Tn_(pmax, tmax, deln, delt, p_m, p_n, alpha, beta, gam_n, gam_t, pMtn);
+            double peakTn = Tn_(pmax, tmax);
             Tn = peakTn * opn / pmax;
             Dnn = peakTn / pmax;
         }
         else
         {
-            Dnn = Dnn_(0, tmax, prms);
+            Dnn = Dnn_(0, tmax);
             Tn = Dnn * opn;
         }
 
-        Tt = Tt_(0, opt, prms);
-        if (Tt >= epsilon && !(opt > prms.delt * prms.rt / 5 && Tt < threshold_tangential))
+        Tt = Tt_(0, opt);
+        if (Tt >= epsilon && !(opt > delt * lambda_t / 5 && Tt < threshold_tangential))
         {
             if (opt >= tmax)
             {
                 // tangential softening
                 tmax = opt;
-                Dtt = Dtt_(0, opt, prms);
+                Dtt = Dtt_(0, opt);
             }
             else
             {
                 // unload/reload
-                double peakTt = Tt_(0, tmax, prms);
+                double peakTt = Tt_(0, tmax);
                 Tt = peakTt * opt / tmax;
                 Dtt = peakTt / tmax;
             }
@@ -977,11 +1270,11 @@ void icy::NumberCrunching::cohesive_law(
     else
     {
         // not in contact
-        Tt = Tt_(opn, opt, prms);
-        Tn = Tn_(opn, opt, prms);
+        Tt = Tt_(opn, opt);
+        Tn = Tn_(opn, opt);
         if (Tt >= epsilon && Tn >= epsilon &&
-            !(opt > prms.delt * prms.rt / 5 && Tt < threshold_tangential) &&
-            !(opn > prms.deln * prms.rn / 5 && Tn < threshold_normal))
+            !(opt > delt * lambda_t / 5 && Tt < threshold_tangential) &&
+            !(opn > deln * lambda_n / 5 && Tn < threshold_normal))
         {
             // tangential component
             bool tsoft = (opt >= tmax);
@@ -991,53 +1284,53 @@ void icy::NumberCrunching::cohesive_law(
                 // tangential and normal softening
                 tmax = opt;
                 pmax = opn;
-                Dnn = Dnn_(opn, opt, prms);
-                Dnt = Dnt_(opn, opt, prms);
-                Dtt = Dtt_(opn, opt, prms);
+                Dnn = Dnn_(opn, opt);
+                Dnt = Dnt_(opn, opt);
+                Dtt = Dtt_(opn, opt);
             }
             else if (tsoft && !nsoft)
             {
                 Dnt = 0;
                 if (pmax != 0)
                 {
-                    double peakTn = Tn_(pmax, tmax, prms);
+                    double peakTn = Tn_(pmax, tmax);
                     Tn = peakTn * opn / pmax;
                     Dnn = peakTn / pmax;
                 }
                 else
                 {
-                    Tn = 0; Dnn = Dnn_(0, tmax, prms);
+                    Tn = 0; Dnn = Dnn_(0, tmax);
                 }
 
                 // normal unload/reload
                 tmax = opt;
-                Tt = Tt_(pmax, opt, prms);
-                Dtt = Dtt_(pmax, opt, prms);
+                Tt = Tt_(pmax, opt);
+                Dtt = Dtt_(pmax, opt);
             }
             else if (!tsoft && nsoft)
             {
                 Dnt = 0;
                 if (tmax != 0)
                 {
-                    double peakTt = Tt_(pmax, tmax, prms);
+                    double peakTt = Tt_(pmax, tmax);
                     Tt = peakTt * opt / tmax;
                     Dtt = peakTt / tmax;
                 }
                 else
                 {
-                    Tt = 0; Dtt = Dtt_(pmax, 0, prms);
+                    Tt = 0; Dtt = Dtt_(pmax, 0);
                 }
 
                 pmax = opn;
-                Tn = Tn_(pmax, tmax, prms);
-                Dnn = Dnn_(pmax, tmax, prms);
+                Tn = Tn_(pmax, tmax);
+                Dnn = Dnn_(pmax, tmax);
 
             }
             else
             {
                 Dnt = 0;
                 // reloading in both tangential and normal
-                double peakTn = Tn_(pmax, tmax, prms);
+                double peakTn = Tn_(pmax, tmax);
                 if (pmax != 0)
                 {
                     Tn = peakTn * opn / pmax;
@@ -1045,18 +1338,18 @@ void icy::NumberCrunching::cohesive_law(
                 }
                 else
                 {
-                    Tn = 0; Dnn = Dnn_(0, tmax, prms);
+                    Tn = 0; Dnn = Dnn_(0, tmax);
                 }
 
                 if (tmax != 0)
                 {
-                    double peakTt = Tt_(pmax, tmax, prms);
+                    double peakTt = Tt_(pmax, tmax);
                     Tt = peakTt * opt / tmax;
                     Dtt = peakTt / tmax;
                 }
                 else
                 {
-                    Tt = 0; Dtt = Dtt_(pmax, 0, prms);
+                    Tt = 0; Dtt = Dtt_(pmax, 0);
                 }
             }
 
