@@ -72,7 +72,7 @@ void icy::MeshCollection::Prepare()
     elasticElements.clear();
     for(auto &elem : beam->elems) elasticElements.push_back(&elem);
 
-    // populate nonFailedCZs, allCZs, failedCZs;
+    UpdateCZs();
 
     // beam data
     beam->principalStresses_cells->Reset();
@@ -88,6 +88,19 @@ void icy::MeshCollection::Prepare()
     beam->verticalDisplacements_nodes->Resize(beam->nodes.size());
     beam->verticalDisplacements_nodes->SetNumberOfValues(beam->nodes.size());
     beam->ugrid->GetPointData()->SetScalars(beam->verticalDisplacements_nodes);
+
+}
+
+void icy::MeshCollection::UpdateCZs() {
+    // populate nonFailedCZs, allCZs, failedCZs;
+    allCZs.clear();
+    failedCZs.clear();
+    nonFailedCZs.clear();
+    for(auto &cz : beam->czs) {
+        allCZs.push_back(&cz);
+        if(cz.failed) failedCZs.push_back(&cz);
+        else nonFailedCZs.push_back(&cz);
+    }
 
 }
 

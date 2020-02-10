@@ -61,6 +61,7 @@ public:
         TimeScaleFactor = other.TimeScaleFactor;
         nCZ_Initial = other.nCZ_Initial;
         nCZFailed = other.nCZFailed;
+        nCZDamaged = other.nCZDamaged;
     }
 
     void IncrementTime(double initialTimestep)

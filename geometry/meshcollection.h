@@ -31,6 +31,7 @@ public:
     void Prepare();
     void ConstructBVH();
     void UpdateActors(); // transfer current nodal positions to vtk for rendering
+    void UpdateCZs();
 };
 
 #endif // MESHCOLLECTION_H

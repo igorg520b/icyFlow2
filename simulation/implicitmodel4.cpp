@@ -19,16 +19,9 @@ void icy::ImplicitModel4::Clear()
 }
 
 
-void icy::ImplicitModel4::_prepare()
+void icy::ImplicitModel4::_updateStaticStructure()
 {
-    icy::NumberCrunching::InitializeConstants();
-
-//    allFrames.push_back(cf);
-    // re-create static contents of the linear system
-    mc.Prepare();   // populate activeNodes
     linearSystem.csrd.ClearStatic();
-//    linearSystem.csrd.ClearDynamic();
-
     // add entries for elastic elements to mesh collection
     // in general, it would be better have a collection for deformables
     for(auto const &elem : mc.beam->elems)
@@ -42,7 +35,21 @@ void icy::ImplicitModel4::_prepare()
             }
         }
     }
-    std::cout << "static csrd size " << linearSystem.csrd.staticCount() << std::endl;
+
+}
+
+void icy::ImplicitModel4::_prepare()
+{
+    icy::NumberCrunching::InitializeConstants();
+
+//    allFrames.push_back(cf);
+    // re-create static contents of the linear system
+    mc.Prepare();   // populate activeNodes
+    _updateStaticStructure();
+//    linearSystem.csrd.ClearDynamic();
+
+    if(cf.StepNumber == 0) cf.nCZ_Initial = (int)mc.allCZs.size();
+//    std::cout << "static csrd size " << linearSystem.csrd.staticCount() << std::endl;
     isReady = true;
 }
 
@@ -105,7 +112,15 @@ void icy::ImplicitModel4::_addCollidingNodesToStructure()
 
 bool icy::ImplicitModel4::_checkDamage()
 {
-    return false; // not implemented
+
+    if (tcf0.TimeScaleFactor == tcf0.Parts) return false; // can't reduce time step anyway
+
+    double dn_damaged = (double)(tcf0.nCZDamaged) / cf.nCZ_Initial;
+    double dn_failed = (double)(tcf0.nCZFailed) / tcf0.nCZ_Initial;
+
+    bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
+
+    return result;
 }
 
 bool icy::ImplicitModel4::_checkDivergence()
@@ -184,8 +199,19 @@ void icy::ImplicitModel4::_acceptFrame()
         nd->AcceptTentativeValues(tcf0.TimeStep);
 
     // accept new state variables in CZs
-    for(auto &cz : mc.nonFailedCZs)
+    for(auto &cz : mc.nonFailedCZs) {
         cz->AcceptTentativeValues();
+        if(cz->failed) {
+            cz->faces[0]->created = cz->faces[0]->exposed = true;
+            cz->faces[1]->created = cz->faces[1]->exposed = true;
+        }
+    }
+
+    // remove CZs that failed and update matrix structure
+    if(tcf0.nCZFailed > 0) {
+        mc.UpdateCZs();
+        _updateStaticStructure();
+    }
 }
 
 void icy::ImplicitModel4::_assemble()
@@ -198,6 +224,7 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
     // assemble cohesive zones
+    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailed, tcf0.nCZDamaged);
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
@@ -208,9 +235,6 @@ void icy::ImplicitModel4::_assemble()
 bool icy::ImplicitModel4::Step()
 {
     kill = false;
-
-//    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // for testing
-
     if(!isReady) _prepare();
     _beginStep();
 
@@ -243,11 +267,7 @@ bool icy::ImplicitModel4::Step()
     if (prms.maxIterations == 1 ||
         tcf0.TimeScaleFactor == tcf0.Parts ||
         (!tcf0.ConvergenceReached && tcf0.TimeScaleFactor >= tcf0.Parts) ||
-        (!explodes && !diverges && tcf0.ConvergenceReached))
-    {
-        _acceptFrame();
-    }
-
+        (!explodes && !diverges && tcf0.ConvergenceReached)) _acceptFrame();
 
     return false; // step not aborted
 }

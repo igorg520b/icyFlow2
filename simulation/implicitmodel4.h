@@ -36,6 +36,7 @@ private:
     bool explodes, diverges;
 
     void _prepare();    // this is called once
+    void _updateStaticStructure();    // this is called once
     void _beginStep();
     void _addCollidingNodesToStructure();
     bool _checkDamage();

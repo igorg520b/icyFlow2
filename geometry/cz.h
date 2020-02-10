@@ -15,7 +15,7 @@ class icy::CZ
 {
 public:
     icy::Node* vrts[6];                 // References to element vertices
-    icy::Face* faces[6];                 // References to element vertices
+    icy::Face* faces[2];                 // References to element vertices
     double pmax[3]={};
     double tmax[3]={};
     bool failed = false;
