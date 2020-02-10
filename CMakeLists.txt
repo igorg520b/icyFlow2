@@ -99,6 +99,8 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     generator/beamparams.h
     generator/generatortool.cpp
     generator/generatortool.h
+    generator/czinsertiontool.cpp
+    generator/czinsertiontool.h
     geometry/node.cpp
     geometry/node.h
     geometry/face.h
