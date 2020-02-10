@@ -31,6 +31,7 @@ public:
     double lhs[18][18];
 
     CZ();
+    void AcceptTentativeValues();
 };
 
 

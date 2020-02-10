@@ -21,6 +21,8 @@ void icy::ImplicitModel4::Clear()
 
 void icy::ImplicitModel4::_prepare()
 {
+    icy::NumberCrunching::InitializeConstants();
+
 //    allFrames.push_back(cf);
     // re-create static contents of the linear system
     mc.Prepare();   // populate activeNodes
@@ -62,7 +64,7 @@ void icy::ImplicitModel4::_beginStep()
     // initial displacement guess for active nodes
 
     double h = tcf0.TimeStep;
-    double hsq2 = h * h / 2;
+//    double hsq2 = h * h / 2;
     for(auto &nd : mc.activeNodes) {
         nd->dux = nd->vx*h;
         nd->duy = nd->vy*h;
@@ -181,6 +183,9 @@ void icy::ImplicitModel4::_acceptFrame()
     for(auto &nd : mc.allNodes)
         nd->AcceptTentativeValues(tcf0.TimeStep);
 
+    // accept new state variables in CZs
+    for(auto &cz : mc.nonFailedCZs)
+        cz->AcceptTentativeValues();
 }
 
 void icy::ImplicitModel4::_assemble()
@@ -198,14 +203,6 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
-
-void icy::ImplicitModel4::_transferUpdatedState()
-{
-    for(int i=0;i<mc.beam->elems.size();i++) {
-        // update principal stresses
-
-    }
-}
 
 
 bool icy::ImplicitModel4::Step()
@@ -248,7 +245,6 @@ bool icy::ImplicitModel4::Step()
         (!tcf0.ConvergenceReached && tcf0.TimeScaleFactor >= tcf0.Parts) ||
         (!explodes && !diverges && tcf0.ConvergenceReached))
     {
-        _transferUpdatedState();
         _acceptFrame();
     }
 

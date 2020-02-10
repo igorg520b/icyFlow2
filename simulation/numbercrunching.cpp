@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <cfloat>
 #include <cmath>
-
+#include <algorithm>
 
 const double icy::NumberCrunching::EPS = 1e-10;
 
@@ -11,6 +11,57 @@ std::unordered_set<long long> icy::NumberCrunching::NL2set;
 std::vector<long long> icy::NumberCrunching::NL2vector;
 std::vector<icy::CPResult> icy::NumberCrunching::cprList;
 SymmetricEigensolver3x3<double> icy::NumberCrunching::solver;
+
+
+void icy::NumberCrunching::InitializeConstants()
+{
+    // initialize sf[]
+
+    double GP_coord_1 = 1.0 / 6.0;
+    double GP_coord_2 = 2.0 / 3.0;
+    sf[0][0] = 1.0 - GP_coord_1 - GP_coord_2;
+    sf[1][0] = GP_coord_1;
+    sf[2][0] = GP_coord_2;
+
+    GP_coord_1 = 2.0 / 3.0;
+    GP_coord_2 = 1.0 / 6.0;
+    sf[0][1] = 1.0 - GP_coord_1 - GP_coord_2;
+    sf[1][1] = GP_coord_1;
+    sf[2][1] = GP_coord_2;
+
+    GP_coord_1 = 1.0 / 6.0;
+    GP_coord_2 = 1.0 / 6.0;
+    sf[0][2] = 1.0 - GP_coord_1 - GP_coord_2;
+    sf[1][2] = GP_coord_1;
+    sf[2][2] = GP_coord_2;
+
+
+    // initialize B[]
+    for(int i=0;i<3;i++)
+    {
+        B[i][0][0] = sf[0][i];
+        B[i][1][1] = sf[0][i];
+        B[i][2][2] = sf[0][i];
+        B[i][0][9] = -sf[0][i];
+        B[i][1][10] = -sf[0][i];
+        B[i][2][11] = -sf[0][i];
+
+        B[i][0][3] = sf[1][i];
+        B[i][1][4] = sf[1][i];
+        B[i][2][5] = sf[1][i];
+        B[i][0][12] = -sf[1][i];
+        B[i][1][13] = -sf[1][i];
+        B[i][2][14] = -sf[1][i];
+
+        B[i][0][6] = sf[2][i];
+        B[i][1][7] = sf[2][i];
+        B[i][2][8] = sf[2][i];
+
+        B[i][0][15] = -sf[2][i];
+        B[i][1][16] = -sf[2][i];
+        B[i][2][17] = -sf[2][i];
+    }
+}
 
 
 void icy::NumberCrunching::NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc)
@@ -594,17 +645,7 @@ void icy::NumberCrunching::multABd(
     m31 = a31*b11 + a32*b21 + a33*b31; m32 = a31*b12 + a32*b22 + a33*b32; m33 = a31*b13 + a32*b23 + a33*b33;
 }
 
-void icy::NumberCrunching::multAX(
-        double a11, double a12, double a13,
-        double a21, double a22, double a23,
-        double a31, double a32, double a33,
-        double x1, double x2, double x3,
-        double &y1, double &y2, double &y3)
-{
-    y1 = x1 * a11 + x2 * a12 + x3 * a13;
-    y2 = x1 * a21 + x2 * a22 + x3 * a23;
-    y3 = x1 * a31 + x2 * a32 + x3 * a33;
-}
+
 
 
 void icy::NumberCrunching::F_and_Df_Corotational(
@@ -804,6 +845,12 @@ void icy::NumberCrunching::AssembleElems(
         double (&rhs)[12] = elem->rhs;
         for(int r=0;r<4;r++)
         {
+            // distribute node forces
+            Node *nd = elem->vrts[r];
+            nd->fx+= rhs[r*3+0];
+            nd->fy+= rhs[r*3+1];
+            nd->fz+= rhs[r*3+2];
+
             int ni = elem->vrts[r]->altId;
             ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
             for (int c=0;c<4;c++)
@@ -835,9 +882,11 @@ double icy::NumberCrunching::pMnt;
 double icy::NumberCrunching::lambda_n;
 double icy::NumberCrunching::lambda_t;
 double icy::NumberCrunching::B[3][3][18] = {};
+double icy::NumberCrunching::sf[3][3] = {};
 
-
-void icy::NumberCrunching::AssembleCZs(LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms, double h)
+void icy::NumberCrunching::AssembleCZs(
+        LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms,
+        int &totalFailed, int &totalDamaged)
 {
     deln=prms.del_n;
     delt = prms.del_t;
@@ -854,298 +903,257 @@ void icy::NumberCrunching::AssembleCZs(LinearSystem &ls, std::vector<CZ*> &czs, 
     lambda_n = prms.lambda_n;
     lambda_t = prms.lambda_t;
 
-    for(int i=0;i<3;i++)
-        for(int j=0;j<3;j++)
-            for(int k=0;k<18;k++) B[i][j][k] = prms.B[i][j][k];
-
     int N = czs.size();
 #pragma omp parallel for
     for(int i=0;i<N;i++)
     {
         icy::CZ *cz = czs[i];
-        CZForce(cz, h);
+        CZForce(cz);
     }
 
-/*
+
+    totalFailed = totalDamaged = 0;
     // distribute into linear system
-    for(auto const &elem : elasticElements)
+    for(auto const &cz : czs)
     {
-        double (&lhs)[12][12] = elem->lhs;
-        double (&rhs)[12] = elem->rhs;
-        for(int r=0;r<4;r++)
+        if(cz->_failed) totalFailed++;
+        if(cz->_damaged) totalDamaged++;
+
+        double (&lhs)[18][18] = cz->lhs;
+        double (&rhs)[18] = cz->rhs;
+        for(int r=0;r<6;r++)
         {
-            int ni = elem->vrts[r]->altId;
+            int ni = cz->vrts[r]->altId;
             ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
-            for (int c=0;c<4;c++)
+            for (int c=0;c<6;c++)
             {
-                int nj = elem->vrts[c]->altId;
-                ls.AddToLHS_Symmetric(ni, nj,
-                lhs[r * 3 + 0][c * 3 + 0], lhs[r * 3 + 0][c * 3 + 1], lhs[r * 3 + 0][c * 3 + 2],
-                lhs[r * 3 + 1][c * 3 + 0], lhs[r * 3 + 1][c * 3 + 1], lhs[r * 3 + 1][c * 3 + 2],
-                lhs[r * 3 + 2][c * 3 + 0], lhs[r * 3 + 2][c * 3 + 1], lhs[r * 3 + 2][c * 3 + 2]);
+                int nj = cz->vrts[c]->altId;
+                ls.AddToLHS_Symmetric(
+                            ni, nj,
+                            lhs[r * 3 + 0][c * 3 + 0], lhs[r * 3 + 0][c * 3 + 1], lhs[r * 3 + 0][c * 3 + 2],
+                        lhs[r * 3 + 1][c * 3 + 0], lhs[r * 3 + 1][c * 3 + 1], lhs[r * 3 + 1][c * 3 + 2],
+                        lhs[r * 3 + 2][c * 3 + 0], lhs[r * 3 + 2][c * 3 + 1], lhs[r * 3 + 2][c * 3 + 2]);
             }
         }
     }
-  */
-
-    /*
-            // distribute results into linear system
-            foreach(CZ cz in mc.nonFailedCZs)
-            {
-                CZResult czr = cz.extension;
-                if (czr.failed || cz.failed) continue;
-                double[,] lhs = czr.Keff;
-                double[] rhs = czr.rhs;
-                for (int r = 0; r < 6; r++)
-                {
-                    int ni = cz.vrts[r].altId;
-                    ls.AddToRHS(ni, rhs[r * 3 + 0], rhs[r * 3 + 1], rhs[r * 3 + 2]);
-                    for (int c = 0; c < 6; c++)
-                    {
-                        int nj = cz.vrts[c].altId;
-                        ls.AddToLHS_Symmetric(ni, nj,
-                        lhs[r * 3 + 0, c * 3 + 0], lhs[r * 3 + 0, c * 3 + 1], lhs[r * 3 + 0, c * 3 + 2],
-                        lhs[r * 3 + 1, c * 3 + 0], lhs[r * 3 + 1, c * 3 + 1], lhs[r * 3 + 1, c * 3 + 2],
-                        lhs[r * 3 + 2, c * 3 + 0], lhs[r * 3 + 2, c * 3 + 1], lhs[r * 3 + 2, c * 3 + 2]);
-                    }
-                }
-            }
-
-            cf.nCZDamaged = mc.nonFailedCZs.Sum(cz => cz.extension.damaged ? 1 : 0);
-            cf.nCZFailedThisStep = mc.nonFailedCZs.Sum(cz => cz.extension.failed ? 1 : 0);
-
-*/
-
-    throw std::runtime_error("NI");
 }
 
-void icy::NumberCrunching::CZForce(CZ *cz, double h)
+void icy::NumberCrunching::CZForce(CZ *cz)
 {
-    throw std::runtime_error("NI");
+    double x0[18], un[18], xc[18], xr[18]={};
 
-    // clear temp variables
+    for (int i=0;i<6;i++)
+    {
+        Node *nd = cz->vrts[i];
+        x0[i * 3 + 0] = nd->x0;
+        x0[i * 3 + 1] = nd->y0;
+        x0[i * 3 + 2] = nd->z0;
+        un[i * 3 + 0] = nd->unx;
+        un[i * 3 + 1] = nd->uny;
+        un[i * 3 + 2] = nd->unz;
+        xc[i * 3 + 0] = nd->tx;
+        xc[i * 3 + 1] = nd->ty;
+        xc[i * 3 + 2] = nd->tz;
+    }
 
-/*
+    double (&pmax)[3] = cz->pmax_;
+    double (&tmax)[3] = cz->tmax_;
+    for(int i=0;i<3;i++) {
+        pmax[i] = cz->pmax[i];
+        tmax[i] = cz->tmax[i];
+    }
 
-            double* x0 = stackalloc double[18];
-            double* un = stackalloc double[18];
-            double* xc = stackalloc double[18];
-            double* xr = stackalloc double[18];
+    // midplane
+    double mpc[9]; // midplane
+    for (int i = 0; i < 9; i++) mpc[i] = (xc[i] + xc[i + 9]) / 2;
 
-            for (int i=0;i<6;i++)
-            {
-                Node nd = cz.vrts[i];
-                x0[i * 3 + 0] = nd.x0;
-                x0[i * 3 + 1] = nd.y0;
-                x0[i * 3 + 2] = nd.z0;
-                un[i * 3 + 0] = nd.unx;
-                un[i * 3 + 1] = nd.uny;
-                un[i * 3 + 2] = nd.unz;
-                xc[i * 3 + 0] = nd.tx;
-                xc[i * 3 + 1] = nd.ty;
-                xc[i * 3 + 2] = nd.tz;
+    double R[3][3];
+    double a_Jacob;
+    CZRotationMatrix(
+        mpc[0], mpc[1], mpc[2],
+        mpc[3], mpc[4], mpc[5],
+        mpc[6], mpc[7], mpc[8],
+        R[0][0], R[0][1], R[0][2],
+        R[1][0], R[1][1], R[1][2],
+        R[2][0], R[2][1], R[2][2],
+        a_Jacob);
+
+    // compute the coordinates xr in the local system
+    for (int i = 0; i < 6; i++)
+        multAX(
+            R[0][0], R[0][1], R[0][2],
+            R[1][0], R[1][1], R[1][2],
+            R[2][0], R[2][1], R[2][2],
+            xc[i * 3 + 0], xc[i * 3 + 1], xc[i * 3 + 2],
+            xr[i * 3 + 0], xr[i * 3 + 1], xr[i * 3 + 2]);
+
+    // total over all gauss points
+    double (&lhs)[18][18] = cz->lhs;
+    double (&rhs)[18] = cz->rhs;
+
+    for(int i=0;i<18;i++) {
+        rhs[i] = 0;
+        for(int j=0;j<18;j++) {
+            lhs[i][j] = 0;
+        }
+    }
+
+    bool cz_contact_gp[3] = {};
+    bool cz_failed_gp[3] = {};
+
+    double avgDn, avgDt, avgTn, avgTt; // preserve average traction-separations for analysis
+    avgDn = avgDt = avgTn = avgTt = 0;
+
+    // loop over 3 Gauss points
+    for (int gpt = 0; gpt < 3; gpt++)
+    {
+        // shear and normal local opening displacements
+        double dt1, dt2, dn;
+        dt1 = dt2 = dn = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            dt1 += (xr[i * 3 + 0] - xr[i * 3 + 9]) * sf[i][gpt];
+            dt2 += (xr[i * 3 + 1] - xr[i * 3 + 10]) * sf[i][gpt];
+            dn += (xr[i * 3 + 2] - xr[i * 3 + 11]) * sf[i][gpt];
+        }
+        double opn = dn;
+        double opt = sqrt(dt1 * dt1 + dt2 * dt2);
+
+        double Tn, Tt, Dnn, Dtt, Dnt, Dtn;
+
+        cohesive_law(opn, opt,
+                     cz_contact_gp[gpt], cz_failed_gp[gpt],
+                     pmax[gpt], tmax[gpt],
+                     Tn, Tt, Dnn, Dtt, Dnt, Dtn);
+
+        // preserve average traction-separations for analysis
+        avgDn += opn / 3;
+        avgDt += opt / 3;
+        avgTn += Tn / 3;
+        avgTt += Tt / 3;
+
+        double T[3] = {};
+        double T_d[3][3] = {};
+
+        if (opt < 1e-20)
+        {
+            T[2] = Tn;
+            T_d[0][0] = Dtt;
+            T_d[1][1] = Dtt;
+            T_d[2][2] = Dnn;
+
+            T_d[1][0] = T_d[0][1] = 0;
+
+            T_d[2][0] = Dtn;
+            T_d[0][2] = Dnt;
+            T_d[2][1] = Dtn;
+            T_d[1][2] = Dnt;
+        }
+        else
+        {
+            T[0] = Tt * dt1 / opt;
+            T[1] = Tt * dt2 / opt;
+            T[2] = Tn;
+
+            double opt_sq = opt * opt;
+            double opt_cu = opt_sq * opt;
+            double delu00 = dt1 * dt1;
+            double delu10 = dt2 * dt1;
+            double delu11 = dt2 * dt2;
+
+            T_d[0][0] = Dtt * delu00 / opt_sq + Tt * delu11 / opt_cu;
+            T_d[1][1] = Dtt * delu11 / opt_sq + Tt * delu00 / opt_cu;
+            T_d[2][2] = Dnn;
+
+            T_d[1][0] = T_d[0][1] = Dtt * delu10 / opt_sq - Tt * delu10 / opt_cu;
+
+            T_d[2][0] = Dtn * dt1 / opt;
+            T_d[0][2] = Dnt * dt1 / opt;
+            T_d[2][1] = Dtn * dt2 / opt;
+            T_d[1][2] = Dnt * dt2 / opt;
+        }
+
+        // RHS
+        // BtT = Bt x T x (-GP_W)
+        const double GP_W = 1.0 / 3.0; // Gauss point weight
+
+        double BtT[18] = {};
+        for (int i = 0; i < 18; i++) {
+            for (int j = 0; j < 3; j++) {
+                BtT[i] += B[gpt][j][i] * T[j];
+            }
+            BtT[i] *= -(GP_W*a_Jacob);
+        }
+
+        // rotate BtT
+        double rhs_gp[18] = {};
+        for (int i = 0; i < 6; i++) {
+            multAX(R[0][0], R[1][0], R[2][0],
+                R[0][1], R[1][1], R[2][1],
+                R[0][2], R[1][2], R[2][2],
+                BtT[i * 3 + 0], BtT[i * 3 + 1], BtT[i * 3 + 2],
+                rhs_gp[i * 3 + 0], rhs_gp[i * 3 + 1], rhs_gp[i * 3 + 2]);
+        }
+
+        // add to rhs
+        for (int i = 0; i < 18; i++) rhs[i] += rhs_gp[i];
+
+        // STIFFNESS MATRIX
+        // compute Bt x T_d x GP_W
+        double BtTd[18][3] = {};
+        for (int row = 0; row < 18; row++)
+            for (int col = 0; col < 3; col++) {
+                for (int k = 0; k < 3; k++) BtTd[row][col] += B[gpt][k][row] * T_d[k][col];
+                BtTd[row][col] *= (GP_W*a_Jacob);
             }
 
-            double* mpc = stackalloc double[9]; // midplane
-            for (int i = 0; i < 9; i++) mpc[i] = (xc[i] + xc[i + 9]) * 0.5;
+        // BtTdB = BtTd x B
+        double BtTdB[18][18] = {};
+        for (int row = 0; row < 18; row++)
+            for (int col = 0; col < 18; col++)
+                for (int k = 0; k < 3; k++)
+                    BtTdB[row][col] += BtTd[row][k] * B[gpt][k][col];
 
-            // rotation matrix of midplane
-            double* R = stackalloc double[9];
-            double a_Jacob;
+        double TrMtBtTdB[18][18] = {};
 
-            CZRotationMatrix(
-                mpc[0], mpc[1], mpc[2],
-                mpc[3], mpc[4], mpc[5],
-                mpc[6], mpc[7], mpc[8],
-                out R[0], out R[1], out R[2],
-                out R[3], out R[4], out R[5],
-                out R[6], out R[7], out R[8],
-                out a_Jacob);
-
-            // xr = R xc
-            for (int i = 0; i < 6; i++)
-                multAX(
-                    R[0], R[1], R[2],
-                    R[3], R[4], R[5],
-                    R[6], R[7], R[8],
-                    xc[i * 3 + 0], xc[i * 3 + 1], xc[i * 3 + 2],
-                    out xr[i * 3 + 0], out xr[i * 3 + 1], out xr[i * 3 + 2]);
-
-            bool* cz_contact_gp = stackalloc bool[3];
-            bool* cz_failed_gp = stackalloc bool[3];
-
-            double avgDn, avgDt, avgTn, avgTt; // preserve average traction-separations for analysis
-            avgDn = avgDt = avgTn = avgTt = 0;
-
-            CZResult r = cz.extension;
-            r.Clear();
-            for(int i=0;i<3;i++) { r.pmax[i] = cz.pmax[i];  r.tmax[i] = cz.tmax[i]; }
-
-            // loop over 3 Gauss points
-            for (int gpt = 0; gpt < 3; gpt++)
+        // Keff
+        for (int i = 0; i < 6; i++)
+            for (int j = 0; j < 6; j++)
             {
-                // shear and normal local opening displacements
-                double dt1, dt2, dn;
-                dt1 = dt2 = dn = 0;
-                for (int i = 0; i < 3; i++)
-                {
-                    dt1 += (xr[i * 3 + 0] - xr[i * 3 + 9]) * sf[i, gpt];
-                    dt2 += (xr[i * 3 + 1] - xr[i * 3 + 10]) * sf[i, gpt];
-                    dn += (xr[i * 3 + 2] - xr[i * 3 + 11]) * sf[i, gpt];
-                }
-                double opn = dn;
-                double opt = Sqrt(dt1 * dt1 + dt2 * dt2);
-
-                double Tn, Tt, Dnn, Dtt, Dnt, Dtn;
-
-                cohesive_law(
-                out cz_contact_gp[gpt],
-                out cz_failed_gp[gpt],
-                ref r.pmax[gpt],
-                ref r.tmax[gpt],
-                opn, opt,
-                out Tn, out Tt, out Dnn, out Dtt, out Dnt, out Dtn, prms);
-
-                // preserve average traction-separations for analysis
-                avgDn += opn / 3;
-                avgDt += opt / 3;
-                avgTn += Tn / 3;
-                avgTt += Tt / 3;
-
-                double* T = stackalloc double[3];
-                double* T_d = stackalloc double[9]; // 3x3 matrix
-
-                if (opt < 1e-20)
-                {
-                    T[2] = Tn;
-                    T_d[0*3+ 0] = Dtt;
-                    T_d[1 * 3 + 1] = Dtt;
-                    T_d[2 * 3 + 2] = Dnn;
-
-                    T_d[1 * 3 + 0] = T_d[0 * 3 + 1] = 0;
-
-                    T_d[2 * 3 + 0] = Dtn;
-                    T_d[0 * 3 + 2] = Dnt;
-                    T_d[2 * 3 + 1] = Dtn;
-                    T_d[1 * 3 + 2] = Dnt;
-                }
-                else
-                {
-                    T[0] = Tt * dt1 / opt;
-                    T[1] = Tt * dt2 / opt;
-                    T[2] = Tn;
-
-                    double opt_sq = opt * opt;
-                    double opt_cu = opt_sq * opt;
-                    double delu00 = dt1 * dt1;
-                    double delu10 = dt2 * dt1;
-                    double delu11 = dt2 * dt2;
-
-                    T_d[0 * 3 + 0] = Dtt * delu00 / opt_sq + Tt * delu11 / opt_cu;
-                    T_d[1 * 3 + 1] = Dtt * delu11 / opt_sq + Tt * delu00 / opt_cu;
-                    T_d[2 * 3 + 2] = Dnn;
-
-                    T_d[1 * 3 + 0] = T_d[0 * 3 + 1] = Dtt * delu10 / opt_sq - Tt * delu10 / opt_cu;
-
-                    T_d[2 * 3 + 0] = Dtn * dt1 / opt;
-                    T_d[0 * 3 + 2] = Dnt * dt1 / opt;
-                    T_d[2 * 3 + 1] = Dtn * dt2 / opt;
-                    T_d[1 * 3 + 2] = Dnt * dt2 / opt;
-                }
-
-                // RHS
-                // BtT = Bt x T x (-GP_W)
-                const double GP_W = 1.0 / 3.0; // Gauss point weight
-
-                double* BtT = stackalloc double[18];
-                for (int i = 0; i < 18; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        BtT[i] += B[gpt, j, i] * T[j];
-                    }
-                    BtT[i] *= -(GP_W * a_Jacob);
-                }
-
-                // rotate BtT
-                double* rhs_gp = stackalloc double[18];
-                for (int i = 0; i < 6; i++)
-                {
-                    multAX(R[0 * 3 + 0], R[1 * 3 + 0], R[2 * 3 + 0],
-                        R[0 * 3 + 1], R[1 * 3 + 1], R[2 * 3 + 1],
-                        R[0 * 3 + 2], R[1 * 3 + 2], R[2 * 3 + 2],
-                        BtT[i * 3 + 0], BtT[i * 3 + 1], BtT[i * 3 + 2],
-                        out rhs_gp[i * 3 + 0], out rhs_gp[i * 3 + 1], out rhs_gp[i * 3 + 2]);
-                }
-
-                // add to rhs
-                for (int i = 0; i < 18; i++) r.rhs[i] += rhs_gp[i];
-
-                // STIFFNESS MATRIX
-                // compute Bt x T_d x GP_W
-                double* BtTd = stackalloc double[18*3];
-                for (int row = 0; row < 18; row++)
-                    for (int col = 0; col < 3; col++)
-                    {
-                        for (int k = 0; k < 3; k++) BtTd[row*3+ col] += B[gpt, k, row] * T_d[k * 3 + col];
-                        BtTd[row*3+ col] *= (GP_W * a_Jacob);
+                // TrMtBtTdB = TrMt x BtTdB
+                for (int k = 0; k < 3; k++)
+                    for (int l = 0; l < 3; l++) {
+                        for (int m = 0; m < 3; m++)
+                            TrMtBtTdB[3 * i + k][3 * j + l] += R[m][k] * BtTdB[3 * i + m][3 * j + l];
                     }
 
-                // BtTdB = BtTd x B
-                double* BtTdB = stackalloc double[18* 18];
-                for (int row = 0; row < 18; row++)
-                    for (int col = 0; col < 18; col++)
-                        for (int k = 0; k < 3; k++)
-                            BtTdB[row*18+ col] += BtTd[row*3+ k] * B[gpt, k, col];
-
-                double* TrMtBtTdB = stackalloc double[18*18];
-
-                // Keff
-                for (int i = 0; i < 6; i++)
-                    for (int j = 0; j < 6; j++)
-                    {
-                        // TrMtBtTdB = TrMt x BtTdB
-                        for (int k = 0; k < 3; k++)
-                            for (int l = 0; l < 3; l++)
-                            {
-                                for (int m = 0; m < 3; m++)
-                                    TrMtBtTdB[(3 * i + k)*18 +(3 * j + l)] += R[m*3+ k] * BtTdB[(3 * i + m)*18+(3 * j + l)];
-                            }
-
-                        // Keff = TrMt x BtTdB x TrM
-                        for (int k = 0; k < 3; k++)
-                            for (int l = 0; l < 3; l++)
-                            {
-                                for (int m = 0; m < 3; m++)
-                                    r.Keff[3 * i + k, 3 * j + l] += TrMtBtTdB[(3 * i + k)*18 +(3 * j + m)] * R[m*3+ l];
-                            }
+                // Keff = TrMt x BtTdB x TrM
+                for (int k = 0; k < 3; k++)
+                    for (int l = 0; l < 3; l++) {
+                        for (int m = 0; m < 3; m++)
+                            lhs[3 * i + k][3 * j + l] += TrMtBtTdB[3 * i + k][3 * j + m] * R[m][l];
                     }
             }
+    }
 
-            // the following approach to pmax, tmax is somewhat experimental
-            r.pmax_ = Max(Max(r.pmax[0], r.pmax[1]), r.pmax[2]);
-            r.tmax_ = Max(Max(r.tmax[0], r.tmax[1]), r.tmax[2]);
-            r.avgDn = avgDn;
-            r.avgDt = avgDt;
-            r.avgTn = avgTn;
-            r.avgTt = avgTt;
+    cz->_pmax = std::max(std::max(pmax[0], pmax[1]), pmax[2]);
+    cz->_tmax = std::max(std::max(tmax[0], tmax[1]), tmax[2]);
 
-            // detect damaged state
-            r.damaged = false;
-            for (int i = 0; i < 3; i++)
-            {
-                if (r.pmax[i] >= prms.deln * prms.rn || r.tmax[i] >= prms.delt * prms.rt)
-                {
-                    r.damaged = true;
-                    break;
-                }
-            }
+    cz->_failed = cz_failed_gp[0] || cz_failed_gp[1] || cz_failed_gp[2];
+    cz->_contact = cz_contact_gp[0] || cz_contact_gp[1] || cz_contact_gp[2];
+    cz->_damaged = false;
+    for (int i = 0; i < 3; i++)
+        if (pmax[i] >= deln * lambda_n || tmax[i] >= delt * lambda_t)
+        {
+            cz->_damaged = true;
+            break;
+        }
 
-            r.failed = cz_failed_gp[0] || cz_failed_gp[1] || cz_failed_gp[2];
-            r.contact = cz_contact_gp[0] || cz_contact_gp[1] || cz_contact_gp[2];
-            if (r.failed) r.damaged = false;
-
-*/
+    cz->_avgDn = avgDn;
+    cz->_avgDt = avgDt;
+    cz->_avgTn = avgTn;
+    cz->_avgTt = avgTt;
+    if(cz->_failed) cz->_damaged = false;
 }
 
 double icy::NumberCrunching::Tn_(const double Dn, const double Dt)
@@ -1364,4 +1372,71 @@ void icy::NumberCrunching::cohesive_law(
 }
 
 
+void icy::NumberCrunching::CZRotationMatrix(
+    double x0, double y0, double z0,
+    double x1, double y1, double z1,
+    double x2, double y2, double z2,
+    double &r00, double &r01, double &r02,
+    double &r10, double &r11, double &r12,
+    double &r20, double &r21, double &r22,
+    double &a_Jacob) {
 
+    double p1x, p1y, p1z, p2x, p2y, p2z;
+    p1x = x1 - x0;
+    p1y = y1 - y0;
+    p1z = z1 - z0;
+
+    p2x = x0 - x2;
+    p2y = y0 - y2;
+    p2z = z0 - z2;
+
+    // normalized p1 goes into 1st row of R
+    double p1mag = sqrt(p1x * p1x + p1y * p1y + p1z * p1z);
+    r00 = p1x / p1mag;
+    r01 = p1y / p1mag;
+    r02 = p1z / p1mag;
+
+    // normalized n = p1 x p2 goes into the 3rd row
+    double nx, ny, nz;
+    nx = -p1z * p2y + p1y * p2z;
+    ny = p1z * p2x - p1x * p2z;
+    nz = -p1y * p2x + p1x * p2y;
+    double nmag = sqrt(nx * nx + ny * ny + nz * nz);
+    a_Jacob = nmag / 2; // area of the cohesive element
+    nx /= nmag;
+    ny /= nmag;
+    nz /= nmag;
+    r20 = nx;
+    r21 = ny;
+    r22 = nz;
+
+    // normalize p1
+    p1x /= p1mag;
+    p1y /= p1mag;
+    p1z /= p1mag;
+
+    // second row is: r2 = n x p1
+    double r2x, r2y, r2z;
+    r2x = -nz * p1y + ny * p1z;
+    r2y = nz * p1x - nx * p1z;
+    r2z = -ny * p1x + nx * p1y;
+
+    nmag = sqrt(r2x*r2x + r2y*r2y + r2z*r2z);
+    r10 = r2x / nmag;
+    r11 = r2y / nmag;
+    r12 = r2z / nmag;
+}
+
+
+
+void icy::NumberCrunching::multAX(
+        double a11, double a12, double a13,
+        double a21, double a22, double a23,
+        double a31, double a32, double a33,
+        double x1, double x2, double x3,
+        double &y1, double &y2, double &y3)
+{
+    y1 = x1 * a11 + x2 * a12 + x3 * a13;
+    y2 = x1 * a21 + x2 * a22 + x3 * a23;
+    y3 = x1 * a31 + x2 * a32 + x3 * a33;
+}

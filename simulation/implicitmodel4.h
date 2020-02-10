@@ -45,7 +45,6 @@ private:
     void _adjustTimeStep();
     void _acceptFrame();
     void _assemble();
-    void _transferUpdatedState();
 
 };
 

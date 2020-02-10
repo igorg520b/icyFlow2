@@ -26,6 +26,7 @@ public:
     static const double EPS;
     static std::vector<CPResult> cprList;
 
+    static void InitializeConstants();
 
     static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc);
 
@@ -36,7 +37,9 @@ public:
     static void AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h);
 
     // cohesive zones
-    static void AssembleCZs(LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms, double h);
+    static void AssembleCZs(
+            LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms,
+            int &totalFailed, int &totalDamaged);
 
 private:
 
@@ -136,7 +139,7 @@ private:
     // these are copied from ModelPrms
     static double deln, delt, p_m, p_n, alpha, beta, gam_n, gam_t, tau_max, sigma_max, pMtn, pMnt, lambda_n, lambda_t;
     static double B[3][3][18];
-
+    static double sf[3][3];
 
     inline static double Tn_(const double Dn, const double Dt);
     inline static double Tt_(const double Dn, const double Dt);
@@ -151,7 +154,16 @@ private:
             double &Tn, double &Tt, double &Dnn,
             double &Dtt, double &Dnt, double &Dtn);
 
-    static void CZForce(CZ *cz, double h);
+    inline static void CZRotationMatrix(
+        double x0, double y0, double z0,
+        double x1, double y1, double z1,
+        double x2, double y2, double z2,
+        double &r00, double &r01, double &r02,
+        double &r10, double &r11, double &r12,
+        double &r20, double &r21, double &r22,
+        double &a_Jacob);
+
+    static void CZForce(CZ *cz);
 
 };
 

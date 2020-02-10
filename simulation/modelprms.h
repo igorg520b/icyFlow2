@@ -93,8 +93,7 @@ public:
     double p_m, p_n;
     double pMtn, pMnt; // < phi_t - phi_n >, < phi_n - phi_t >
     double gam_n, gam_t;
-    double sf[3][3] = {};
-    double B[3][3][18] = {};
+
     double E[6][6]={}; // recompute when nu or rho changes
 
     ModelPrms() {
@@ -111,52 +110,7 @@ public:
                 }
 
 
-        // initialize sf[]
 
-        double GP_coord_1 = 1.0 / 6.0;
-        double GP_coord_2 = 2.0 / 3.0;
-        sf[0][0] = 1.0 - GP_coord_1 - GP_coord_2;
-        sf[1][0] = GP_coord_1;
-        sf[2][0] = GP_coord_2;
-
-        GP_coord_1 = 2.0 / 3.0;
-        GP_coord_2 = 1.0 / 6.0;
-        sf[0][1] = 1.0 - GP_coord_1 - GP_coord_2;
-        sf[1][1] = GP_coord_1;
-        sf[2][1] = GP_coord_2;
-
-        GP_coord_1 = 1.0 / 6.0;
-        GP_coord_2 = 1.0 / 6.0;
-        sf[0][2] = 1.0 - GP_coord_1 - GP_coord_2;
-        sf[1][2] = GP_coord_1;
-        sf[2][2] = GP_coord_2;
-
-
-        // initialize B[]
-        for(int i=0;i<3;i++)
-        {
-            B[i][0][0] = sf[0][i];
-            B[i][1][1] = sf[0][i];
-            B[i][2][2] = sf[0][i];
-            B[i][0][9] = -sf[0][i];
-            B[i][1][10] = -sf[0][i];
-            B[i][2][11] = -sf[0][i];
-
-            B[i][0][3] = sf[1][i];
-            B[i][1][4] = sf[1][i];
-            B[i][2][5] = sf[1][i];
-            B[i][0][12] = -sf[1][i];
-            B[i][1][13] = -sf[1][i];
-            B[i][2][14] = -sf[1][i];
-
-            B[i][0][6] = sf[2][i];
-            B[i][1][7] = sf[2][i];
-            B[i][2][8] = sf[2][i];
-
-            B[i][0][15] = -sf[2][i];
-            B[i][1][16] = -sf[2][i];
-            B[i][2][17] = -sf[2][i];
-        }
 
         Recompute();
         RecomputeE();
