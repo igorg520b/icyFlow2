@@ -20,6 +20,7 @@ public:
     int globalElementId = -1;           // Sequential numbering of exterior (surface) elements for collision detection
     int id = 0;                         // sequential numbering within same mesh for saving/loading faces
     bool isSurface = false;
+    int tag = 0;                        // for cz insertion
 
     std::unordered_set<icy::Face*> adjFaces; // Collection of adjacent faces for collision detection (only on surface elements)
     double stress[6]={};

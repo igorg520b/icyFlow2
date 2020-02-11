@@ -1,6 +1,6 @@
 #include "czinsertiontool.h"
 
-CZInsertionTool::CZInsertionTool()
+icy::CZInsertionTool::CZInsertionTool()
 {
 
 }

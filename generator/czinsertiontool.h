@@ -2,7 +2,9 @@
 #define CZINSERTIONTOOL_H
 
 
-class CZInsertionTool
+namespace icy { class CZInsertionTool; }
+
+class icy::CZInsertionTool
 {
 public:
     CZInsertionTool();

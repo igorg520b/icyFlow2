@@ -176,6 +176,7 @@ void icy::Mesh::UpdateGridData()
     for(int i=0;i<(int)elems.size();i++) {
         Element *elem = &elems[i];
         principalStresses_cells->SetTuple3(i, elem->principal_stresses[0], elem->principal_stresses[1], elem->principal_stresses[2]);
+        tags_cells->SetValue(i, elem->tag);
     }
 
 }
