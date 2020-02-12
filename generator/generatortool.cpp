@@ -1,4 +1,5 @@
 #include "generatortool.h"
+#include "czinsertiontool.h"
 #include <unordered_set>
 #include <utility>
 #include <cmath>
@@ -32,6 +33,11 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     beam->CreateUGrid();
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
+
+
+    // insert czs
+    CZInsertionTool cztool;
+    cztool.InsertCohesiveElements(*beam);
 }
 
 void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)

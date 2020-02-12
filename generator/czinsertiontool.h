@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace icy {
 class CZInsertionTool;
@@ -13,8 +14,8 @@ class ExtendedNode;
 class ExtendedFace;
 class ExtendedElement;
 class ExtendedCZ;
-}
 
+}
 
 class icy::ExtendedNode {
 public:
@@ -22,7 +23,7 @@ public:
     int id;
 
     bool _belongs_to_cz = false;
-    std::vector<int> grains;
+    std::unordered_set<int> grains;
     std::vector<int> elementsOfNode; // connected elems
 
     void SplitNode(std::list<int> &allNodesAsLL, std::vector<ExtendedNode> &allNodes)
@@ -34,11 +35,11 @@ public:
 
 class icy::ExtendedFace {
 public:
-    int vrts[3];
+    int id = -1;
+    int vrts[3] = {};
     bool exposed = true;            // is this an outside surface
     bool created = false;           // got exposed at simulation time due to fracture
-
-    int elementsOfFace[2] = {};
+    std::vector<int>elementsOfFace;
 };
 
 class icy::ExtendedElement {
@@ -47,18 +48,18 @@ public:
     int vrts[4];
     int tag;
 
-    std::vector<int> faces;
+    static const int myConvention[4][3];
 
-    void SubstituteNode(int oldNode, int newNode) {
-        bool found = false;
-        for(int i=0;i<4;i++)
-            if(vrts[i]==oldNode) {
-                found = true;
-                vrts[i] = newNode;
-                break;
-            }
-        if(!found) throw std::runtime_error("substituted node not found");
-    }
+    std::vector<int> faces;
+    void SubstituteNode(int oldNode, int newNode);
+    int WhichFace(ExtendedFace &fc);
+
+    bool ContainsFace(ExtendedFace &fc);
+    void AddFaceIfContains(ExtendedFace &fc);
+    ExtendedFace CreateFaceFromIdx(int idx);
+    static int TetraIdxOfFaceVertex(int fidx, int faceVertIdx)
+    { return myConvention[fidx][faceVertIdx]; }
+
 };
 
 class icy::ExtendedCZ {
@@ -82,7 +83,7 @@ public:
     std::list<int> allNodesAsLL;
 
 
-    CZInsertionTool();
+    CZInsertionTool() {}
     void InsertCohesiveElements(Mesh &mg);
 private:
     void Extend(Mesh &mg); // convert to the extended format stored in this class
