@@ -16,7 +16,6 @@ class icy::Element
 {
 public:
     icy::Node* vrts[4];                 // References to element vertices
-    int granule = 0;                    // Granule that the element belongs to (0 if not granular)
     int globalElementId = -1;           // Sequential numbering of exterior (surface) elements for collision detection
     int id = 0;                         // sequential numbering within same mesh for saving/loading faces
     bool isSurface = false;

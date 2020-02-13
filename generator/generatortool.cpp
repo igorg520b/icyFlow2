@@ -24,20 +24,18 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     mc->mgs.push_back(indenter);
     mc->beam = beam;
     mc->indenter = indenter;
-    beam->AnchorSides();
     for(auto &nd : indenter->nodes) nd.anchored = true;
 
     // align the indenter
     indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
-//    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 0.05);
-    beam->CreateUGrid();
+//    beam->CreateUGrid();
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
-
 
     // insert czs
     CZInsertionTool cztool;
     cztool.InsertCohesiveElements(*beam);
+    beam->AnchorSides();
 }
 
 void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)

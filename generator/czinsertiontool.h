@@ -94,6 +94,7 @@ public:
 
     int e0, e1; // attached elements
     int fidx0, fidx1;
+    int fid0, fid1; // used at very last step
     bool sameGrain = false; // czs should not be insreted between elements of the same grain
     int relativeOrientationIndex = -1; // used when creating CZ from Face
     void ReinitializeVerticeArrays(std::vector<ExtendedElement> &elems);
