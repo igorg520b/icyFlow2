@@ -1,12 +1,12 @@
 #include "mesh.h"
 #include <stdexcept>
 
-icy::Mesh::Mesh()
+icy::Mesh::~Mesh()
 {
-
+    Clear();
 }
 
-icy::Mesh::~Mesh()
+void icy::Mesh::Clear()
 {
     // delete everything
     surfaceElements.clear();
@@ -14,7 +14,9 @@ icy::Mesh::~Mesh()
     czs.clear();
     elems.clear();
     nodes.clear();
+
 }
+
 
 void icy::Mesh::ComputeBoundingBox()
 {

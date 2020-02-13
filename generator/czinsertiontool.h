@@ -41,6 +41,7 @@ public:
     double x0, y0, z0;
     bool isSurface = false;
     int id;
+    int newId;  // for resequencing after insertion
 
     bool belongs_to_cz = false;
     std::unordered_set<int> grains;
@@ -85,7 +86,6 @@ public:
 
     static std::tuple<int,int,int> make_sorted_tuple(int a, int b, int c);
     void GenerateFaces();
-
 };
 
 class icy::ExtendedCZ {
@@ -96,6 +96,7 @@ public:
     int fidx0, fidx1;
     bool sameGrain = false; // czs should not be insreted between elements of the same grain
     int relativeOrientationIndex = -1; // used when creating CZ from Face
+    void ReinitializeVerticeArrays(std::vector<ExtendedElement> &elems);
 };
 
 

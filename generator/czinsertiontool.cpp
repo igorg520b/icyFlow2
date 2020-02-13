@@ -1,5 +1,6 @@
 #include "czinsertiontool.h"
 
+// ====================================== node
 void icy::ExtendedNode::SplitNode(
         std::list<int> &allNodesAsLL,
         std::vector<ExtendedNode> &allNodes,
@@ -92,8 +93,6 @@ void icy::ExtendedElement::AddFaceIfContains(ExtendedFace &fc)
     if(ContainsFace(fc)) faces.push_back(fc.id);
 }
 
-
-
 icy::ExtendedFace icy::ExtendedElement::CreateFaceFromIdx(int idx)
 {
     ExtendedFace r;
@@ -103,6 +102,22 @@ icy::ExtendedFace icy::ExtendedElement::CreateFaceFromIdx(int idx)
     r.vrts[2] = vrts[myConvention[idx][2]];
 
     return r;
+}
+
+//=========================================== CZ
+
+void icy::ExtendedCZ::ReinitializeVerticeArrays(std::vector<ExtendedElement> &elems)
+{
+    for(int i=0;i<3;i++) {
+        ExtendedElement &elem0 = elems[e0];
+        ExtendedElement &elem1 = elems[e1];
+
+        vrts[i] = elem0.vrts[icy::ExtendedElement::myConvention[fidx0][i]];
+        vrts[i+3] = elem1.vrts[icy::ExtendedElement::myConvention[fidx1][(i + relativeOrientationIndex) % 3]];
+    }
+    int temp = vrts[5];
+    vrts[5] = vrts[4];
+    vrts[4] = temp;
 }
 
 
@@ -171,16 +186,7 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
         }
         else if(fc.connectedElements.size() == 0 || fc.connectedElements.size() > 2)
             throw std::runtime_error("face with incorrect number of adj tetra");
-
     }
-
-
-}
-
-
-void icy::CZInsertionTool::ConvertBack(Mesh &mg)
-{
-
 }
 
 
@@ -188,7 +194,6 @@ void icy::CZInsertionTool::ConvertBack(Mesh &mg)
 void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
 {
     Extend(mg);
-//    IdentifyParentsOfTriangles();
 
     // store surface faces and inner faces
     std::vector<int> surface;
@@ -206,13 +211,13 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
         for(int i=0;i<3;i++) nodes[fc.vrts[i]].isSurface = true;
     }
 
-    std::vector<std::pair<int, int>> surfaceFaces; // <elemIdx, faceIdx>
+//    std::vector<std::pair<int, int>> surfaceFaces; // <elemIdx, faceIdx>
 
     for(auto &fc : faces) {
         for(auto &elemIdx : fc.connectedElements) {
             ExtendedElement &elem = elems[elemIdx];
             int which = elem.WhichFace(fc);
-            if(fc.connectedElements.size()==1) surfaceFaces.push_back(std::make_pair(elemIdx,which));
+            if(fc.connectedElements.size()==1) //surfaceFaces.push_back(std::make_pair(elemIdx,which));
             elem.faces.push_back(which);
         }
     }
@@ -235,11 +240,8 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
             if(first_nd_idx == second_nd_idx) {cz.relativeOrientationIndex=i; break;}
         }
         if(cz.relativeOrientationIndex == -1) throw std::runtime_error("relative orientation idx");
+        czs.push_back(cz);
     }
-
-
-    // prepare linked list (all nodes)
-
 
     // list the nodes that are connected to CZs
     for(auto &fidx : innerTris) {
@@ -258,14 +260,68 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
         if(nd.belongs_to_cz) nczs.push_back(nd.id);
     }
 
-    // split the nodes, which belong to cohesive elements
-    for(auto )
+    // split the nodes that belong to cohesive elements
+    std::cout << "nodes before " << nodes.size() << std::endl;
+    for(auto &ndIdx : nczs) {
+        ExtendedNode &nd = nodes[ndIdx];
+        nd.SplitNode(allNodesAsLL, nodes, elems);
+    }
+    std::cout << "nodes after split " << nodes.size() << std::endl;
+    std::cout << "idxs in allNodesAsLL " << allNodesAsLL.size() << std::endl;
+    std::cout << "number of czs " << czs.size() << std::endl;
+
+    // linked list becomes the new list of nodes
+    // create a new "vector" of nodes from allNodesAsLL and update elem.vrts
+    std::map<int, int> resequence;
+    std::vector<ExtendedNode> nodes2;
+    int count = 0;
+    for(auto &ndIdx : allNodesAsLL) {
+        ExtendedNode &nd = nodes[ndIdx];
+        nd.newId = count++;
+        nodes2.push_back(nd);
+    }
+
+    // replace node indices in elems
+    for(auto &elem : elems)
+        for(int i=0;i<4;i++)
+            elem.vrts[i] = nodes[elem.vrts[i]].newId;
+
+    // replace the node array
+    nodes = nodes2;
+    for(auto &nd : nodes) nd.id = nd.newId;
 
 
-//    foreach (ExtendedNode nd in nczs) nd.SplitNode(ll);
+    // infer cz.vrts[] from fidx
+    for(auto &cz : czs) cz.ReinitializeVerticeArrays(elems);
+
+    // FACES
+    faces.clear();
+
+    // surface faces are re-created from element.faces
+    for(auto &elem : elems)
+        for(int &fcIdx : elem.faces)
+            faces.push_back(elem.CreateFaceFromIdx(fcIdx));
+    std::cout << "exposed faces " << faces.size() << std::endl;
+
+    // cz faces are re-created from czs
+    for(auto &cz : czs) {
+        ExtendedElement &elem0 = elems[cz.e0];
+        ExtendedElement &elem1 = elems[cz.e1];
+
+        ExtendedFace fc0 = elem0.CreateFaceFromIdx(cz.fidx0);
+        ExtendedFace fc1 = elem1.CreateFaceFromIdx(cz.fidx1);
+        fc0.exposed = false;
+        fc1.exposed = false;
+        faces.push_back(fc0);
+        faces.push_back(fc1);
+    }
+    std::cout << "total faces " << faces.size() << std::endl;
+
+    // CONVERT BACK
+    mg.Clear();
 
 
-    // linked list becomes the new list of nodes; resequence
-
-
+    mg.CreateUGrid();
 }
+
+

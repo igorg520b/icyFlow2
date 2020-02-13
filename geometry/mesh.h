@@ -56,8 +56,9 @@ public:
     vtkNew<vtkIntArray> tags_cells;
     vtkNew<vtkDoubleArray> verticalDisplacements_nodes;
 
-    Mesh();
+    Mesh() {}
     ~Mesh();
+    void Clear();
     void ComputeBoundingBox();
     void AnchorSides();
     void IdentifySurfaceElements();
