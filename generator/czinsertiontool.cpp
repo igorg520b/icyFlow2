@@ -4,12 +4,16 @@
 void icy::ExtendedNode::SplitNode(
         std::list<int> &allNodesAsLL,
         std::vector<ExtendedNode> &allNodes,
-        std::vector<ExtendedElement> &elems)
+        std::vector<ExtendedElement> &elems,
+        std::vector<ExtendedNode> &additionalNodes)
 {
     std::list<int>::iterator itLL = std::find(allNodesAsLL.begin(), allNodesAsLL.end(), this->id);
     if(itLL == allNodesAsLL.end()) throw std::runtime_error("node not found in LL");
 
     std::vector<int> grains_as_vector(grains.begin(), grains.end());
+
+//    std::map<int,bool> localNewNodes; // for double-check
+//    localNewNodes[this->id] = false;
 
     // add (nGranules-1) new nodes and update connected elements
     int nGrains = (int)grains.size();
@@ -19,9 +23,10 @@ void icy::ExtendedNode::SplitNode(
         int currentGrain = grains_as_vector[i];
 //        std::cout << "current grain " << currentGrain << std::endl;
         ExtendedNode newNode = *this;
-        newNode.id = (int)allNodes.size();
-        allNodes.push_back(newNode);
+        newNode.id = (int)allNodes.size()+additionalNodes.size();
+        additionalNodes.push_back(newNode);
         allNodesAsLL.insert(itLL, newNode.id);
+//        localNewNodes[newNode.id]=false;
 
         for(auto &elemIdx : elementsOfNode) {
             ExtendedElement &elem = elems[elemIdx];
@@ -29,6 +34,29 @@ void icy::ExtendedNode::SplitNode(
                 elem.SubstituteNode(this->id, newNode.id);
         }
     }
+/*
+    // verify that all localNewNodes are connected
+    for(auto &elemIdx : elementsOfNode) {
+        for(int i=0;i<4;i++) {
+            int ndIdx = elems[elemIdx].vrts[i];
+            if(localNewNodes.find(ndIdx)!=localNewNodes.end())
+                localNewNodes[ndIdx] = true;
+        }
+    }
+
+    bool disconnect_found = false;
+    for(auto &pair : localNewNodes)
+        if(pair.second == false)
+        {
+            disconnect_found = true;
+            std::cout << "disconnected node " << pair.first << " is present when splitting " << this->id <<std::endl;
+        }
+
+    if(disconnect_found) {
+        std::cout << "  nGrains " << nGrains << "; localNewNodes: " << localNewNodes.size();
+        std::cout << "; elems of nds: " << elementsOfNode.size() << std::endl;
+    }
+    */
 }
 
 
@@ -148,8 +176,6 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
     }
     std::cout << "count disconnected nds in mg: "<< count << std::endl;
 
-
-
     czs.clear();
     faces.clear();
     elems.clear();
@@ -177,8 +203,8 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
             int nodeIdx = elem.vrts[j]->id;
             ExtendedNode &nd = nodes[nodeIdx];
             nd.grains.insert(elem.tag); // populate grains of the node
-            elem2.vrts[j] = nodeIdx;
             nd.elementsOfNode.push_back(elem2.id);
+            elem2.vrts[j] = nodeIdx;
         }
         elem2.GenerateFaces();
 
@@ -228,10 +254,10 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
     std::cout << "surface fcs " << surface.size() << std::endl;
     std::cout << "innter fcs " << innerTris.size() << std::endl;
 
-    for(auto &fcidx : surface) {
-        ExtendedFace &fc = faces[fcidx];
-        for(int i=0;i<3;i++) nodes[fc.vrts[i]].isSurface = true;
-    }
+//    for(auto &fcidx : surface) {
+//        ExtendedFace &fc = faces[fcidx];
+//        for(int i=0;i<3;i++) nodes[fc.vrts[i]].isSurface = true;
+//    }
 
 //    std::vector<std::pair<int, int>> surfaceFaces; // <elemIdx, faceIdx>
 
@@ -284,10 +310,17 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
 
     // split the nodes that belong to cohesive elements
     std::cout << "nodes before " << nodes.size() << std::endl;
+
+    std::vector<ExtendedNode> additionalNodes;
     for(auto &ndIdx : nczs) {
         ExtendedNode &nd = nodes[ndIdx];
-        nd.SplitNode(allNodesAsLL, nodes, elems);
+        nd.SplitNode(allNodesAsLL, nodes, elems, additionalNodes);
     }
+
+    std::cout << "additional nodes size " << additionalNodes.size() << std::endl;
+    // additionalNodes -> nodes
+    nodes.insert(nodes.end(), additionalNodes.begin(),additionalNodes.end());
+
     std::cout << "nodes after split " << nodes.size() << std::endl;
     std::cout << "idxs in allNodesAsLL " << allNodesAsLL.size() << std::endl;
     std::cout << "number of czs " << czs.size() << std::endl;

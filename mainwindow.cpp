@@ -37,7 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
 //    qtw->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
 
     pb = new ObjectPropertyBrowser(nullptr);
-    pb->setActiveObject(&beamParams);
+//    pb->setActiveObject(&beamParams);
+    pb->setActiveObject(&model.prms);
 
     sp->addWidget(pb);
     sp->addWidget(qtw);

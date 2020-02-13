@@ -49,7 +49,8 @@ public:
 
     void SplitNode(std::list<int> &allNodesAsLL,
                    std::vector<ExtendedNode> &allNodes,
-                   std::vector<ExtendedElement> &elems);
+                   std::vector<ExtendedElement> &elems,
+                   std::vector<ExtendedNode> &additionalNodes);
 };
 
 

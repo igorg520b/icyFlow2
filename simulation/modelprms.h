@@ -53,13 +53,13 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    double IndentationVelocity = 0.1;//0.0001; // 0.1 mm/s
+    double IndentationVelocity = 0.0001; // 0.1 mm/s
     double InitialTimeStep = 0.05;
     int MaxSteps = 100;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material
-    double Y = 6000000;//5e9;
+    double Y = 3.7e9;
     double rho = 916.2;
     double dampingMass = 0.0005;
     double dampingStiffness = 0.0005;
@@ -83,7 +83,8 @@ public:
 
     // cz parameters
     double alpha = 4, beta = 4, lambda_n = 0.015, lambda_t = 0.015;
-    double phi_n = 3, phi_t = 3; // fracture energy
+    double phi_n = 300; // 3;
+    double phi_t = 300; //3; // fracture energy
     double sigma_max = 120000, tau_max = 140000;
     double del_n = 0, del_t = 0;
 
