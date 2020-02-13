@@ -1,6 +1,34 @@
 #include "czinsertiontool.h"
 
+void icy::ExtendedNode::SplitNode(
+        std::list<int> &allNodesAsLL,
+        std::vector<ExtendedNode> &allNodes,
+        std::vector<ExtendedElement> &elems)
+{
+    std::list<int>::iterator itLL = std::find(allNodesAsLL.begin(), allNodesAsLL.end(), this->id);
+    if(itLL == allNodesAsLL.end()) throw std::runtime_error("node not found in LL");
 
+    std::vector<int> grains_as_vector(grains.begin(), grains.end());
+
+    // add (nGranules-1) new nodes and update connected elements
+    int nGrains = (int)grains.size();
+    for(int i=0;i<nGrains-1;i++) {
+        int currentGrain = grains_as_vector[i];
+        ExtendedNode newNode = *this;
+        newNode.id = (int)allNodes.size();
+        allNodes.push_back(newNode);
+        allNodesAsLL.insert(itLL, newNode.id);
+
+        for(auto &elemIdx : elementsOfNode) {
+            ExtendedElement &elem = elems[elemIdx];
+            if(elem.tag == currentGrain)
+                elem.SubstituteNode(this->id, newNode.id);
+        }
+    }
+}
+
+
+// ================================== face
 icy::ExtendedFace::ExtendedFace(std::tuple<int,int,int> ftuple) {
     vrts[0] = std::get<0>(ftuple);
     vrts[1] = std::get<1>(ftuple);
@@ -8,7 +36,7 @@ icy::ExtendedFace::ExtendedFace(std::tuple<int,int,int> ftuple) {
     this->ftuple = ftuple;
 }
 
-
+//==================================== element
 const int icy::ExtendedElement::myConvention[4][3] = {
 {3,1,2},
 {0,3,2},
@@ -86,6 +114,11 @@ icy::ExtendedFace icy::ExtendedElement::CreateFaceFromIdx(int idx)
 
 void icy::CZInsertionTool::Extend(Mesh &mg)
 {
+    czs.clear();
+    faces.clear();
+    elems.clear();
+    face_map.clear();
+
     nodes.resize(mg.nodes.size());
 
     for(size_t i= 0;i<mg.nodes.size();i++) {
@@ -98,15 +131,21 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
         nd2.z0 = nd.z0;
     }
 
-
     elems.resize(mg.elems.size());
     for(size_t i=0;i<mg.elems.size();i++) {
         Element &elem = mg.elems[i];
         ExtendedElement &elem2 = elems[i];
         elem2.tag = elem.tag;
         elem2.id = i;
-        for(int j=0;j<4;j++) elem2.vrts[j] = elem.vrts[j]->id;
+        for(int j=0;j<4;j++) {
+            int nodeIdx = elem.vrts[j]->id;
+            ExtendedNode &nd = nodes[nodeIdx];
+            nd.grains.insert(elem.tag); // populate grains of the node
+            elem2.vrts[j] = nodeIdx;
+        }
         elem2.GenerateFaces();
+
+        // create a "map" of faces; each face connecting to 1-2 elements
         for(int j=0;j<4;j++)
         {
             std::tuple<int,int,int> ftuple = elem2.faces_as_tuples[j];
@@ -120,6 +159,7 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
         }
     }
 
+    // only pick faces that are either (1) exterior or (2) separate grains
     int count = 0;
     for(auto &val : face_map) {
         ExtendedFace &fc = val.second;
@@ -134,7 +174,6 @@ void icy::CZInsertionTool::Extend(Mesh &mg)
 
     }
 
-    czs.clear();
 
 }
 
@@ -211,12 +250,18 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
         }
     }
 
+    // prepare linked list and a list of nodes that need to split
     std::vector<int> nczs; // nodes connected to cohesive zones
-    for(auto &nd : nodes)
+    allNodesAsLL.clear();
+    for(auto &nd : nodes) {
+        allNodesAsLL.push_back(nd.id);
         if(nd.belongs_to_cz) nczs.push_back(nd.id);
-
+    }
 
     // split the nodes, which belong to cohesive elements
+    for(auto )
+
+
 //    foreach (ExtendedNode nd in nczs) nd.SplitNode(ll);
 
 

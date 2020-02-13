@@ -46,10 +46,9 @@ public:
     std::unordered_set<int> grains;
     std::vector<int> elementsOfNode; // connected elems
 
-    void SplitNode(std::list<int> &allNodesAsLL, std::vector<ExtendedNode> &allNodes)
-    {
-        // NI
-    }
+    void SplitNode(std::list<int> &allNodesAsLL,
+                   std::vector<ExtendedNode> &allNodes,
+                   std::vector<ExtendedElement> &elems);
 };
 
 
