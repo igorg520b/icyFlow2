@@ -82,7 +82,6 @@ void icy::ImplicitModel4::_beginStep()
     // initial displacement guess for active nodes
 
     double h = tcf0.TimeStep;
-//    double hsq2 = h * h / 2;
     for(auto &nd : mc.activeNodes) {
         nd->dux = nd->vx*h;
         nd->duy = nd->vy*h;
@@ -90,12 +89,12 @@ void icy::ImplicitModel4::_beginStep()
     }
 
     // for testing
-//    for(auto &nd : mc.beam->nodes) {
-//        if(nd.anchored) {
-//            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
-//            nd.cz = nd.tz = nd.z0 + nd.uz;
- //       }
- //   }
+    for(auto &nd : mc.beam->nodes) {
+        if(nd.anchored) {
+            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
+            nd.cz = nd.tz = nd.z0 + nd.uz;
+       }
+   }
 }
 
 
@@ -132,6 +131,7 @@ bool icy::ImplicitModel4::_checkDamage()
 
     bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
 
+//    std::cout << "_checkDamage: " << result << std::endl;
     return result;
 }
 
@@ -175,6 +175,7 @@ void icy::ImplicitModel4::_XtoDU()
 
 void icy::ImplicitModel4::_adjustTimeStep()
 {
+    std::cout << "_adjustTimeStep: ";
     const int holdFactorDelay = 4;
     cf.AttemptsTaken++;
     if (explodes)
@@ -201,6 +202,7 @@ void icy::ImplicitModel4::_adjustTimeStep()
             if (tcf0.TimeScaleFactor < 1) tcf0.TimeScaleFactor = 1;
             tcf0.StepsWithCurrentFactor = 2;
         }
+        std::cout << "converges " << std::endl;
     }
 }
 
@@ -208,7 +210,7 @@ void icy::ImplicitModel4::_acceptFrame()
 {
     cf.CopyFrom(tcf0);
     cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
-
+    std::cout << "accepting frame with ts " << tcf0.TimeStep;
     for(auto &nd : mc.allNodes)
         nd->AcceptTentativeValues(tcf0.TimeStep);
 
@@ -238,10 +240,10 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
     // assemble cohesive zones
-    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
+//    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
-    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
+//    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
 
 
@@ -269,13 +271,16 @@ bool icy::ImplicitModel4::Step()
         diverges = _checkDivergence();
         _XtoDU();
         tcf0.IterationsPerformed++;
-        std::cout << "iteration " << tcf0.IterationsPerformed;
-        std::cout << "; convergence " << tcf0.ConvergenceReached;
-        std::cout << "; trf " << tcf0.TimeScaleFactor << std:: endl;
+        std::cout << "st " << tcf0.StepNumber;
+        std::cout << ";it " << tcf0.IterationsPerformed;
+        std::cout << "; div " << diverges;
+        std::cout << "; expl " << explodes;
+        std::cout << "; cvg " << tcf0.ConvergenceReached;
+        std::cout << "; trf " << tcf0.TimeScaleFactor;
+        std::cout << "; ts " << tcf0.TimeStep << std:: endl;
     } while(tcf0.IterationsPerformed < prms.minIterations ||
       (!explodes && !diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
 
-    if(kill) { std::cout << "killing "; return true; }
 //    cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
     _adjustTimeStep();
 

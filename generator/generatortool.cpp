@@ -28,13 +28,13 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
     // align the indenter
     indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
-//    beam->CreateUGrid();
+    beam->CreateUGrid();
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
 
     // insert czs
     CZInsertionTool cztool;
-    cztool.InsertCohesiveElements(*beam);
+//    cztool.InsertCohesiveElements(*beam);
     beam->AnchorSides();
 }
 

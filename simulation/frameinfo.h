@@ -61,7 +61,7 @@ public:
         ConvergenceReached = false;
     }
 
-    int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }
+//    int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }
 
     void CopyFrom(FrameInfo &other) {
         Reset();

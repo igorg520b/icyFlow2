@@ -54,20 +54,20 @@ class icy::ModelPrms : public QObject
 
 public:
     double IndentationVelocity = 0.001;
-    double InitialTimeStep = 0.05;
+    double InitialTimeStep = 0.025;
     int MaxSteps = 1000;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material
-    double Y = 3.7e9;
+    double Y = 5.0e7;//3.7e9;
     double rho = 916.2;
     double dampingMass = 0.0005;
     double dampingStiffness = 0.0005;
     double nu = 0.3;
 
     // integration
-    double NewmarkBeta = 0.5;
-    double NewmarkGamma = 1.0;
+    double NewmarkBeta = 0.25;
+    double NewmarkGamma = 0.5;
     double ConvergenceEpsilon = 0.005;
     double ConvergenceCutoff = 1E-8;
     double maxDamagePerStep = 0.05;

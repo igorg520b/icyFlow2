@@ -555,12 +555,16 @@ const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
 
     F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses, E);
 
-//    const double gravity = -10;
-//    double gravityForcePerNode = gravity * rho * V / 4;
-//    rhs[2] += gravityForcePerNode;
-//    rhs[5] += gravityForcePerNode;
-//    rhs[8] += gravityForcePerNode;
-//    rhs[11] += gravityForcePerNode;
+    const double gravity = -10;
+    double gravityForcePerNode = gravity * rho * V / 4;
+    rhs[2] += gravityForcePerNode;
+    rhs[5] += gravityForcePerNode;
+    rhs[8] += gravityForcePerNode;
+    rhs[11] += gravityForcePerNode;
+//    rhs[1] += gravityForcePerNode;
+//    rhs[4] += gravityForcePerNode;
+//    rhs[7] += gravityForcePerNode;
+ //   rhs[10] += gravityForcePerNode;
 
     // assemble the effective stiffness matrix Keff = M/(h^2 beta) + RKRt + D * gamma /(h beta)
     // where D is the damping matrix D = a M + b K
