@@ -96,7 +96,6 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     renderer->RemoveAllViewProps();
     renderer->AddActor(model.mc.mgs[0]->ugridActor);
     renderer->AddActor(model.mc.mgs[1]->ugridActor);
-
     renderer->ResetCamera();
     renderWindow->Render();
 }
@@ -112,4 +111,23 @@ void MainWindow::on_actionStep_triggered()
 {
     model.Step();
     updateGUI(false);
+}
+
+void MainWindow::on_actionElements_triggered()
+{
+    viewMode = ViewMode::Elements;
+    renderer->RemoveAllViewProps();
+    renderer->AddActor(model.mc.mgs[0]->ugridActor);
+    renderer->AddActor(model.mc.mgs[1]->ugridActor);
+    renderer->ResetCamera();
+    renderWindow->Render();
+}
+
+void MainWindow::on_actionAllCZs_triggered()
+{
+    viewMode = ViewMode::AllCZs;
+    renderer->RemoveAllViewProps();
+    renderer->AddActor(model.mc.beam->ugridActor_czs);
+    renderer->ResetCamera();
+    renderWindow->Render();
 }

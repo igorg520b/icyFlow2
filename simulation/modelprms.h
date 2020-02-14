@@ -53,9 +53,9 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    double IndentationVelocity = 0.0001; // 0.1 mm/s
+    double IndentationVelocity = 0.001;
     double InitialTimeStep = 0.05;
-    int MaxSteps = 100;
+    int MaxSteps = 1000;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material
@@ -70,11 +70,10 @@ public:
     double NewmarkGamma = 1.0;
     double ConvergenceEpsilon = 0.005;
     double ConvergenceCutoff = 1E-8;
-    double maxDamagePerStep = 0.01;
-    double maxFailPerStep = 0.01;
+    double maxDamagePerStep = 0.05;
+    double maxFailPerStep = 0.05;
     int maxIterations = 10;
-    int minIterations = 3;
-//    double gravity = -9.8;
+    int minIterations = 2;
 
     // collisions
     double penaltyK = 30000;
@@ -109,10 +108,6 @@ public:
                     int row = j * 3 + m;
                     M[col][row] = (col == row) ? 2 * coeff : coeff;
                 }
-
-
-
-
         Recompute();
         RecomputeE();
     }

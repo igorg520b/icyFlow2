@@ -155,11 +155,27 @@ void icy::Mesh::CreateUGrid()
     }
     */
 
-
     dataSetMapper->SetInputData(ugrid);
     ugridActor->SetMapper(dataSetMapper);
     ugridActor->GetProperty()->SetColor(colors->GetColor3d("Seashell").GetData());
     ugridActor->GetProperty()->EdgeVisibilityOn();
+
+
+    if(czs.size() == 0) return;
+
+    ugrid_czs->Reset();
+    ugrid_czs->Allocate(czs.size());
+    ugrid_czs->SetPoints(points);
+
+    for(auto &cz : czs) {
+        for(int i=0;i<3;i++) pts2[i]=cz.vrts[i]->id;
+        ugrid_czs->InsertNextCell(VTK_TRIANGLE, 3, pts2);
+    }
+    dataSetMapper_czs->SetInputData(ugrid_czs);
+    ugridActor_czs->SetMapper(dataSetMapper_czs);
+    ugridActor_czs->GetProperty()->SetColor(colors->GetColor3d("Blue").GetData());
+    ugridActor_czs->GetProperty()->EdgeVisibilityOn();
+
 }
 
 void icy::Mesh::UpdateUGrid()

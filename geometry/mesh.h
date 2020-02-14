@@ -47,8 +47,11 @@ public:
     // bounding box
     double xmin, xmax, ymin, ymax, zmin, zmax;
     vtkNew<vtkUnstructuredGrid> ugrid;
+    vtkNew<vtkUnstructuredGrid> ugrid_czs;
     vtkNew<vtkDataSetMapper> dataSetMapper;
+    vtkNew<vtkDataSetMapper> dataSetMapper_czs;
     vtkNew<vtkActor> ugridActor;
+    vtkNew<vtkActor> ugridActor_czs;
     vtkNew<vtkPoints> points;
     vtkNew<vtkNamedColors> colors;
 

@@ -121,7 +121,8 @@ void icy::CSRDictionary::CreateStructure()
 
 int icy::CSRDictionary::offset(int row, int column)
 {
-    return rows_pcsr[row][column];
+    // this will throw exception if the column entry does not exist
+    return rows_pcsr[row].at(column);
 }
 
 void icy::CSRDictionary::Assert()

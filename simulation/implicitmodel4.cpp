@@ -36,6 +36,17 @@ void icy::ImplicitModel4::_updateStaticStructure()
         }
     }
 
+    for(auto const &cz : mc.beam->czs)
+    {
+        for(int i=0;i<6;i++) {
+            Node *nd1 = cz.vrts[i];
+            for(int j=0;j<6;j++) {
+                Node *nd2 = cz.vrts[j];
+                if(!nd1->anchored && !nd2->anchored && nd2->altId >= nd1->altId)
+                    linearSystem.csrd.AddStatic(nd1->altId, nd2->altId);
+            }
+        }
+    }
 }
 
 void icy::ImplicitModel4::_prepare()

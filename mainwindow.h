@@ -50,6 +50,9 @@ public:
     ~MainWindow();
     void showEvent( QShowEvent* event ) override;
 
+    enum ViewMode { Elements, AllCZs, DamagedCZs };
+    ViewMode viewMode = ViewMode::Elements;
+
 public slots:
     void updateGUI(bool aborted);
 
@@ -64,6 +67,10 @@ private slots:
     void on_actionPause_Resume_triggered();
 
     void on_actionStep_triggered();
+
+    void on_actionElements_triggered();
+
+    void on_actionAllCZs_triggered();
 
 private:
     Ui::MainWindow *ui;
