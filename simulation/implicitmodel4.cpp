@@ -69,7 +69,7 @@ void icy::ImplicitModel4::_beginStep()
     // prepare tentative entry about the simulation step
     tcf0.CopyFrom(cf); // copy current frame data
     tcf0.IncrementTime(prms.InitialTimeStep);
-    tcf0.ActiveNodes = (int)mc.activeNodes.size();
+    tcf0.nActiveNodes = (int)mc.activeNodes.size();
     tcf0.ConvergenceReached = false;
     tcf0.IterationsPerformed = 0;
 
@@ -103,6 +103,7 @@ void icy::ImplicitModel4::_addCollidingNodesToStructure()
 {
     linearSystem.csrd.ClearDynamic();
     int count = (int)NumberCrunching::cprList.size();
+    tcf0.nCollisions = count;
     for(int k=0;k<count;k++) {
         CPResult &cpr = NumberCrunching::cprList[k];
         Node *nd = cpr.nd;
@@ -126,8 +127,8 @@ bool icy::ImplicitModel4::_checkDamage()
 
     if (tcf0.TimeScaleFactor == tcf0.Parts) return false; // can't reduce time step anyway
 
-    double dn_damaged = (double)(tcf0.nCZDamaged) / cf.nCZ_Initial;
-    double dn_failed = (double)(tcf0.nCZFailed) / tcf0.nCZ_Initial;
+    double dn_damaged = (double)(tcf0.nCZDamagedThisStep) / cf.nCZ_Initial;
+    double dn_failed = (double)(tcf0.nCZFailedThisStep) / tcf0.nCZ_Initial;
 
     bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
 
@@ -206,6 +207,8 @@ void icy::ImplicitModel4::_adjustTimeStep()
 void icy::ImplicitModel4::_acceptFrame()
 {
     cf.CopyFrom(tcf0);
+    cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
+
     for(auto &nd : mc.allNodes)
         nd->AcceptTentativeValues(tcf0.TimeStep);
 
@@ -219,7 +222,7 @@ void icy::ImplicitModel4::_acceptFrame()
     }
 
     // remove CZs that failed and update matrix structure
-    if(tcf0.nCZFailed > 0) {
+    if(tcf0.nCZFailedThisStep > 0) {
         mc.UpdateCZs();
         _updateStaticStructure();
     }
@@ -235,7 +238,7 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
     // assemble cohesive zones
-    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailed, tcf0.nCZDamaged);
+    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
@@ -267,12 +270,13 @@ bool icy::ImplicitModel4::Step()
         _XtoDU();
         tcf0.IterationsPerformed++;
         std::cout << "iteration " << tcf0.IterationsPerformed;
-        std::cout << "; convergence " << tcf0.ConvergenceReached << std:: endl;
+        std::cout << "; convergence " << tcf0.ConvergenceReached;
+        std::cout << "; trf " << tcf0.TimeScaleFactor << std:: endl;
     } while(tcf0.IterationsPerformed < prms.minIterations ||
       (!explodes && !diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
 
     if(kill) { std::cout << "killing "; return true; }
-    cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
+//    cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
     _adjustTimeStep();
 
     if (prms.maxIterations == 1 ||

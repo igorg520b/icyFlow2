@@ -8,17 +8,27 @@ namespace icy { class FrameInfo; }
 class icy::FrameInfo : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int StepNumber MEMBER StepNumber NOTIFY propertyChanged)
+    Q_PROPERTY(int time_StepNumber MEMBER StepNumber NOTIFY propertyChanged)
+    Q_PROPERTY(double time_SimulationTime MEMBER SimulationTime NOTIFY propertyChanged)
+    Q_PROPERTY(int time_TimeScaleFactor MEMBER TimeScaleFactor NOTIFY propertyChanged)
+    Q_PROPERTY(int time_StepsWithCurrentFactor MEMBER StepsWithCurrentFactor NOTIFY propertyChanged)
+    Q_PROPERTY(int nCZFailedTotal MEMBER nCZFailedTotal NOTIFY propertyChanged)
+    Q_PROPERTY(int nCollisions MEMBER nCollisions NOTIFY propertyChanged)
+    Q_PROPERTY(int nActiveNodes MEMBER nActiveNodes NOTIFY propertyChanged)
 
 
 public:
 
     // geometry
-    int nCZFailed;
-    int nCZDamaged;
+    int nCZFailedThisStep;
+    int nCZDamagedThisStep;
+
+    int nCZFailedTotal;
+    int nCZDamagedTotal;
+
     int nCollisions;
     int nCZ_Initial;
-    int ActiveNodes;
+    int nActiveNodes;
 
 
     // time
@@ -29,7 +39,7 @@ public:
     unsigned long SimulationIntegerTime;  // // measures time in 1/Parts intervals of InitialTimeStep
     double TimeStep;// time difference between current frame and last frame
     int StepsWithCurrentFactor; // time steps left with current factor (if TSF > 1)
-    int TimeScaleFactorThisStep = 1;    // Time scale used for this step
+//    int TimeScaleFactorThisStep = 1;    // Time scale used for this step
 
     double IndenterForce;
 
@@ -41,12 +51,13 @@ public:
     bool ConvergenceReached;
 
     void Reset() {
-        ActiveNodes = nCZ_Initial = nCZFailed = nCZDamaged = nCollisions = 0;
+        nActiveNodes = nCZ_Initial = nCZFailedThisStep = nCZDamagedThisStep = nCollisions = 0;
+        nCZFailedTotal = nCZDamagedTotal = 0;
         TimeStep = SimulationTime = 0;
         SimulationIntegerTime = StepsWithCurrentFactor = 0;
         StepNumber = -1;
         TimeScaleFactor = 1;
-        TimeScaleFactorThisStep = 1;
+        // TimeScaleFactorThisStep = 1;
         ConvergenceReached = false;
     }
 
@@ -60,8 +71,8 @@ public:
         StepsWithCurrentFactor = other.StepsWithCurrentFactor;
         TimeScaleFactor = other.TimeScaleFactor;
         nCZ_Initial = other.nCZ_Initial;
-        nCZFailed = other.nCZFailed;
-        nCZDamaged = other.nCZDamaged;
+        nCZFailedTotal = other.nCZFailedTotal;
+        nCZDamagedTotal = other.nCZDamagedTotal;
     }
 
     void IncrementTime(double initialTimestep)

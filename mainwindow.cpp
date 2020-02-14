@@ -70,6 +70,8 @@ void MainWindow::updateGUI(bool aborted)
     statusFrameNumber->setText(QString::number(model.cf.StepNumber));
     model.mc.UpdateActors();
     renderWindow->Render();
+
+    pb->setActiveObject(&model.cf);
 }
 
 

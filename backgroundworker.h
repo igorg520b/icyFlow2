@@ -7,6 +7,7 @@
 #include <QWaitCondition>
 #include <QString>
 #include "simulation/implicitmodel4.h"
+#include <vtkXMLUnstructuredGridWriter.h>
 
 namespace icy { class BackgroundWorker; }
 
@@ -20,6 +21,10 @@ public:
     bool timeToPause = false;
     bool running = false;
     void toggle();  // pause if running; resume if paused
+
+private:
+    vtkNew<vtkXMLUnstructuredGridWriter> writer;
+
 
 signals:
     void stepCompleted(bool aborted);
