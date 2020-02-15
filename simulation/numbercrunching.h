@@ -34,7 +34,9 @@ public:
     static void CollisionResponse(LinearSystem &ls, double DistanceEpsilon, double k);
 
     // linear tetrahedron
-    static void AssembleElems(LinearSystem &ls, std::vector<Element*> &elasticElements, ModelPrms &prms, double h);
+    static void AssembleElems(LinearSystem &ls,
+                              std::vector<Element*> &elasticElements,
+                              ModelPrms &prms, double h);
 
     // cohesive zones
     static void AssembleCZs(
@@ -132,7 +134,8 @@ private:
             Element *elem,
             const double (&E)[6][6], const double rho,
     const double dampingMass, const double dampingStiffness, const double h,
-    const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12]);
+    const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12],
+    const double gravity);
 
 
     // cohesive zones

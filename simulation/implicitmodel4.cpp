@@ -3,6 +3,7 @@
 #include "bvh/bvht.h"
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
+#include <omp.h>
 
 icy::ImplicitModel4::ImplicitModel4()
 {
@@ -18,6 +19,18 @@ void icy::ImplicitModel4::Clear()
     mc.Clear();
 }
 
+void icy::ImplicitModel4::_prepare()
+{
+    icy::NumberCrunching::InitializeConstants();
+
+//    allFrames.push_back(cf);
+    // re-create static contents of the linear system
+    mc.Prepare();   // populate activeNodes
+    _updateStaticStructure();
+
+    if(cf.StepNumber == 0) cf.nCZ_Initial = (int)mc.allCZs.size();
+    isReady = true;
+}
 
 void icy::ImplicitModel4::_updateStaticStructure()
 {
@@ -47,21 +60,7 @@ void icy::ImplicitModel4::_updateStaticStructure()
             }
         }
     }
-}
-
-void icy::ImplicitModel4::_prepare()
-{
-    icy::NumberCrunching::InitializeConstants();
-
-//    allFrames.push_back(cf);
-    // re-create static contents of the linear system
-    mc.Prepare();   // populate activeNodes
-    _updateStaticStructure();
-//    linearSystem.csrd.ClearDynamic();
-
-    if(cf.StepNumber == 0) cf.nCZ_Initial = (int)mc.allCZs.size();
-//    std::cout << "static csrd size " << linearSystem.csrd.staticCount() << std::endl;
-    isReady = true;
+    //    std::cout << "static csrd size " << linearSystem.csrd.staticCount() << std::endl;
 }
 
 void icy::ImplicitModel4::_beginStep()
@@ -89,14 +88,12 @@ void icy::ImplicitModel4::_beginStep()
     }
 
     // for testing
-    for(auto &nd : mc.beam->nodes) {
-        if(nd.anchored) {
-            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
-            nd.cz = nd.tz = nd.z0 + nd.uz;
-       }
-   }
+//    for(auto &nd : mc.beam->nodes)
+//        if(nd.anchored) {
+//            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
+//            nd.cz = nd.tz = nd.z0 + nd.uz;
+//       }
 }
-
 
 void icy::ImplicitModel4::_addCollidingNodesToStructure()
 {
@@ -123,15 +120,10 @@ void icy::ImplicitModel4::_addCollidingNodesToStructure()
 
 bool icy::ImplicitModel4::_checkDamage()
 {
-
     if (tcf0.TimeScaleFactor == tcf0.Parts) return false; // can't reduce time step anyway
-
     double dn_damaged = (double)(tcf0.nCZDamagedThisStep) / cf.nCZ_Initial;
     double dn_failed = (double)(tcf0.nCZFailedThisStep) / tcf0.nCZ_Initial;
-
     bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
-
-//    std::cout << "_checkDamage: " << result << std::endl;
     return result;
 }
 
@@ -175,22 +167,22 @@ void icy::ImplicitModel4::_XtoDU()
 
 void icy::ImplicitModel4::_adjustTimeStep()
 {
-    std::cout << "_adjustTimeStep: ";
     const int holdFactorDelay = 4;
     cf.AttemptsTaken++;
-    if (explodes)
+    if (tcf0.explodes)
     {
         cf.TimeScaleFactor *= 2;
         if (cf.TimeScaleFactor > cf.Parts) cf.TimeScaleFactor = cf.Parts;
-        std::cout << "explodes, new sf: " << cf.TimeScaleFactor << std::endl;
+        std::cout << "_adjustTimeStep: explodes, new sf: " << cf.TimeScaleFactor << std::endl;
         cf.StepsWithCurrentFactor = holdFactorDelay;
     }
-    else if ((diverges || !tcf0.ConvergenceReached) && tcf0.TimeScaleFactor < cf.Parts && prms.maxIterations > 1)
+    else if ((tcf0.diverges || !tcf0.ConvergenceReached) &&
+             tcf0.TimeScaleFactor < cf.Parts && prms.maxIterations > 1)
     {
         // does not converge
         cf.TimeScaleFactor *= 2;
         cf.StepsWithCurrentFactor = holdFactorDelay;
-        std::cout << "double ts: diverges " << diverges << "; convergenceReached " << tcf0.ConvergenceReached << "; factor " << cf.TimeScaleFactor << std::endl;
+        std::cout << "_adjustTimeStep: diverges " << tcf0.diverges << "; convergenceReached " << tcf0.ConvergenceReached << "; factor " << cf.TimeScaleFactor << std::endl;
     }
     else if (tcf0.ConvergenceReached && cf.TimeScaleFactor > 1)
     {
@@ -202,7 +194,6 @@ void icy::ImplicitModel4::_adjustTimeStep()
             if (tcf0.TimeScaleFactor < 1) tcf0.TimeScaleFactor = 1;
             tcf0.StepsWithCurrentFactor = 2;
         }
-        std::cout << "converges " << std::endl;
     }
 }
 
@@ -211,8 +202,18 @@ void icy::ImplicitModel4::_acceptFrame()
     cf.CopyFrom(tcf0);
     cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
     std::cout << "accepting frame with ts " << tcf0.TimeStep;
-    for(auto &nd : mc.allNodes)
+//    for(auto &nd : mc.activeNodes) {
+//        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
+//        nd->AcceptTentativeValues(tcf0.TimeStep);
+//    }
+
+    size_t N = mc.activeNodes.size();
+#pragma omp parallel for
+    for(size_t i=0;i<N;i++) {
+        Node *nd = mc.activeNodes[i];
+        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
         nd->AcceptTentativeValues(tcf0.TimeStep);
+    }
 
     // accept new state variables in CZs
     for(auto &cz : mc.nonFailedCZs) {
@@ -240,13 +241,11 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
 
     // assemble cohesive zones
-//    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
+    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
-//    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
+    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
 }
-
-
 
 bool icy::ImplicitModel4::Step()
 {
@@ -256,7 +255,8 @@ bool icy::ImplicitModel4::Step()
 
     do {
 
-        for(auto &nd : mc.activeNodes) nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
+        for(auto &nd : mc.activeNodes)
+            nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
 
         mc.ConstructBVH();                                              // this should _not_ be called on every step
         mc.bvh.Traverse();                                              // traverse BVH
@@ -264,30 +264,23 @@ bool icy::ImplicitModel4::Step()
         _addCollidingNodesToStructure();  // add colliding nodes to structure
 
         _assemble(); // prepare and compute forces
-        explodes = _checkDamage();
-        if(kill) { std::cout << "killing "; return true; }
+        tcf0.explodes = _checkDamage();
+        if(kill) return true;
         linearSystem.Solve();
-        if(kill) { std::cout << "killing "; return true; }
-        diverges = _checkDivergence();
+        if(kill) return true;
+        tcf0.diverges = _checkDivergence();
         _XtoDU();
         tcf0.IterationsPerformed++;
-        std::cout << "st " << tcf0.StepNumber;
-        std::cout << ";it " << tcf0.IterationsPerformed;
-        std::cout << "; div " << diverges;
-        std::cout << "; expl " << explodes;
-        std::cout << "; cvg " << tcf0.ConvergenceReached;
-        std::cout << "; trf " << tcf0.TimeScaleFactor;
-        std::cout << "; ts " << tcf0.TimeStep << std:: endl;
+        tcf0.Print();
     } while(tcf0.IterationsPerformed < prms.minIterations ||
-      (!explodes && !diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
+      (!tcf0.explodes && !tcf0.diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
 
-//    cf.TimeScaleFactorThisStep = tcf0.TimeScaleFactor; // record what TSF was used for this step
     _adjustTimeStep();
 
     if (prms.maxIterations == 1 ||
         tcf0.TimeScaleFactor == tcf0.Parts ||
         (!tcf0.ConvergenceReached && tcf0.TimeScaleFactor >= tcf0.Parts) ||
-        (!explodes && !diverges && tcf0.ConvergenceReached)) _acceptFrame();
+        (!tcf0.explodes && !tcf0.diverges && tcf0.ConvergenceReached)) _acceptFrame();
 
     return false; // step not aborted
 }

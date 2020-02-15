@@ -33,7 +33,6 @@ public:
     bool Step();    // return true if aborted
 
 private:
-    bool explodes, diverges;
 
     void _prepare();    // this is called once
     void _updateStaticStructure();    // this is called once

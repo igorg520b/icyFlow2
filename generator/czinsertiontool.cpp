@@ -420,8 +420,6 @@ void icy::CZInsertionTool::InsertCohesiveElements(Mesh &mg)
         cz.faces[1] = &mg.faces[czx.fid1];
     }
 
-    mg.CreateUGrid();
-
     // verify that each node is connected to either element or cz
 
     std::vector<bool> double_check;

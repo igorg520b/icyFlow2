@@ -29,9 +29,9 @@ void icy::Node::Initialize(double x, double y, double z, int _id)
 
 void icy::Node::AcceptTentativeValues(double h)
 {
-    unx += dux;
-    uny += duy;
-    unz += duz;
+//    unx += dux;
+//    uny += duy;
+//    unz += duz;
 
     vnx = (unx - ux) / h;
     vny = (uny - uy) / h;

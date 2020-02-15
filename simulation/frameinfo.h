@@ -2,6 +2,7 @@
 #define FRAMEINFO_H
 
 #include <QObject>
+#include <iostream>
 
 namespace icy { class FrameInfo; }
 
@@ -16,8 +17,8 @@ class icy::FrameInfo : public QObject
     Q_PROPERTY(int nCollisions MEMBER nCollisions NOTIFY propertyChanged)
     Q_PROPERTY(int nActiveNodes MEMBER nActiveNodes NOTIFY propertyChanged)
 
-
 public:
+    bool explodes, diverges; // for time step adjustment algorithm
 
     // geometry
     int nCZFailedThisStep;
@@ -49,6 +50,17 @@ public:
     double RelativeError;
     double Error0;
     bool ConvergenceReached;
+
+    void Print() {
+        std::cout << "st " << StepNumber;
+        std::cout << ";it " << IterationsPerformed;
+        std::cout << "; div " << diverges;
+        std::cout << "; expl " << explodes;
+        std::cout << "; cvg " << ConvergenceReached;
+        std::cout << "; trf " << TimeScaleFactor;
+        std::cout << "; ts " << TimeStep;
+        std::cout << std:: endl;
+    }
 
     void Reset() {
         nActiveNodes = nCZ_Initial = nCZFailedThisStep = nCZDamagedThisStep = nCollisions = 0;

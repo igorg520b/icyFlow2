@@ -44,11 +44,13 @@ void icy::BackgroundWorker::run()
 
         if(kill) break;
         bool aborted = model->Step();
-        // save
-        sprintf(fileName, "beam_%05d.vtu", model->cf.StepNumber);
-        writer->SetFileName(fileName);
-        writer->SetInputData(model->mc.beam->ugrid);
-        writer->Write();
+        if(model->prms.SaveVTU) {
+            // save
+            sprintf(fileName, "beam_%05d.vtu", model->cf.StepNumber);
+            writer->SetFileName(fileName);
+            writer->SetInputData(model->mc.beam->ugrid);
+            writer->Write();
+        }
 
         if(kill) break;
         if(aborted || model->cf.StepNumber >= model->prms.MaxSteps) timeToPause = true;

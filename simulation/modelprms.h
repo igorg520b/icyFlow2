@@ -13,6 +13,8 @@ class NumberCrunching;
 class icy::ModelPrms : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool sim_SaveVTU MEMBER SaveVTU NOTIFY propertyChanged)
+
     Q_PROPERTY(double sim_InitialTimeStep MEMBER InitialTimeStep NOTIFY propertyChanged)
     Q_PROPERTY(int sim_MaxSteps MEMBER MaxSteps NOTIFY propertyChanged)
     Q_PROPERTY(double sim_IndentationVelocity MEMBER IndentationVelocity NOTIFY propertyChanged)
@@ -24,8 +26,9 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double intg_ConvergenceCutoff MEMBER ConvergenceCutoff NOTIFY propertyChanged)
     Q_PROPERTY(double intg_maxDamagePerStep MEMBER maxDamagePerStep NOTIFY propertyChanged)
     Q_PROPERTY(double intg_maxFailPerStep MEMBER maxFailPerStep NOTIFY propertyChanged)
-    Q_PROPERTY(double intg_maxIterations MEMBER maxIterations NOTIFY propertyChanged)
-    Q_PROPERTY(double intg_minIterations MEMBER minIterations NOTIFY propertyChanged)
+    Q_PROPERTY(int intg_maxIterations MEMBER maxIterations NOTIFY propertyChanged)
+    Q_PROPERTY(int intg_minIterations MEMBER minIterations NOTIFY propertyChanged)
+    Q_PROPERTY(double intg_gravity MEMBER gravity NOTIFY propertyChanged)
 //    Q_PROPERTY(double intg_gravity MEMBER gravity NOTIFY propertyChanged)
 
     // collisions
@@ -53,13 +56,14 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(double cz_delt READ get_del_t)
 
 public:
-    double IndentationVelocity = 0.001;
+    bool SaveVTU = false;
+    double IndentationVelocity = 0.1;//0.001;
     double InitialTimeStep = 0.025;
     int MaxSteps = 1000;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material
-    double Y = 5.0e7;//3.7e9;
+    double Y = 3e6;//3.7e9;
     double rho = 916.2;
     double dampingMass = 0.0005;
     double dampingStiffness = 0.0005;
@@ -74,6 +78,7 @@ public:
     double maxFailPerStep = 0.05;
     int maxIterations = 10;
     int minIterations = 2;
+    double gravity = 0;//-10;
 
     // collisions
     double penaltyK = 30000;

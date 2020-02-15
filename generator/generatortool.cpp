@@ -12,7 +12,6 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     // generate beam
     Mesh *beam = new Mesh();
     GeneratorTool::GenerateBeam(beamParams, beam);
-//    GeneratorTool::GenerateTest(beamParams, beam);
     beam->setObjectName("beam");
 
     // generate indenter
@@ -28,7 +27,6 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
     // align the indenter
     indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
-    beam->CreateUGrid();
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
 
@@ -36,6 +34,7 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
     CZInsertionTool cztool;
 //    cztool.InsertCohesiveElements(*beam);
     beam->AnchorSides();
+    beam->CreateUGrid();
 }
 
 void icy::GeneratorTool::GenerateIndenter(BeamParams *beamParams, Mesh *outMesh)

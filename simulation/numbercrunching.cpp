@@ -527,7 +527,8 @@ void icy::NumberCrunching::ElementElasticity(
         Element *elem,
         const double (&E)[6][6], const double rho,
 const double dampingMass, const double dampingStiffness, const double h,
-const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
+const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12],
+const double gravity)
 {
     double V, x0[12], xc[12], vn[12], an[12];
     double f[12]={};
@@ -555,16 +556,11 @@ const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12])
 
     F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses, E);
 
-    const double gravity = -10;
     double gravityForcePerNode = gravity * rho * V / 4;
     rhs[2] += gravityForcePerNode;
     rhs[5] += gravityForcePerNode;
     rhs[8] += gravityForcePerNode;
     rhs[11] += gravityForcePerNode;
-//    rhs[1] += gravityForcePerNode;
-//    rhs[4] += gravityForcePerNode;
-//    rhs[7] += gravityForcePerNode;
- //   rhs[10] += gravityForcePerNode;
 
     // assemble the effective stiffness matrix Keff = M/(h^2 beta) + RKRt + D * gamma /(h beta)
     // where D is the damping matrix D = a M + b K
@@ -839,7 +835,8 @@ void icy::NumberCrunching::AssembleElems(
     for(int i=0;i<N;i++)
     {
         icy::Element *elem = elasticElements[i];
-        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h, NewmarkBeta, NewmarkGamma, M);
+        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h,
+                          NewmarkBeta, NewmarkGamma, M, prms.gravity);
     }
 
     // distribute into linear system
