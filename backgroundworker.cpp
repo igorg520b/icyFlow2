@@ -37,6 +37,7 @@ void icy::BackgroundWorker::run()
         if (!running || timeToPause) {
             running = false;
             timeToPause = false;
+//            emit stepCompleted(false);
             condition.wait(&mutex);
         }
         running = true;
@@ -55,8 +56,6 @@ void icy::BackgroundWorker::run()
         if(kill) break;
         if(aborted || model->cf.StepNumber >= model->prms.MaxSteps) timeToPause = true;
         emit stepCompleted(aborted);    // notify GUI that a step was completed
-
-
     }
 }
 

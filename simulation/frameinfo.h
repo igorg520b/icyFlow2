@@ -1,23 +1,17 @@
 #ifndef FRAMEINFO_H
 #define FRAMEINFO_H
 
-#include <QObject>
 #include <iostream>
 
 namespace icy { class FrameInfo; }
 
-class icy::FrameInfo : public QObject
+class icy::FrameInfo
 {
-    Q_OBJECT
-    Q_PROPERTY(int time_StepNumber MEMBER StepNumber NOTIFY propertyChanged)
-    Q_PROPERTY(double time_SimulationTime MEMBER SimulationTime NOTIFY propertyChanged)
-    Q_PROPERTY(int time_TimeScaleFactor MEMBER TimeScaleFactor NOTIFY propertyChanged)
-    Q_PROPERTY(int time_StepsWithCurrentFactor MEMBER StepsWithCurrentFactor NOTIFY propertyChanged)
-    Q_PROPERTY(int nCZFailedTotal MEMBER nCZFailedTotal NOTIFY propertyChanged)
-    Q_PROPERTY(int nCollisions MEMBER nCollisions NOTIFY propertyChanged)
-    Q_PROPERTY(int nActiveNodes MEMBER nActiveNodes NOTIFY propertyChanged)
-
 public:
+    // recorded values
+    double IndenterForce;
+    double extensometerDisplacements[5]={};
+
     bool explodes, diverges; // for time step adjustment algorithm
 
     // geometry
@@ -42,7 +36,6 @@ public:
     int StepsWithCurrentFactor; // time steps left with current factor (if TSF > 1)
 //    int TimeScaleFactorThisStep = 1;    // Time scale used for this step
 
-    double IndenterForce;
 
     // solution analysis
     int IterationsPerformed;
@@ -69,11 +62,9 @@ public:
         SimulationIntegerTime = StepsWithCurrentFactor = 0;
         StepNumber = -1;
         TimeScaleFactor = 1;
-        // TimeScaleFactorThisStep = 1;
         ConvergenceReached = false;
+        IndenterForce = 0;
     }
-
-//    int MaxIntTimestep() { return Parts - SimulationIntegerTime % Parts; }
 
     void CopyFrom(FrameInfo &other) {
         Reset();
@@ -97,8 +88,6 @@ public:
         StepNumber++;
     }
 
-signals:
-    void propertyChanged();
 };
 
 #endif // FRAMEINFO_H

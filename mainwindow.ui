@@ -20,14 +20,13 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionWrite_VTU"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionGenerator_Tool"/>
    </widget>
@@ -51,11 +50,6 @@
    <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionWrite_VTU">
-   <property name="text">
-    <string>Write VTU</string>
-   </property>
-  </action>
   <action name="actionScreenshot">
    <property name="text">
     <string>Screenshot</string>

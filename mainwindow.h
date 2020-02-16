@@ -40,9 +40,6 @@
 #include "simulation/implicitmodel4.h"
 #include "backgroundworker.h"
 
-namespace model = gmsh::model;
-namespace factory = gmsh::model::occ;
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -63,8 +60,6 @@ public slots:
     void updateGUI(bool aborted);
 
 private slots:
-
-    void on_actionWrite_VTU_triggered();
 
     void on_actionScreenshot_triggered();
 

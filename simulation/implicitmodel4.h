@@ -22,7 +22,7 @@ public:
     MeshCollection mc;
     ModelPrms prms;
     FrameInfo cf, tcf0;
-//    std::vector<FrameInfo> allFrames;
+    std::vector<FrameInfo> allFrames;
     LinearSystem linearSystem;
 
     bool isReady = false;

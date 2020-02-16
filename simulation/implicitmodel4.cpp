@@ -8,11 +8,12 @@
 icy::ImplicitModel4::ImplicitModel4()
 {
     Clear();
+    allFrames.reserve(1000);
 }
 
 void icy::ImplicitModel4::Clear()
 {
-//    allFrames.clear();
+    allFrames.clear();
     cf.Reset();
     tcf0.Reset();
     isReady = false;
@@ -23,7 +24,7 @@ void icy::ImplicitModel4::_prepare()
 {
     icy::NumberCrunching::InitializeConstants(prms);
 
-//    allFrames.push_back(cf);
+    allFrames.push_back(cf);
     // re-create static contents of the linear system
     mc.Prepare();   // populate activeNodes
     _updateStaticStructure();
@@ -208,11 +209,6 @@ void icy::ImplicitModel4::_acceptFrame()
     cf.nCZDamagedTotal =tcf0.nCZDamagedThisStep;
 //    std::cout << "accepting frame with ts " << tcf0.TimeStep << std::endl;
 
-//    for(auto &nd : mc.activeNodes) {
-//        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
-//        nd->AcceptTentativeValues(tcf0.TimeStep);
-//    }
-
     size_t N = mc.activeNodes.size();
 #pragma omp parallel for
     for(size_t i=0;i<N;i++) {
@@ -235,6 +231,20 @@ void icy::ImplicitModel4::_acceptFrame()
         mc.UpdateCZs();
         _updateStaticStructure();
     }
+
+    // read indenter force
+    double fx, fy, fz;
+    fx = fy = fz = 0;
+    for(auto &nd : mc.indenter->nodes) {
+        fx += nd.fx;
+        fy += nd.fy;
+        fz += nd.fz;
+    }
+    cf.IndenterForce = sqrt(fx*fx+fy*fy+fz*fz);
+    allFrames.push_back(cf);
+//    std::cout << cf.IndenterForce << std::endl;
+
+    // "measure" the vertical deflection at extensometer locations
 }
 
 void icy::ImplicitModel4::_assemble()

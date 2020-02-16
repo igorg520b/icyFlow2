@@ -57,14 +57,15 @@ class icy::ModelPrms : public QObject
 
 public:
     bool SaveVTU = false;
-    double IndentationVelocity = 0.001;
-    double InitialTimeStep = 0.025;
+    double IndentationVelocity = 0.017;
+    double penaltyK = 5000;
+    double InitialTimeStep = 0.01;
     int MaxSteps = 1000;
     double nThreshold = 0, tThreshold = 0; // CZ peak traction values
 
     // material
     double Y = 3.7e9;
-    double rho = 916.2;
+    double rho = 7000;//916.2;
     double dampingMass = 0.0005;
     double dampingStiffness = 0.0005;
     double nu = 0.3;
@@ -81,7 +82,6 @@ public:
     double gravity = 0;//-10;
 
     // collisions
-    double penaltyK = 30000;
     double DistanceEpsilon = 1E-15;
     int ReconstructBVH = 10;
 
@@ -89,7 +89,7 @@ public:
     double alpha = 4, beta = 4, lambda_n = 0.015, lambda_t = 0.015;
     double phi_n = 3; // 3;
     double phi_t = 3; //3; // fracture energy
-    double sigma_max = 120000, tau_max = 140000;
+    double sigma_max = 170000, tau_max = 190000;
     double del_n = 0, del_t = 0;
 
     // computed variables
