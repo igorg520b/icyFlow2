@@ -17,7 +17,7 @@ void icy::MeshCollection::Clear()
     allNodes.clear();
     activeNodes.clear();
 
-    nonFailedCZs.clear();
+    activeCZs.clear();
     allCZs.clear();
     failedCZs.clear();
 
@@ -125,11 +125,11 @@ void icy::MeshCollection::UpdateCZs() {
     // populate nonFailedCZs, allCZs, failedCZs;
     allCZs.clear();
     failedCZs.clear();
-    nonFailedCZs.clear();
+    activeCZs.clear();
     for(auto &cz : beam->czs) {
         allCZs.push_back(&cz);
         if(cz.failed) failedCZs.push_back(&cz);
-        else nonFailedCZs.push_back(&cz);
+        else activeCZs.push_back(&cz);
     }
 
 }

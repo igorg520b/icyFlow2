@@ -23,7 +23,7 @@ public:
 
     std::vector<icy::Node*> allNodes, activeNodes;
     std::vector<icy::Element*> surfaceElements, elasticElements;
-    std::vector<icy::CZ*> nonFailedCZs, allCZs, failedCZs;
+    std::vector<icy::CZ*> allCZs, activeCZs, failedCZs;
 //    std::vector<icy::Face*> allFaces;
 
     MeshCollection();

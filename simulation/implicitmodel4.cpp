@@ -65,7 +65,9 @@ void icy::ImplicitModel4::_updateStaticStructure()
 
 void icy::ImplicitModel4::_beginStep()
 {
-    // prepare tentative entry about the simulation step
+    if(cf.StepNumber == 0) cf.nCZ_Initial = mc.activeCZs.size();
+
+        // prepare tentative entry about the simulation step
     tcf0.CopyFrom(cf); // copy current frame data
     tcf0.IncrementTime(prms.InitialTimeStep);
     tcf0.nActiveNodes = (int)mc.activeNodes.size();
@@ -121,9 +123,11 @@ void icy::ImplicitModel4::_addCollidingNodesToStructure()
 bool icy::ImplicitModel4::_checkDamage()
 {
     if (tcf0.TimeScaleFactor == tcf0.Parts) return false; // can't reduce time step anyway
-    double dn_damaged = (double)(tcf0.nCZDamagedThisStep) / cf.nCZ_Initial;
+    double dn_damaged = (double)(tcf0.nCZDamagedThisStep-cf.nCZDamagedTotal) / tcf0.nCZ_Initial;
     double dn_failed = (double)(tcf0.nCZFailedThisStep) / tcf0.nCZ_Initial;
     bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
+    if(result)
+        std::cout << "damaged " << tcf0.nCZDamagedThisStep << "; f " << tcf0.nCZFailedThisStep << ";i "  << tcf0.nCZ_Initial << std::endl;
     return result;
 }
 
@@ -201,6 +205,7 @@ void icy::ImplicitModel4::_acceptFrame()
 {
     cf.CopyFrom(tcf0);
     cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
+    cf.nCZDamagedTotal =tcf0.nCZDamagedThisStep;
     std::cout << "accepting frame with ts " << tcf0.TimeStep;
 //    for(auto &nd : mc.activeNodes) {
 //        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
@@ -216,7 +221,7 @@ void icy::ImplicitModel4::_acceptFrame()
     }
 
     // accept new state variables in CZs
-    for(auto &cz : mc.nonFailedCZs) {
+    for(auto &cz : mc.activeCZs) {
         cz->AcceptTentativeValues();
         if(cz->failed) {
             cz->faces[0]->created = cz->faces[0]->exposed = true;
@@ -241,7 +246,7 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, tcf0.TimeStep);
 
     // assemble cohesive zones
-    NumberCrunching::AssembleCZs(linearSystem, mc.nonFailedCZs, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
+    NumberCrunching::AssembleCZs(linearSystem, mc.activeCZs, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
@@ -264,7 +269,7 @@ bool icy::ImplicitModel4::Step()
         _addCollidingNodesToStructure();  // add colliding nodes to structure
 
         _assemble(); // prepare and compute forces
-        tcf0.explodes = false;//_checkDamage();
+        tcf0.explodes = _checkDamage();
 
         if(kill) return true;
         linearSystem.Solve();
@@ -272,7 +277,7 @@ bool icy::ImplicitModel4::Step()
         tcf0.diverges = _checkDivergence();
         _XtoDU();
         tcf0.IterationsPerformed++;
-        tcf0.Print();
+//        tcf0.Print();
     } while(tcf0.IterationsPerformed < prms.minIterations ||
       (!tcf0.explodes && !tcf0.diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
 
