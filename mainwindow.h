@@ -7,6 +7,12 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QLabel>
+#include <QVBoxLayout>
+
+#include <QtCharts>
+#include <QLineSeries>
+#include <QChart>
+#include <QChartView>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNamedColors.h>
@@ -76,10 +82,15 @@ private:
     Ui::MainWindow *ui;
     QVTKOpenGLNativeWidget *qtw;
     QSplitter *sp;
+    QVBoxLayout *layout;
     ObjectPropertyBrowser *pb;
     QLabel *statusPausedOrRunning;
     QLabel *statusFrameNumber;
 
+    // chart
+    QLineSeries *series;
+    QChart *chart;
+    QChartView *chartView;
 
     // VTK objects
     vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;

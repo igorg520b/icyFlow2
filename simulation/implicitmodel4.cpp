@@ -206,7 +206,8 @@ void icy::ImplicitModel4::_acceptFrame()
     cf.CopyFrom(tcf0);
     cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
     cf.nCZDamagedTotal =tcf0.nCZDamagedThisStep;
-    std::cout << "accepting frame with ts " << tcf0.TimeStep;
+//    std::cout << "accepting frame with ts " << tcf0.TimeStep << std::endl;
+
 //    for(auto &nd : mc.activeNodes) {
 //        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
 //        nd->AcceptTentativeValues(tcf0.TimeStep);
