@@ -13,6 +13,9 @@
 #include <vtkNamedColors.h>
 #include <vtkDoubleArray.h>
 #include <vtkIntArray.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkDataSetMapper.h>
+#include <vtkLookupTable.h>
 #include "node.h"
 #include "element.h"
 #include "cz.h"
@@ -56,8 +59,12 @@ public:
     vtkNew<vtkNamedColors> colors;
 
     vtkNew<vtkDoubleArray> principalStresses_cells;
+    vtkNew<vtkDoubleArray> firstPrincipalStress_cells;
     vtkNew<vtkIntArray> tags_cells;
     vtkNew<vtkDoubleArray> verticalDisplacements_nodes;
+
+    vtkNew<vtkDataSetMapper> mapper;
+    vtkNew<vtkLookupTable> hueLut;
 
     Mesh() {}
     ~Mesh();
