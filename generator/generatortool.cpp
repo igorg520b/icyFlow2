@@ -32,7 +32,7 @@ void icy::GeneratorTool::GenerateLBeamSetup(BeamParams *beamParams, MeshCollecti
 
     // insert czs
     CZInsertionTool cztool;
-//    cztool.InsertCohesiveElements(*beam);
+    cztool.InsertCohesiveElements(*beam);
     beam->AnchorSides();
     beam->CreateUGrid();
 }

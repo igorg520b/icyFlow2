@@ -21,7 +21,7 @@ void icy::ImplicitModel4::Clear()
 
 void icy::ImplicitModel4::_prepare()
 {
-    icy::NumberCrunching::InitializeConstants();
+    icy::NumberCrunching::InitializeConstants(prms);
 
 //    allFrames.push_back(cf);
     // re-create static contents of the linear system
@@ -238,10 +238,10 @@ void icy::ImplicitModel4::_assemble()
 
     // assemble elements
     if(tcf0.TimeStep == 0) throw std::runtime_error("time step is zero");
-    NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, prms, tcf0.TimeStep);
+    NumberCrunching::AssembleElems(linearSystem, mc.elasticElements, tcf0.TimeStep);
 
     // assemble cohesive zones
-    NumberCrunching::AssembleCZs(linearSystem, mc.allCZs, prms, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
+    NumberCrunching::AssembleCZs(linearSystem, mc.nonFailedCZs, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
@@ -264,7 +264,8 @@ bool icy::ImplicitModel4::Step()
         _addCollidingNodesToStructure();  // add colliding nodes to structure
 
         _assemble(); // prepare and compute forces
-        tcf0.explodes = _checkDamage();
+        tcf0.explodes = false;//_checkDamage();
+
         if(kill) return true;
         linearSystem.Solve();
         if(kill) return true;

@@ -26,7 +26,7 @@ public:
     static const double EPS;
     static std::vector<CPResult> cprList;
 
-    static void InitializeConstants();
+    static void InitializeConstants(ModelPrms &prms);
 
     static void NarrowPhase(std::vector<Element*> &broadList, MeshCollection &mc);
 
@@ -35,12 +35,11 @@ public:
 
     // linear tetrahedron
     static void AssembleElems(LinearSystem &ls,
-                              std::vector<Element*> &elasticElements,
-                              ModelPrms &prms, double h);
+                              std::vector<Element*> &elasticElements, double h);
 
     // cohesive zones
     static void AssembleCZs(
-            LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms,
+            LinearSystem &ls, std::vector<CZ*> &czs,
             int &totalFailed, int &totalDamaged);
 
 private:
@@ -89,6 +88,10 @@ private:
     static void OneCollision(double distanceEpsilonSqared, double k, CPResult &res);
 
     //linear tetrahedron
+    static double E[6][6]; // recompute when nu or rho changes
+    static double M[12][12];
+    static double rho, Y, nu;
+    static double NewmarkBeta, NewmarkGamma, gravity, dampingMass, dampingStiffness;
 
     // the results of this function subsequently go into the equaiton of motion
     // f[12] = elastic forces acting on nodes
@@ -97,8 +100,7 @@ private:
     static void F_and_Df_Corotational(
             const double(&x0)[12], const double(&xc)[12],
     double(&f)[12], double(&Df)[12][12], double &V,
-    double(&sigma)[6], double (&principal_str)[3],
-    const double (&E)[6][6]);
+    double(&sigma)[6], double (&principal_str)[3]);
 
     static inline void fastRotationMatrix(
             double p0x, double p0y, double p0z,
@@ -130,13 +132,7 @@ private:
         double xy, double yz, double zx,
         double* eigenvalues);
 
-    static void ElementElasticity(
-            Element *elem,
-            const double (&E)[6][6], const double rho,
-    const double dampingMass, const double dampingStiffness, const double h,
-    const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12],
-    const double gravity);
-
+    static void ElementElasticity(Element *elem, const double h);
 
     // cohesive zones
     // these are copied from ModelPrms

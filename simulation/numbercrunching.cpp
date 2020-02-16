@@ -13,8 +13,77 @@ std::vector<icy::CPResult> icy::NumberCrunching::cprList;
 SymmetricEigensolver3x3<double> icy::NumberCrunching::solver;
 
 
-void icy::NumberCrunching::InitializeConstants()
+double icy::NumberCrunching::M[12][12] = {};
+double icy::NumberCrunching::E[6][6] = {};
+double icy::NumberCrunching::Y;
+double icy::NumberCrunching::rho;
+double icy::NumberCrunching::nu;
+double icy::NumberCrunching::NewmarkBeta;
+double icy::NumberCrunching::NewmarkGamma;
+double icy::NumberCrunching::gravity;
+double icy::NumberCrunching::dampingMass;
+double icy::NumberCrunching::dampingStiffness;
+
+double icy::NumberCrunching::B[3][3][18] = {};
+double icy::NumberCrunching::sf[3][3] = {};
+double icy::NumberCrunching::deln;
+double icy::NumberCrunching::delt;
+double icy::NumberCrunching::p_m;
+double icy::NumberCrunching::p_n;
+double icy::NumberCrunching::alpha;
+double icy::NumberCrunching::beta;
+double icy::NumberCrunching::gam_n;
+double icy::NumberCrunching::gam_t;
+double icy::NumberCrunching::tau_max;
+double icy::NumberCrunching::sigma_max;
+double icy::NumberCrunching::pMtn;
+double icy::NumberCrunching::pMnt;
+double icy::NumberCrunching::lambda_n;
+double icy::NumberCrunching::lambda_t;
+
+void icy::NumberCrunching::InitializeConstants(ModelPrms &prms)
 {
+    // M and E
+    double coeff = 1.0 / 20.0;
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            for (int m = 0; m < 3; m++)
+            {
+                int col = i * 3 + m;
+                int row = j * 3 + m;
+                M[col][row] = (col == row) ? 2 * coeff : coeff;
+            }
+
+    rho = prms.rho;
+    Y = prms.Y;
+    nu = prms.nu;
+
+    NewmarkBeta = prms.NewmarkBeta;
+    NewmarkGamma = prms.NewmarkGamma;
+    gravity = prms.gravity;
+    dampingMass = prms.dampingMass;
+    dampingStiffness = prms.dampingStiffness;
+
+    double coeff1 = Y / ((1.0 + nu) * (1.0 - 2.0 * nu));
+    E[0][0] = E[1][1] = E[2][2] = (1.0 - nu) * coeff1;
+    E[0][1] = E[0][2] = E[1][2] = E[1][0] = E[2][0] = E[2][1] = nu * coeff1;
+    E[3][3] = E[4][4] = E[5][5] = (0.5 - nu) * coeff1;
+
+    deln=prms.del_n;
+    delt = prms.del_t;
+    p_m = prms.p_m;
+    p_n = prms.p_n;
+    alpha = prms.alpha;
+    beta = prms.beta;
+    gam_n = prms.gam_n;
+    gam_t = prms.gam_t;
+    tau_max = prms.tau_max;
+    sigma_max = prms.sigma_max;
+    pMtn = prms.pMtn;
+    pMnt = prms.pMnt;
+    lambda_n = prms.lambda_n;
+    lambda_t = prms.lambda_t;
+
     // initialize sf[]
 
     double GP_coord_1 = 1.0 / 6.0;
@@ -37,6 +106,11 @@ void icy::NumberCrunching::InitializeConstants()
 
 
     // initialize B[]
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            for(int k=0;k<18;k++)
+                if(B[i][j][k]!=0) throw std::runtime_error("B not zero");
+
     for(int i=0;i<3;i++)
     {
         B[i][0][0] = sf[0][i];
@@ -524,11 +598,7 @@ void icy::NumberCrunching::CollisionResponse(LinearSystem &ls, double DistanceEp
 
 
 void icy::NumberCrunching::ElementElasticity(
-        Element *elem,
-        const double (&E)[6][6], const double rho,
-const double dampingMass, const double dampingStiffness, const double h,
-const double NewmarkBeta, const double NewmarkGamma, const double (&M)[12][12],
-const double gravity)
+        Element *elem, const double h)
 {
     double V, x0[12], xc[12], vn[12], an[12];
     double f[12]={};
@@ -554,7 +624,7 @@ const double gravity)
         an[i * 3 + 2] = nd->anz;
     }
 
-    F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses, E);
+    F_and_Df_Corotational(x0, xc, f, Df, V, elem->stress, elem->principal_stresses);
 
     double gravityForcePerNode = gravity * rho * V / 4;
     rhs[2] += gravityForcePerNode;
@@ -651,7 +721,7 @@ void icy::NumberCrunching::multABd(
 void icy::NumberCrunching::F_and_Df_Corotational(
     const double(&x0)[12], const double(&xc)[12],
     double(&f)[12], double(&Df)[12][12], double &V,
-double(&sigma)[6], double (&principal_str)[3], const double (&E)[6][6])
+double(&sigma)[6], double (&principal_str)[3])
 {
     // Colorational formulation:
     // f = RK(Rt xc - x0)
@@ -820,23 +890,14 @@ void icy::NumberCrunching::Eigenvalues(
 
 void icy::NumberCrunching::AssembleElems(
         LinearSystem &ls,
-        std::vector<Element*> &elasticElements, ModelPrms &prms, double h)
+        std::vector<Element*> &elasticElements, double h)
 {
-    const double (&E)[6][6] = prms.E;
-    const double rho = prms.rho;
-    const double dampingMass = prms.dampingMass;
-    const double dampingStiffness = prms.dampingStiffness;
-    const double NewmarkBeta = prms.NewmarkBeta;
-    const double NewmarkGamma = prms.NewmarkGamma;
-    const double (&M)[12][12] = prms.M;
-
     int N = elasticElements.size();
 #pragma omp parallel for
     for(int i=0;i<N;i++)
     {
         icy::Element *elem = elasticElements[i];
-        ElementElasticity(elem, E, rho, dampingMass, dampingStiffness, h,
-                          NewmarkBeta, NewmarkGamma, M, prms.gravity);
+        ElementElasticity(elem, h);
     }
 
     // distribute into linear system
@@ -868,41 +929,14 @@ void icy::NumberCrunching::AssembleElems(
 
 // cohesive zones ===========================
 
-double icy::NumberCrunching::deln;
-double icy::NumberCrunching::delt;
-double icy::NumberCrunching::p_m;
-double icy::NumberCrunching::p_n;
-double icy::NumberCrunching::alpha;
-double icy::NumberCrunching::beta;
-double icy::NumberCrunching::gam_n;
-double icy::NumberCrunching::gam_t;
-double icy::NumberCrunching::tau_max;
-double icy::NumberCrunching::sigma_max;
-double icy::NumberCrunching::pMtn;
-double icy::NumberCrunching::pMnt;
-double icy::NumberCrunching::lambda_n;
-double icy::NumberCrunching::lambda_t;
-double icy::NumberCrunching::B[3][3][18] = {};
-double icy::NumberCrunching::sf[3][3] = {};
+
+
 
 void icy::NumberCrunching::AssembleCZs(
-        LinearSystem &ls, std::vector<CZ*> &czs, ModelPrms &prms,
+        LinearSystem &ls, std::vector<CZ*> &czs,
         int &totalFailed, int &totalDamaged)
 {
-    deln=prms.del_n;
-    delt = prms.del_t;
-    p_m = prms.p_m;
-    p_n = prms.p_n;
-    alpha = prms.alpha;
-    beta = prms.beta;
-    gam_n = prms.gam_n;
-    gam_t = prms.gam_t;
-    tau_max = prms.tau_max;
-    sigma_max = prms.sigma_max;
-    pMtn = prms.pMtn;
-    pMnt = prms.pMnt;
-    lambda_n = prms.lambda_n;
-    lambda_t = prms.lambda_t;
+
 
     int N = czs.size();
 #pragma omp parallel for
