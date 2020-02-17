@@ -90,6 +90,7 @@ private:
     ObjectPropertyBrowser *pb;
     QLabel *statusPausedOrRunning;
     QLabel *statusFrameNumber;
+    QLabel *tcf;
 
     // chart
     QLineSeries *series;

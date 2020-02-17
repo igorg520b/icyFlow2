@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
     chart2->legend()->hide();
     for(int i=0;i<5;i++) {
         series2[i] = new QLineSeries();
-        series2[i]->append(0, -0.0005);
+        series2[i]->append(0, -0.001);
         series2[i]->append(1, 0);
         chart2->addSeries(series2[i]);
     }
@@ -40,9 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     statusPausedOrRunning = new QLabel("paused");
     statusFrameNumber = new QLabel("-");
+    tcf = new QLabel("-");
 
     ui->statusbar->addWidget(statusPausedOrRunning);
     ui->statusbar->addWidget(statusFrameNumber);
+    ui->statusbar->addWidget(tcf);
 
     gmsh::initialize();
 
@@ -120,6 +122,7 @@ void MainWindow::updateGUI(bool aborted)
     else statusPausedOrRunning->setText("running");
 
     statusFrameNumber->setText(QString::number(model.cf.StepNumber));
+    tcf->setText(QString::number(model.cf.TimeScaleFactor));
     model.mc.UpdateActors();
     renderWindow->Render();
 

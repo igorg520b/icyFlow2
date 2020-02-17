@@ -89,7 +89,7 @@ public:
     double alpha = 4, beta = 4, lambda_n = 0.015, lambda_t = 0.015;
     double phi_n = 3; // 3;
     double phi_t = 3; //3; // fracture energy
-    double sigma_max = 170000, tau_max = 190000;
+    double sigma_max = 230000, tau_max = 230000;
     double del_n = 0, del_t = 0;
 
     // computed variables

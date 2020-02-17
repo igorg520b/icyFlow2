@@ -28,10 +28,10 @@ public:
     double beamL2 = 1.3;
     double beamGap = 0.1;   // c
     double beamMargin = 0.35; // d
-    double beamThickness = 0.5; // h
-    double CharacteristicLengthMax = 0.08;//0.2;
+    double beamThickness = 0.50; // h
+    double CharacteristicLengthMax = 0.09;//0.2;
     double CharacteristicLengthIndenter = 0.02;
-    double RefinementMultiplier = 0.04;//0.07;
+    double RefinementMultiplier = 0.09;//0.07;
     double IndenterSize = 0.15;
 
 signals:

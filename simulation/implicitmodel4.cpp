@@ -261,7 +261,7 @@ void icy::ImplicitModel4::_acceptFrame()
         if(result != 0) {
             double pt[3] = {};
             extPoints->GetPoint(0, pt);
-            std::cout << i << "; " << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
+//            std::cout << i << "; " << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
             cf.extensometerDisplacements[i]=pt[2]-beamParams->beamThickness;
         } else cf.extensometerDisplacements[i] = 0;
     }
