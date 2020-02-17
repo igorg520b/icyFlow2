@@ -96,6 +96,11 @@ private:
     QChart *chart;
     QChartView *chartView;
 
+    // extensometer chart
+    QLineSeries *series2[5];
+    QChart *chart2;
+    QChartView *chartView2;
+
     // VTK objects
     vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
     vtkNew<vtkRenderer> renderer;
@@ -104,15 +109,12 @@ private:
     vtkNew<vtkWindowToImageFilter> windowToImageFilter;
     vtkNew<vtkPNGWriter> writerPNG;
 
-    // extensometers
+    double extPointsS[5][3];
+    double extPointsE[5][3];
     vtkNew<vtkLineSource> extLines[5];
     vtkNew<vtkMultiBlockDataSet> mbds;
     vtkNew<vtkCompositePolyDataMapper2> extMapper;
     vtkNew<vtkActor> extActor;
-    vtkNew<vtkOBBTree> obbTree;
-    vtkNew<vtkDataSetSurfaceFilter> filter1;
-    vtkNew<vtkPoints> extPoints;
-    vtkNew<vtkIdList> extIdList;
 
 
     // model

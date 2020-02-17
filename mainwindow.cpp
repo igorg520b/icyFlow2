@@ -12,17 +12,30 @@ MainWindow::MainWindow(QWidget *parent)
     series = new QLineSeries();
     series->append(0, 0);
     series->append(1, 5000);
-    QChart *chart = new QChart();
+    chart = new QChart();
     chart->legend()->hide();
     chart->addSeries(series);
 
     chart->createDefaultAxes();
-    QChartView *chartView = new QChartView(chart);
+    chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
     QVBoxLayout *layout = new QVBoxLayout;
     QWidget *leftContainer = new QWidget;
     leftContainer->setLayout(layout);
+
+    // chart for extensometers
+    chart2 = new QChart();
+    chart2->legend()->hide();
+    for(int i=0;i<5;i++) {
+        series2[i] = new QLineSeries();
+        series2[i]->append(0, -0.0005);
+        series2[i]->append(1, 0);
+        chart2->addSeries(series2[i]);
+    }
+    chart2->createDefaultAxes();
+    chartView2 = new QChartView(chart2);
+    chartView2->setRenderHint(QPainter::Antialiasing);
 
 
     statusPausedOrRunning = new QLabel("paused");
@@ -46,13 +59,15 @@ MainWindow::MainWindow(QWidget *parent)
     pb->setActiveObject(&model.prms);
 
     layout->addWidget(pb);
+    layout->addWidget(chartView2);
     layout->addWidget(chartView);
     sp->addWidget(leftContainer);
     sp->addWidget(qtw);
     setCentralWidget(sp);
 
-   worker = new icy::BackgroundWorker(&model);
+    worker = new icy::BackgroundWorker(&model);
     connect(worker, SIGNAL(stepCompleted(bool)), this, SLOT(updateGUI(bool)));
+    model.beamParams = &beamParams;
 }
 
 MainWindow::~MainWindow()
@@ -66,31 +81,25 @@ void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
     ui->actionGenerator_Tool->trigger();
+
     double extOffsets[5][2]={{0.07,0.07},
                              {0.855, 0.075},
                              {1.16, 0.07},
                              {0.93, 0.61},
                              {1.23, 0.70}};
-    double extPointsS[5][3];
-    double extPointsE[5][3];
+
 
     mbds->SetNumberOfBlocks(5);
     for(int i=0;i<5;i++) {
-        // set up extensometers
-        extLines[i]->SetPoint1(beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0],
-                beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1],
-                beamParams.beamThickness+0.1);
-        extLines[i]->SetPoint2(beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0],
-                beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1],
-                beamParams.beamThickness-0.1);
-
         extPointsS[i][0] = extPointsE[i][0] = beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0];
         extPointsS[i][1] = extPointsE[i][1] = beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1];
         extPointsS[i][2] = beamParams.beamThickness+0.1;
         extPointsE[i][2] = beamParams.beamThickness-0.1;
 
+        extLines[i]->SetPoint1(&extPointsS[i][0]);
+        extLines[i]->SetPoint2(&extPointsE[i][0]);
+
         extLines[i]->Update();
-//        extMapper->SetInputConnection(extLines[i]->GetOutputPort());
         mbds->SetBlock(i, extLines[i]->GetOutput());
     }
 
@@ -98,23 +107,10 @@ void MainWindow::showEvent( QShowEvent*)
     extActor->SetMapper(extMapper);
     extActor->GetProperty()->SetLineWidth(4);
     extActor->GetProperty()->SetColor(0,0,1);
+
     renderer->AddActor(extActor);
-
-    // obb tree
-//    filter1->SetInputConnection(model.mc.beam->ugrid);
-    filter1->SetInputDataObject(model.mc.beam->ugrid);
-    filter1->Update();
-
-    obbTree->SetDataSet(filter1->GetOutput());
-    obbTree->BuildLocator();
-
-    int result = obbTree->IntersectWithLine(&extPointsS[0][0], &extPointsE[0][0],extPoints, extIdList);
-    std::cout << "result " << result << std::endl;
-    double pt[3] = {};
-    extPoints->GetPoint(0, pt);
-    std::cout << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
-
-
+    model.extPointsE = &extPointsE[0][0];
+    model.extPointsS = &extPointsS[0][0];
 }
 
 void MainWindow::updateGUI(bool aborted)
@@ -129,13 +125,15 @@ void MainWindow::updateGUI(bool aborted)
 
     // update chart
 
+    for(int i=0;i<5;i++) series2[i]->clear();
     series->clear();
     for(size_t i=0;i<model.allFrames.size();i++) {
         icy::FrameInfo &f = model.allFrames[i];
         series->append(f.SimulationTime,f.IndenterForce);
+
+        for(int i=0;i<5;i++) series2[i]->append(f.SimulationTime, f.extensometerDisplacements[i]);
     }
 
-//    chartView->update();
 
 }
 

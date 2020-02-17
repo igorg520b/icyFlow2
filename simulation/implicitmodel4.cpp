@@ -31,6 +31,14 @@ void icy::ImplicitModel4::_prepare()
 
     if(cf.StepNumber == 0) cf.nCZ_Initial = (int)mc.allCZs.size();
     isReady = true;
+
+    //extensometers
+
+
+    // obb tree
+    filter1->SetInputDataObject(mc.beam->ugrid);
+    filter1->Update();
+    obbTree->SetDataSet(filter1->GetOutput());
 }
 
 void icy::ImplicitModel4::_updateStaticStructure()
@@ -241,10 +249,23 @@ void icy::ImplicitModel4::_acceptFrame()
         fz += nd.fz;
     }
     cf.IndenterForce = sqrt(fx*fx+fy*fy+fz*fz);
-    allFrames.push_back(cf);
 //    std::cout << cf.IndenterForce << std::endl;
 
     // "measure" the vertical deflection at extensometer locations
+    // extensometers
+    filter1->Update();
+    obbTree->BuildLocator();
+    for(int i=0;i<5;i++) {
+        int result = obbTree->IntersectWithLine(&extPointsS[i*3], &extPointsE[i*3],extPoints, extIdList);
+        if(result != 0) {
+            double pt[3] = {};
+            extPoints->GetPoint(0, pt);
+            std::cout << i << "; " << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
+            cf.extensometerDisplacements[i]=pt[2]-beamParams->beamThickness;
+        } else cf.extensometerDisplacements[i] = 0;
+    }
+
+    allFrames.push_back(cf);
 }
 
 void icy::ImplicitModel4::_assemble()
