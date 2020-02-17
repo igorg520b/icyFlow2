@@ -1,6 +1,7 @@
 #ifndef IMPLICITMODEL4_H
 #define IMPLICITMODEL4_H
 
+#include <fstream>
 #include <vector>
 #include "geometry/meshcollection.h"
 #include "modelprms.h"
@@ -60,7 +61,7 @@ private:
     void _assemble();
 
     // extensometers
-
+    fstream myfile;
     vtkNew<vtkOBBTree> obbTree;
     vtkNew<vtkDataSetSurfaceFilter> filter1;
     vtkNew<vtkPoints> extPoints;

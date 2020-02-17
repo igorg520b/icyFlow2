@@ -5,6 +5,7 @@
 #include <chrono>         // std::chrono::seconds
 #include <omp.h>
 
+
 icy::ImplicitModel4::ImplicitModel4()
 {
     Clear();
@@ -265,6 +266,12 @@ void icy::ImplicitModel4::_acceptFrame()
         } else cf.extensometerDisplacements[i] = 0;
     }
 
+
+    myfile.open ("results.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+    myfile << cf.StepNumber << "," << cf.SimulationTime << "," << cf.IndenterForce;
+    for(int i=0;i<5;i++) myfile << "," << cf.extensometerDisplacements[i];
+    myfile << std::endl;
+    myfile.close();
     allFrames.push_back(cf);
 }
 

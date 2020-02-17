@@ -167,7 +167,6 @@ void icy::Mesh::CreateUGrid()
     ugridActor->GetProperty()->SetColor(colors->GetColor3d("Seashell").GetData());
     ugridActor->GetProperty()->EdgeVisibilityOn();
 
-
     if(czs.size() == 0) return;
 
     ugrid_czs->Reset();
@@ -182,7 +181,6 @@ void icy::Mesh::CreateUGrid()
     ugridActor_czs->SetMapper(dataSetMapper_czs);
     ugridActor_czs->GetProperty()->SetColor(colors->GetColor3d("Blue").GetData());
     ugridActor_czs->GetProperty()->EdgeVisibilityOn();
-
 }
 
 void icy::Mesh::UpdateUGrid()
@@ -196,25 +194,29 @@ void icy::Mesh::UpdateUGrid()
 void icy::Mesh::UpdateGridData()
 {
     // transfer computed variables onto the grid for vtk display and analysis in paraview
-    for(int i=0;i<(int)nodes.size();i++) verticalDisplacements_nodes->SetValue(i, nodes[i].uz);
-    verticalDisplacements_nodes->Modified();
-
     double min_stress = DBL_MAX;
     double max_stress = -DBL_MAX;
+    for(int i=0;i<(int)nodes.size();i++) {
+        double val = nodes[i].uz;
+        verticalDisplacements_nodes->SetValue(i, val);
+        if(min_stress>val) min_stress = val;
+        if(max_stress<val) max_stress = val;
+    }
+    verticalDisplacements_nodes->Modified();
+
     for(int i=0;i<(int)elems.size();i++) {
         Element *elem = &elems[i];
         principalStresses_cells->SetTuple3(i, elem->principal_stresses[0], elem->principal_stresses[1], elem->principal_stresses[2]);
         tags_cells->SetValue(i, elem->tag);
         firstPrincipalStress_cells->SetValue(i, elem->principal_stresses[0]);
 
-        double ps = elem->principal_stresses[0];
-        if(min_stress>ps) min_stress = ps;
-        if(max_stress<ps) max_stress = ps;
+//        double ps = elem->principal_stresses[0];
+//        if(min_stress>ps) min_stress = ps;
+//        if(max_stress<ps) max_stress = ps;
     }
 
     hueLut->SetTableRange (min_stress, max_stress);
     mapper->SetScalarRange(min_stress, max_stress);
-
 
     hueLut->Modified();
     principalStresses_cells->Modified();

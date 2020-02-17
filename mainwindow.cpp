@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     renderWindow->SetAlphaBitPlanes(1); //?
 
     qtw->SetRenderWindow(renderWindow);
-    renderer->SetBackground(colors->GetColor3d("LightGrey").GetData());
+    renderer->SetBackground(colors->GetColor3d("White").GetData());
     qtw->GetRenderWindow()->AddRenderer(renderer);
 
     pb = new ObjectPropertyBrowser(nullptr);
@@ -105,8 +105,8 @@ void MainWindow::showEvent( QShowEvent*)
 
     extMapper->SetInputDataObject(mbds.GetPointer());
     extActor->SetMapper(extMapper);
-    extActor->GetProperty()->SetLineWidth(4);
-    extActor->GetProperty()->SetColor(0,0,1);
+    extActor->GetProperty()->SetLineWidth(6);
+    extActor->GetProperty()->SetColor(1,1,1);
 
     renderer->AddActor(extActor);
     model.extPointsE = &extPointsE[0][0];

@@ -106,10 +106,9 @@ void icy::MeshCollection::Prepare()
 
     beam->mapper->SetInputData(beam->ugrid);
     beam->mapper->ScalarVisibilityOn();
-    beam->mapper->SetScalarModeToUseCellData();
-//    beam->mapper->SetScalarModeToUsePointData();
+//    beam->mapper->SetScalarModeToUseCellData();
+    beam->mapper->SetScalarModeToUsePointData();
     beam->mapper->SetColorModeToMapScalars();
-
 
 //    beam->hueLut->SetTableRange (-1, 1e8);
 //    beam->hueLut->SetHueRange (-1000000, 100000000);
