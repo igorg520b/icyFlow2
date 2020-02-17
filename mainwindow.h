@@ -29,6 +29,15 @@
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
+#include <vtkPointSource.h>
+#include <vtkLineSource.h>
+#include <vtkOBBTree.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkMultiBlockDataSet.h>
+#include <vtkCompositePolyDataMapper2.h>
+#include <vtkPoints.h>
+#include <vtkIdList.h>
+#include <vtkDataSetSurfaceFilter.h>
 
 #include <QVTKOpenGLNativeWidget.h>
 #include <QVTKOpenGLWidget.h>
@@ -95,6 +104,18 @@ private:
     vtkNew<vtkWindowToImageFilter> windowToImageFilter;
     vtkNew<vtkPNGWriter> writerPNG;
 
+    // extensometers
+    vtkNew<vtkLineSource> extLines[5];
+    vtkNew<vtkMultiBlockDataSet> mbds;
+    vtkNew<vtkCompositePolyDataMapper2> extMapper;
+    vtkNew<vtkActor> extActor;
+    vtkNew<vtkOBBTree> obbTree;
+    vtkNew<vtkDataSetSurfaceFilter> filter1;
+    vtkNew<vtkPoints> extPoints;
+    vtkNew<vtkIdList> extIdList;
+
+
+    // model
     icy::ImplicitModel4 model;
     BeamParams beamParams;
     icy::BackgroundWorker* worker;

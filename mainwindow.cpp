@@ -16,23 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     chart->legend()->hide();
     chart->addSeries(series);
 
-/*
-    QValueAxis *axisX = new QValueAxis();
-    axisX->setTitleText("time");
-    axisX->setLabelFormat("%g");
-    axisX->setTickCount(100);
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
-
-    QValueAxis *axisY = new QValueAxis();
-    axisX->setTitleText("force");
-    axisX->setLabelFormat("%g");
-    axisX->setTickCount(100);
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisY);
-*/
     chart->createDefaultAxes();
-//    chart->setTitle("Simple line chart example");
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -82,6 +66,55 @@ void MainWindow::showEvent( QShowEvent*)
 {
     // for testing
     ui->actionGenerator_Tool->trigger();
+    double extOffsets[5][2]={{0.07,0.07},
+                             {0.855, 0.075},
+                             {1.16, 0.07},
+                             {0.93, 0.61},
+                             {1.23, 0.70}};
+    double extPointsS[5][3];
+    double extPointsE[5][3];
+
+    mbds->SetNumberOfBlocks(5);
+    for(int i=0;i<5;i++) {
+        // set up extensometers
+        extLines[i]->SetPoint1(beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0],
+                beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1],
+                beamParams.beamThickness+0.1);
+        extLines[i]->SetPoint2(beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0],
+                beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1],
+                beamParams.beamThickness-0.1);
+
+        extPointsS[i][0] = extPointsE[i][0] = beamParams.beamGap+beamParams.beamMargin+beamParams.beamL2-extOffsets[i][0];
+        extPointsS[i][1] = extPointsE[i][1] = beamParams.beamGap+beamParams.beamMargin+beamParams.beamL1-extOffsets[i][1];
+        extPointsS[i][2] = beamParams.beamThickness+0.1;
+        extPointsE[i][2] = beamParams.beamThickness-0.1;
+
+        extLines[i]->Update();
+//        extMapper->SetInputConnection(extLines[i]->GetOutputPort());
+        mbds->SetBlock(i, extLines[i]->GetOutput());
+    }
+
+    extMapper->SetInputDataObject(mbds.GetPointer());
+    extActor->SetMapper(extMapper);
+    extActor->GetProperty()->SetLineWidth(4);
+    extActor->GetProperty()->SetColor(0,0,1);
+    renderer->AddActor(extActor);
+
+    // obb tree
+//    filter1->SetInputConnection(model.mc.beam->ugrid);
+    filter1->SetInputDataObject(model.mc.beam->ugrid);
+    filter1->Update();
+
+    obbTree->SetDataSet(filter1->GetOutput());
+    obbTree->BuildLocator();
+
+    int result = obbTree->IntersectWithLine(&extPointsS[0][0], &extPointsE[0][0],extPoints, extIdList);
+    std::cout << "result " << result << std::endl;
+    double pt[3] = {};
+    extPoints->GetPoint(0, pt);
+    std::cout << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
+
+
 }
 
 void MainWindow::updateGUI(bool aborted)
