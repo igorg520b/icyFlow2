@@ -54,7 +54,7 @@ endif()
 
 include(${VTK_USE_FILE})
 
-set(qtpb_dir /home/s2/Qt/5.12.6/Src/qttools/src/shared/qtpropertybrowser)
+set(qtpb_dir /home/s2/Qt/5.12.4/Src/qttools/src/shared/qtpropertybrowser)
 SET(qtpropertyeditor_SRCS
 ${qtpb_dir}/qtpropertybrowser.cpp
 ${qtpb_dir}/qtpropertymanager.cpp
@@ -131,9 +131,11 @@ find_package(Qt5Charts)
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
 target_include_directories(icyFlow2 PUBLIC generator pb)
 target_include_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/include)
-target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
+#target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
+target_link_directories(icyFlow2 PUBLIC /usr/local/lib)
+target_link_directories(icyFlow2 PUBLIC /usr/local/lib/mkl)
 
-target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets Qt5::Charts)
+target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets Qt5::Charts Qt5::Core)
 target_link_libraries(icyFlow2 PRIVATE ${VTK_LIBRARIES})
-target_link_libraries(icyFlow2 PRIVATE gmsh)
-target_link_libraries(icyFlow2 PRIVATE mkl_rt)
+target_link_libraries(icyFlow2 PUBLIC gmsh)
+target_link_libraries(icyFlow2 PUBLIC mkl_rt)
