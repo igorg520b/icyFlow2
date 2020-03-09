@@ -45,7 +45,7 @@ void icy::BackgroundWorker::run()
 
         if(kill) break;
         bool aborted = model->Step();
-        if(model->prms.SaveVTU) {
+        if(model->prms->SaveVTU) {
             // save
             sprintf(fileName, "beam_%05d.vtu", model->cf.StepNumber);
             writer->SetFileName(fileName);
@@ -54,7 +54,7 @@ void icy::BackgroundWorker::run()
         }
 
         if(kill) break;
-        if(aborted || model->cf.StepNumber >= model->prms.MaxSteps) timeToPause = true;
+        if(aborted || model->cf.StepNumber >= model->prms->MaxSteps) timeToPause = true;
         emit stepCompleted(aborted);    // notify GUI that a step was completed
     }
 }

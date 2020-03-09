@@ -7,6 +7,7 @@ class BeamParams : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(int beamType MEMBER beamType NOTIFY propertyChanged)
     Q_PROPERTY(double beamA MEMBER beamA NOTIFY propertyChanged)
     Q_PROPERTY(double beamB MEMBER beamB NOTIFY propertyChanged)
     Q_PROPERTY(double beamL1 MEMBER beamL1 NOTIFY propertyChanged)
@@ -22,6 +23,7 @@ class BeamParams : public QObject
 public:
     explicit BeamParams(QObject *parent = nullptr);
 
+    int beamType = 0; // 0=l-shaped; 1-cantilever
     double beamA = 0.4;     // a
     double beamB = 0.4;     // b
     double beamL1 = 0.83;

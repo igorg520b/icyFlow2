@@ -64,6 +64,8 @@ public:
 
     enum ViewMode { Elements, AllCZs, DamagedCZs };
     ViewMode viewMode = ViewMode::Elements;
+    BeamParams *beamParams = nullptr;
+    icy::ImplicitModel4 model;
 
 public slots:
     void updateGUI(bool aborted);
@@ -119,8 +121,6 @@ private:
 
 
     // model
-    icy::ImplicitModel4 model;
-    BeamParams beamParams;
     icy::BackgroundWorker* worker;
 
 };

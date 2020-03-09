@@ -31,7 +31,7 @@ class icy::ImplicitModel4
 {
 public:
     MeshCollection mc;
-    ModelPrms prms;
+    ModelPrms *prms = nullptr;
     BeamParams *beamParams;
     FrameInfo cf, tcf0;
     std::vector<FrameInfo> allFrames;

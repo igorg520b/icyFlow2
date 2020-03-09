@@ -23,7 +23,7 @@ void icy::ImplicitModel4::Clear()
 
 void icy::ImplicitModel4::_prepare()
 {
-    icy::NumberCrunching::InitializeConstants(prms);
+    icy::NumberCrunching::InitializeConstants(*prms);
 
     allFrames.push_back(cf);
     // re-create static contents of the linear system
@@ -79,14 +79,14 @@ void icy::ImplicitModel4::_beginStep()
 
         // prepare tentative entry about the simulation step
     tcf0.CopyFrom(cf); // copy current frame data
-    tcf0.IncrementTime(prms.InitialTimeStep);
+    tcf0.IncrementTime(prms->InitialTimeStep);
     tcf0.nActiveNodes = (int)mc.activeNodes.size();
     tcf0.ConvergenceReached = false;
     tcf0.IterationsPerformed = 0;
 
     // position the indenter
     for(auto &nd : mc.indenter->nodes) {
-        nd.unz = nd.uz = - tcf0.SimulationTime*prms.IndentationVelocity;
+        nd.unz = nd.uz = - tcf0.SimulationTime*prms->IndentationVelocity;
         nd.cz = nd.tz = nd.z0 + nd.uz;
     }
 
@@ -135,7 +135,7 @@ bool icy::ImplicitModel4::_checkDamage()
     if (tcf0.TimeScaleFactor == tcf0.Parts) return false; // can't reduce time step anyway
     double dn_damaged = (double)(tcf0.nCZDamagedThisStep-cf.nCZDamagedTotal) / tcf0.nCZ_Initial;
     double dn_failed = (double)(tcf0.nCZFailedThisStep) / tcf0.nCZ_Initial;
-    bool result = (dn_damaged > prms.maxDamagePerStep || dn_failed > prms.maxFailPerStep);
+    bool result = (dn_damaged > prms->maxDamagePerStep || dn_failed > prms->maxFailPerStep);
     if(result)
         std::cout << "damaged " << tcf0.nCZDamagedThisStep << "; f " << tcf0.nCZFailedThisStep << ";i "  << tcf0.nCZ_Initial << std::endl;
     return result;
@@ -144,12 +144,12 @@ bool icy::ImplicitModel4::_checkDamage()
 bool icy::ImplicitModel4::_checkDivergence()
 {
     bool divergence;
-    double cutoff = prms.ConvergenceCutoff; // somewhat arbitrary constant
+    double cutoff = prms->ConvergenceCutoff; // somewhat arbitrary constant
     double norm = linearSystem.NormOfDx();
     if (tcf0.IterationsPerformed == 0)
     {
         tcf0.Error0 = norm;
-        if (tcf0.Error0 == 0) tcf0.Error0 = prms.ConvergenceEpsilon;
+        if (tcf0.Error0 == 0) tcf0.Error0 = prms->ConvergenceEpsilon;
         tcf0.ConvergenceReached = false;
         divergence = false;
     }
@@ -163,7 +163,7 @@ bool icy::ImplicitModel4::_checkDivergence()
     {
         if(tcf0.Error0 == 0) throw std::runtime_error("tcf0.Error0 == 0");
         tcf0.RelativeError = sqrt(norm / tcf0.Error0);
-        if (tcf0.RelativeError <= prms.ConvergenceEpsilon) tcf0.ConvergenceReached = true;
+        if (tcf0.RelativeError <= prms->ConvergenceEpsilon) tcf0.ConvergenceReached = true;
         divergence = (tcf0.RelativeError > 1.01); // return true diverges
     }
     return divergence;
@@ -191,7 +191,7 @@ void icy::ImplicitModel4::_adjustTimeStep()
         cf.StepsWithCurrentFactor = holdFactorDelay;
     }
     else if ((tcf0.diverges || !tcf0.ConvergenceReached) &&
-             tcf0.TimeScaleFactor < cf.Parts && prms.maxIterations > 1)
+             tcf0.TimeScaleFactor < cf.Parts && prms->maxIterations > 1)
     {
         // does not converge
         cf.TimeScaleFactor *= 2;
@@ -222,7 +222,7 @@ void icy::ImplicitModel4::_acceptFrame()
 #pragma omp parallel for
     for(size_t i=0;i<N;i++) {
         Node *nd = mc.activeNodes[i];
-        nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
+        nd->InferTentativeValues(tcf0.TimeStep, prms->NewmarkBeta, prms->NewmarkGamma);
         nd->AcceptTentativeValues(tcf0.TimeStep);
     }
 
@@ -288,7 +288,7 @@ void icy::ImplicitModel4::_assemble()
     NumberCrunching::AssembleCZs(linearSystem, mc.activeCZs, tcf0.nCZFailedThisStep, tcf0.nCZDamagedThisStep);
 
     // assemble collisions
-    NumberCrunching::CollisionResponse(linearSystem, prms.DistanceEpsilon, prms.penaltyK);
+    NumberCrunching::CollisionResponse(linearSystem, prms->DistanceEpsilon, prms->penaltyK);
 }
 
 bool icy::ImplicitModel4::Step()
@@ -300,7 +300,7 @@ bool icy::ImplicitModel4::Step()
     do {
 
         for(auto &nd : mc.activeNodes)
-            nd->InferTentativeValues(tcf0.TimeStep, prms.NewmarkBeta, prms.NewmarkGamma);
+            nd->InferTentativeValues(tcf0.TimeStep, prms->NewmarkBeta, prms->NewmarkGamma);
 
         mc.ConstructBVH();                                              // this should _not_ be called on every step
         mc.bvh.Traverse();                                              // traverse BVH
@@ -317,12 +317,12 @@ bool icy::ImplicitModel4::Step()
         _XtoDU();
         tcf0.IterationsPerformed++;
 //        tcf0.Print();
-    } while(tcf0.IterationsPerformed < prms.minIterations ||
-      (!tcf0.explodes && !tcf0.diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms.maxIterations));
+    } while(tcf0.IterationsPerformed < prms->minIterations ||
+      (!tcf0.explodes && !tcf0.diverges && !tcf0.ConvergenceReached && tcf0.IterationsPerformed < prms->maxIterations));
 
     _adjustTimeStep();
 
-    if (prms.maxIterations == 1 ||
+    if (prms->maxIterations == 1 ||
         tcf0.TimeScaleFactor == tcf0.Parts ||
         (!tcf0.ConvergenceReached && tcf0.TimeScaleFactor >= tcf0.Parts) ||
         (!tcf0.explodes && !tcf0.diverges && tcf0.ConvergenceReached)) _acceptFrame();
