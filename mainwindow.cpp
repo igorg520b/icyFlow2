@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     series = new QLineSeries();
     series->append(0, 0);
-    series->append(5, 15000);
+    series->append(5, 25000);
     chart = new QChart();
     chart->legend()->hide();
     chart->addSeries(series);
@@ -60,7 +60,6 @@ MainWindow::MainWindow(QWidget *parent)
     qtw->GetRenderWindow()->AddRenderer(renderer);
 
     pb = new ObjectPropertyBrowser(nullptr);
-    pb->setActiveObject(model.prms);
 
     layout->addWidget(pb);
     layout->addWidget(chartView2);
@@ -134,9 +133,7 @@ void MainWindow::on_actionGenerator_Tool_triggered()
     if(beamParams->beamType == 1)
     {
         icy::GeneratorTool::GenerateCantileverBeamSetup(beamParams, &model.mc);
-        renderer->AddActor(model.mc.mgs[0]->ugridActor);
-        renderer->AddActor(model.mc.mgs[1]->ugridActor);
-        renderer->AddActor(model.mc.mgs[2]->ugridActor);
+        for(int i=0;i<(int)model.mc.mgs.size();i++) renderer->AddActor(model.mc.mgs[i]->ugridActor);
         renderer->ResetCamera();
         renderWindow->Render();
     }

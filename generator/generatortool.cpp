@@ -253,7 +253,7 @@ void icy::GeneratorTool::GenerateBeam(BeamParams *beamParams, Mesh *outMesh)
     std::vector<int> loops;
     loops.push_back(loop2);
     loops.push_back(loop3);
-    int surfaceTag = factory::addPlaneSurface(loops);
+    factory::addPlaneSurface(loops);
 
     factory::synchronize();
 
@@ -402,10 +402,10 @@ void icy::GeneratorTool::GenerateCantileverBeamSetup(BeamParams *beamParams, Mes
     beam->setObjectName("beam");
     mc->mgs.push_back(beam);
     mc->beam = beam;
+
     CZInsertionTool cztool;
     cztool.InsertCohesiveElements(*beam);
     beam->CreateUGrid();
-
 
     // generate indenters
     Mesh *indenter = new Mesh();
@@ -417,7 +417,7 @@ void icy::GeneratorTool::GenerateCantileverBeamSetup(BeamParams *beamParams, Mes
     for(auto &nd : indenter->nodes) nd.anchored = true;
 
     // align the indenter
-    indenter->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
+    indenter->Translate(0,0,-indenter->zmin+beam->zmax);
     indenter->CreateUGrid();
     indenter->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Brown").GetData());
 
@@ -430,7 +430,7 @@ void icy::GeneratorTool::GenerateCantileverBeamSetup(BeamParams *beamParams, Mes
     for(auto &nd : support->nodes) nd.anchored = true;
 
     // align the support
-    support->Translate(0,0,-indenter->zmin+beam->zmax + 1e-10);
+    support->Translate(0,0,-support->zmax+beam->zmin);
     support->CreateUGrid();
     support->ugridActor->GetProperty()->SetColor(indenter->colors->GetColor3d("Blue").GetData());
 }
@@ -442,7 +442,6 @@ void icy::GeneratorTool::GenerateCantileverBeam(BeamParams *beamParams, Mesh *ou
     double CharacteristicLengthMax = beamParams->CharacteristicLengthMax;
     double a = beamParams->beamA; // beamA
     double l1 = beamParams->beamL1;
-    double c = beamParams->beamGap; // beam gap
     double h = beamParams->beamThickness; // thickness
 
     gmsh::clear();
@@ -525,7 +524,6 @@ void icy::GeneratorTool::GenerateCantileverIndenter(BeamParams *beamParams, Mesh
     double CharacteristicLengthIndenter = beamParams->CharacteristicLengthIndenter;
     double l1 = beamParams->beamL1;
     double a = beamParams->beamA;
-    double d = beamParams->beamMargin; // beam margin
     double h = beamParams->beamThickness; // thickness
     double indsize = beamParams->IndenterSize; // indentor size
     double c = beamParams->beamGap; // beam gap
@@ -659,7 +657,6 @@ void icy::GeneratorTool::GenerateCantileverSupport(BeamParams *beamParams, Mesh 
     double CharacteristicLengthIndenter = beamParams->CharacteristicLengthIndenter;
     double l1 = beamParams->beamL1;
     double a = beamParams->beamA;
-    double d = beamParams->beamMargin; // beam margin
     double h = beamParams->beamThickness; // thickness
     double indsize = beamParams->IndenterSize; // indentor size
     double c = beamParams->beamGap; // beam gap

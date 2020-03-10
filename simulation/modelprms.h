@@ -29,7 +29,6 @@ class icy::ModelPrms : public QObject
     Q_PROPERTY(int intg_maxIterations MEMBER maxIterations NOTIFY propertyChanged)
     Q_PROPERTY(int intg_minIterations MEMBER minIterations NOTIFY propertyChanged)
     Q_PROPERTY(double intg_gravity MEMBER gravity NOTIFY propertyChanged)
-//    Q_PROPERTY(double intg_gravity MEMBER gravity NOTIFY propertyChanged)
 
     // collisions
     Q_PROPERTY(double coll_penaltyK MEMBER penaltyK NOTIFY propertyChanged)
@@ -88,7 +87,7 @@ public:
     // cz parameters
     double alpha = 4, beta = 4, lambda_n = 0.015, lambda_t = 0.015;
     double phi_n = 3; // 3;
-    double phi_t = 3; //3; // fracture energy
+    double phi_t = 50; //3; // fracture energy
     double sigma_max = 230000, tau_max = 230000;
     double del_n = 0, del_t = 0;
 

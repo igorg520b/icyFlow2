@@ -62,7 +62,12 @@ void icy::MeshCollection::Prepare()
                 node.altId = count++;
                 activeNodes.push_back(&node);
             }
-            else node.altId = -1;
+            else {
+                node.cx = node.tx = node.x0;
+                node.cy = node.ty = node.y0;
+                node.cz = node.tz = node.z0;
+                node.altId = -1;
+            }
         }
         mesh->ConnectFaces();
     }
