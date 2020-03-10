@@ -3,7 +3,7 @@
 #include "bvh/bvht.h"
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
-#include <omp.h>
+//#include <omp.h>
 
 
 icy::ImplicitModel4::ImplicitModel4()
@@ -252,26 +252,30 @@ void icy::ImplicitModel4::_acceptFrame()
     cf.IndenterForce = sqrt(fx*fx+fy*fy+fz*fz);
 //    std::cout << cf.IndenterForce << std::endl;
 
-    // "measure" the vertical deflection at extensometer locations
-    // extensometers
-    filter1->Update();
-    obbTree->BuildLocator();
-    for(int i=0;i<5;i++) {
-        int result = obbTree->IntersectWithLine(&extPointsS[i*3], &extPointsE[i*3],extPoints, extIdList);
-        if(result != 0) {
-            double pt[3] = {};
-            extPoints->GetPoint(0, pt);
-//            std::cout << i << "; " << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
-            cf.extensometerDisplacements[i]=pt[2]-beamParams->beamThickness;
-        } else cf.extensometerDisplacements[i] = 0;
+    if(beamParams->beamType == 0)
+    {
+        // "measure" the vertical deflection at extensometer locations
+        // extensometers
+        filter1->Update();
+        obbTree->BuildLocator();
+        for(int i=0;i<5;i++) {
+            int result = obbTree->IntersectWithLine(&extPointsS[i*3], &extPointsE[i*3],extPoints, extIdList);
+            if(result != 0) {
+                double pt[3] = {};
+                extPoints->GetPoint(0, pt);
+                //            std::cout << i << "; " << pt[0] << ", " << pt[1] << ", " << pt[2] << std::endl;
+                cf.extensometerDisplacements[i]=pt[2]-beamParams->beamThickness;
+            } else cf.extensometerDisplacements[i] = 0;
+        }
+
+
+        myfile.open ("results.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+        myfile << cf.StepNumber << "," << cf.SimulationTime << "," << cf.IndenterForce;
+        for(int i=0;i<5;i++) myfile << "," << cf.extensometerDisplacements[i];
+        myfile << std::endl;
+        myfile.close();
     }
 
-
-    myfile.open ("results.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-    myfile << cf.StepNumber << "," << cf.SimulationTime << "," << cf.IndenterForce;
-    for(int i=0;i<5;i++) myfile << "," << cf.extensometerDisplacements[i];
-    myfile << std::endl;
-    myfile.close();
     allFrames.push_back(cf);
 }
 

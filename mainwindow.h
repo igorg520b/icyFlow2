@@ -93,6 +93,7 @@ private:
     QLabel *statusPausedOrRunning;
     QLabel *statusFrameNumber;
     QLabel *tcf;
+    QLabel *statusDamagedCZs;
 
     // chart
     QLineSeries *series;

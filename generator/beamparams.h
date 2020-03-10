@@ -21,7 +21,7 @@ class BeamParams : public QObject
     Q_PROPERTY(double IndenterSize MEMBER IndenterSize NOTIFY propertyChanged)
 
 public:
-    explicit BeamParams(QObject *parent = nullptr);
+    explicit BeamParams(QObject *parent = nullptr){}
 
     int beamType = 0; // 0=l-shaped; 1-cantilever
     double beamA = 0.4;     // a

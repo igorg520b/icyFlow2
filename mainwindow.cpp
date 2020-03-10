@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     series = new QLineSeries();
     series->append(0, 0);
-    series->append(1, 5000);
+    series->append(5, 15000);
     chart = new QChart();
     chart->legend()->hide();
     chart->addSeries(series);
@@ -41,10 +41,12 @@ MainWindow::MainWindow(QWidget *parent)
     statusPausedOrRunning = new QLabel("paused");
     statusFrameNumber = new QLabel("-");
     tcf = new QLabel("-");
+    statusDamagedCZs = new QLabel("-");
 
     ui->statusbar->addWidget(statusPausedOrRunning);
     ui->statusbar->addWidget(statusFrameNumber);
     ui->statusbar->addWidget(tcf);
+    ui->statusbar->addWidget(statusDamagedCZs);
 
     gmsh::initialize();
 
@@ -96,6 +98,7 @@ void MainWindow::updateGUI(bool aborted)
 
     statusFrameNumber->setText(QString::number(model.cf.StepNumber));
     tcf->setText(QString::number(model.cf.TimeScaleFactor));
+    statusDamagedCZs->setText(QString::number(model.cf.nCZDamagedTotal)+" / " + QString::number(model.cf.nCZ_Initial));
     model.mc.UpdateActors();
     renderWindow->Render();
 
@@ -126,10 +129,19 @@ void MainWindow::on_actionScreenshot_triggered()
 void MainWindow::on_actionGenerator_Tool_triggered()
 {
     pb->setActiveObject(model.prms);
-
     renderer->RemoveAllViewProps();
 
-    if(beamParams->beamType == 0) {
+    if(beamParams->beamType == 1)
+    {
+        icy::GeneratorTool::GenerateCantileverBeamSetup(beamParams, &model.mc);
+        renderer->AddActor(model.mc.mgs[0]->ugridActor);
+        renderer->AddActor(model.mc.mgs[1]->ugridActor);
+        renderer->AddActor(model.mc.mgs[2]->ugridActor);
+        renderer->ResetCamera();
+        renderWindow->Render();
+    }
+    else if(beamParams->beamType == 0)
+    {
         // user generator tool to set up the scene
         icy::GeneratorTool::GenerateLBeamSetup(beamParams, &model.mc);
         renderer->AddActor(model.mc.mgs[0]->ugridActor);
@@ -142,7 +154,6 @@ void MainWindow::on_actionGenerator_Tool_triggered()
                                  {1.16, 0.07},
                                  {0.93, 0.61},
                                  {1.23, 0.70}};
-
 
         mbds->SetNumberOfBlocks(5);
         for(int i=0;i<5;i++) {

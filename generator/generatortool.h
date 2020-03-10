@@ -19,10 +19,14 @@ class icy::GeneratorTool
 {
 public:
     static void GenerateLBeamSetup(BeamParams *beamParams, MeshCollection *output);
+    static void GenerateCantileverBeamSetup(BeamParams *beamParams, MeshCollection *output);
 private:
     GeneratorTool() {}
     static void GenerateIndenter(BeamParams *beamParams, Mesh *output);
+    static void GenerateCantileverIndenter(BeamParams *beamParams, Mesh *output);
+    static void GenerateCantileverSupport(BeamParams *beamParams, Mesh *output);
     static void GenerateBeam(BeamParams *beamParams, Mesh *output);
+    static void GenerateCantileverBeam(BeamParams *beamParams, Mesh *output);
 
 //    static double cross(p2d v1, p2d v2) { return v1.first*v2.second-v1.second*v2.first; }
 

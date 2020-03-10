@@ -51,7 +51,17 @@ int main(int argc, char *argv[])
 
 
     if(parser.isSet(cantileverBeamOption)) {
+        modelPrms.IndentationVelocity = 0.0001;
+        modelPrms.InitialTimeStep = 0.05;
+        beamParams.IndenterSize = 0.25;
         beamParams.beamType = 1;
+        beamParams.beamL1 = 5.80;
+        beamParams.beamA = 0.70;
+        beamParams.beamThickness = 0.64;
+        beamParams.CharacteristicLengthMax = 0.25;
+        modelPrms.penaltyK = 5000;
+        modelPrms.SaveVTU = false;
+
         if(parser.isSet(idxOption)) {
             double idx = parser.value(idxOption).toDouble();
             double idx_max = parser.value(idxOption).toDouble()-1;

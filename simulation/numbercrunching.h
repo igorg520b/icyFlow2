@@ -1,7 +1,7 @@
 #ifndef NUMBERCRUNCHING_H
 #define NUMBERCRUNCHING_H
 
-#include <omp.h>
+//#include <omp.h>
 #include <cstring>
 #include "geometry/meshcollection.h"
 #include "geometry/element.h"

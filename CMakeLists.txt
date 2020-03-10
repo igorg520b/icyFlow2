@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -qopenmp")
+#SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -qopenmp")
 
 
 
@@ -87,7 +87,6 @@ find_package(Qt5Charts)
     ${qtpropertyeditor_SRCS}
     pb/objectpropertybrowser.cpp
     pb/objectpropertybrowser.h
-    generator/beamparams.cpp
     generator/beamparams.h
     generator/generatortool.cpp
     generator/generatortool.h
@@ -131,11 +130,12 @@ find_package(Qt5Charts)
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
 target_include_directories(icyFlow2 PUBLIC generator pb)
 target_include_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/include)
-#target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
+target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
 target_link_directories(icyFlow2 PUBLIC /usr/local/lib)
-target_link_directories(icyFlow2 PUBLIC /usr/local/lib/mkl)
+#target_link_directories(icyFlow2 PUBLIC /usr/local/lib/mkl)
 
 target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets Qt5::Charts Qt5::Core)
 target_link_libraries(icyFlow2 PRIVATE ${VTK_LIBRARIES})
 target_link_libraries(icyFlow2 PUBLIC gmsh)
-target_link_libraries(icyFlow2 PUBLIC mkl_rt)
+#target_link_libraries(icyFlow2 PUBLIC mkl_rt)
+target_link_libraries(icyFlow2 PUBLIC mkl_intel_lp64 mkl_gnu_thread mkl_core gomp pthread m dl)
