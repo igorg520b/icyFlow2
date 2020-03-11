@@ -8,9 +8,9 @@
 #include <QString>
 #include "simulation/implicitmodel4.h"
 #include <vtkXMLUnstructuredGridWriter.h>
+#include <fstream>
 
 namespace icy { class BackgroundWorker; }
-
 
 class icy::BackgroundWorker : public QThread
 {
@@ -25,7 +25,6 @@ public:
 private:
     vtkNew<vtkXMLUnstructuredGridWriter> writer;
 
-
 signals:
     void stepCompleted(bool aborted);
 
@@ -38,6 +37,8 @@ private:
     ImplicitModel4 *model;
     bool kill = false;
     void saveCSV(int termination_reason);
+    fstream myfile;
+
 };
 
 #endif // BACKGROUNDWORKER_H

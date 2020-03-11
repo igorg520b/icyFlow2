@@ -61,4 +61,33 @@ void icy::BackgroundWorker::run()
     }
 }
 
+void icy::BackgroundWorker::saveCSV(int termination_reason)
+{
+    if(model->beamParams->beamType != 1) return;
 
+    char fileName[20];
+    sprintf(fileName, "%05d.csv", model->prms->InstanceNumber);
+    myfile.open ("results.csv", std::fstream::out | std::fstream::trunc);
+    myfile << termination_reason << std::endl;
+    myfile << "length, " << model->beamParams->beamL1 << endl;
+    myfile << "width, " << model->beamParams->beamA << endl;
+    myfile << "thickness, " << model->beamParams->beamThickness << endl;
+
+    // determine max force
+
+    // calculate "s" distance
+
+    // calculate flexural strength
+
+    int N = model->allFrames.size();
+    for(int i=0;i<N;i++) {
+        FrameInfo &fi = model->allFrames[i];
+        //    myfile << cf.StepNumber << "," << cf.SimulationTime << "," << cf.IndenterForce;
+    }
+
+
+
+    myfile.close();
+
+
+}
