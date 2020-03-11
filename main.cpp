@@ -66,11 +66,12 @@ int main(int argc, char *argv[])
         modelPrms.NewmarkGamma = 1;
 
         if(parser.isSet(idxOption)) {
-            double idx = parser.value(idxOption).toDouble();
+            int idx = parser.value(idxOption).toInt();
+            modelPrms.InstanceNumber = idx;
             double idx_max = parser.value(idxOption).toDouble()-1;
             double low = parser.value(lowOption).toInt();
             double high = parser.value(highOption).toInt();
-            double idxNormalized = idx/idx_max;
+            double idxNormalized = (double)idx/idx_max;
             double val = low+(high-low)*idxNormalized; // interpolated value
 
             // set volume of the beam equal to val

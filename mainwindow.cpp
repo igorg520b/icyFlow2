@@ -42,11 +42,13 @@ MainWindow::MainWindow(QWidget *parent)
     statusFrameNumber = new QLabel("-");
     tcf = new QLabel("-");
     statusDamagedCZs = new QLabel("-");
+    statusTotalSolves = new QLabel("-");
 
     ui->statusbar->addWidget(statusPausedOrRunning);
     ui->statusbar->addWidget(statusFrameNumber);
     ui->statusbar->addWidget(tcf);
     ui->statusbar->addWidget(statusDamagedCZs);
+    ui->statusbar->addWidget(statusTotalSolves);
 
     gmsh::initialize();
 
@@ -98,6 +100,7 @@ void MainWindow::updateGUI(bool aborted)
     statusFrameNumber->setText(QString::number(model.cf.StepNumber));
     tcf->setText(QString::number(model.cf.TimeScaleFactor));
     statusDamagedCZs->setText(QString::number(model.cf.nCZDamagedTotal)+" / " + QString::number(model.cf.nCZ_Initial));
+    statusTotalSolves->setText("solves: " + QString::number(model.cf.TotalSolves));
     model.mc.UpdateActors();
     renderWindow->Render();
 

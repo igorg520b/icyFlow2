@@ -35,11 +35,13 @@ void icy::ImplicitModel4::_prepare()
 
     //extensometers
 
-
-    // obb tree
-    filter1->SetInputDataObject(mc.beam->ugrid);
-    filter1->Update();
-    obbTree->SetDataSet(filter1->GetOutput());
+    if(beamParams->beamType == 0)
+    {
+        // obb tree
+        filter1->SetInputDataObject(mc.beam->ugrid);
+        filter1->Update();
+        obbTree->SetDataSet(filter1->GetOutput());
+    }
 }
 
 void icy::ImplicitModel4::_updateStaticStructure()
@@ -91,20 +93,12 @@ void icy::ImplicitModel4::_beginStep()
     }
 
     // initial displacement guess for active nodes
-
     double h = tcf0.TimeStep;
     for(auto &nd : mc.activeNodes) {
         nd->dux = nd->vx*h;
         nd->duy = nd->vy*h;
         nd->duz = nd->vz*h;
     }
-
-    // for testing
-//    for(auto &nd : mc.beam->nodes)
-//        if(nd.anchored) {
-//            nd.unz = nd.uz = tcf0.SimulationTime*prms.IndentationVelocity;
-//            nd.cz = nd.tz = nd.z0 + nd.uz;
-//       }
 }
 
 void icy::ImplicitModel4::_addCollidingNodesToStructure()
@@ -214,9 +208,8 @@ void icy::ImplicitModel4::_adjustTimeStep()
 void icy::ImplicitModel4::_acceptFrame()
 {
     cf.CopyFrom(tcf0);
-    cf.nCZFailedTotal+=tcf0.nCZFailedThisStep;
-    cf.nCZDamagedTotal =tcf0.nCZDamagedThisStep;
-//    std::cout << "accepting frame with ts " << tcf0.TimeStep << std::endl;
+    cf.nCZFailedTotal += tcf0.nCZFailedThisStep;
+    cf.nCZDamagedTotal = tcf0.nCZDamagedThisStep;
 
     size_t N = mc.activeNodes.size();
 #pragma omp parallel for
@@ -250,7 +243,6 @@ void icy::ImplicitModel4::_acceptFrame()
         fz += nd.fz;
     }
     cf.IndenterForce = sqrt(fx*fx+fy*fy+fz*fz);
-//    std::cout << cf.IndenterForce << std::endl;
 
     if(beamParams->beamType == 0)
     {
@@ -268,12 +260,14 @@ void icy::ImplicitModel4::_acceptFrame()
             } else cf.extensometerDisplacements[i] = 0;
         }
 
-
         myfile.open ("results.csv", std::fstream::in | std::fstream::out | std::fstream::app);
         myfile << cf.StepNumber << "," << cf.SimulationTime << "," << cf.IndenterForce;
         for(int i=0;i<5;i++) myfile << "," << cf.extensometerDisplacements[i];
         myfile << std::endl;
         myfile.close();
+    } else if(beamParams->beamType == 1) {
+        // cantilever beam
+
     }
 
     allFrames.push_back(cf);
@@ -314,8 +308,8 @@ bool icy::ImplicitModel4::Step()
         _assemble(); // prepare and compute forces
         tcf0.explodes = _checkDamage();
 
-        if(kill) return true;
         linearSystem.Solve();
+        cf.TotalSolves++;
         if(kill) return true;
         tcf0.diverges = _checkDivergence();
         _XtoDU();

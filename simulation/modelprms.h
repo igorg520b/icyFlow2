@@ -14,10 +14,12 @@ class icy::ModelPrms : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool sim_SaveVTU MEMBER SaveVTU NOTIFY propertyChanged)
-
     Q_PROPERTY(double sim_InitialTimeStep MEMBER InitialTimeStep NOTIFY propertyChanged)
     Q_PROPERTY(int sim_MaxSteps MEMBER MaxSteps NOTIFY propertyChanged)
     Q_PROPERTY(double sim_IndentationVelocity MEMBER IndentationVelocity NOTIFY propertyChanged)
+    Q_PROPERTY(int sim_StepAfterWhichFractionDetectionIsTriggered MEMBER StepAfterWhichFractionDetectionIsTriggered NOTIFY propertyChanged)
+    Q_PROPERTY(double sim_FractionDetectionForceThreshold MEMBER FractionDetectionForceThreshold NOTIFY propertyChanged)
+    Q_PROPERTY(int sim_MaxSolves MEMBER MaxSolves NOTIFY propertyChanged)
 
     // integration
     Q_PROPERTY(double intg_NewmarkBeta MEMBER NewmarkBeta NOTIFY propertyChanged)
@@ -60,7 +62,11 @@ public:
     double penaltyK = 5000;
     double InitialTimeStep = 0.01;
     int MaxSteps = 180;
-    double nThreshold = 0, tThreshold = 0; // CZ peak traction values
+    double nThreshold = 0, tThreshold = 0; // CZ peak separation point
+    int StepAfterWhichFractionDetectionIsTriggered = 50;
+    double FractionDetectionForceThreshold = 10;
+    int MaxSolves = 50; // prevents the simulation from running infinitely
+    int InstanceNumber = 0; // if executed in batch, this is set via command line parameters
 
     // material
     double Y = 3.7e9;

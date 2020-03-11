@@ -37,7 +37,6 @@ void icy::BackgroundWorker::run()
         if (!running || timeToPause) {
             running = false;
             timeToPause = false;
-//            emit stepCompleted(false);
             condition.wait(&mutex);
         }
         running = true;
@@ -55,6 +54,9 @@ void icy::BackgroundWorker::run()
 
         if(kill) break;
         if(aborted || model->cf.StepNumber >= model->prms->MaxSteps) timeToPause = true;
+        if(model->prms->MaxSolves > 0 && model->cf.TotalSolves > model->prms->MaxSolves) timeToPause = true;
+        if(model->prms->StepAfterWhichFractionDetectionIsTriggered > 0 &&
+                model->cf.IndenterForce < model->prms->FractionDetectionForceThreshold) timeToPause = true;
         emit stepCompleted(aborted);    // notify GUI that a step was completed
     }
 }

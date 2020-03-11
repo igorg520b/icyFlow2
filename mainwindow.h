@@ -94,6 +94,7 @@ private:
     QLabel *statusFrameNumber;
     QLabel *tcf;
     QLabel *statusDamagedCZs;
+    QLabel *statusTotalSolves;
 
     // chart
     QLineSeries *series;

@@ -10,7 +10,7 @@ class icy::FrameInfo
 public:
     // recorded values
     double IndenterForce;
-    double extensometerDisplacements[5]={};
+    double extensometerDisplacements[5]={}; // only used in L-beam setup
 
     bool explodes, diverges; // for time step adjustment algorithm
 
@@ -25,7 +25,6 @@ public:
     int nCZ_Initial;
     int nActiveNodes;
 
-
     // time
     int StepNumber;
     double SimulationTime;
@@ -36,13 +35,13 @@ public:
     int StepsWithCurrentFactor; // time steps left with current factor (if TSF > 1)
 //    int TimeScaleFactorThisStep = 1;    // Time scale used for this step
 
-
     // solution analysis
     int IterationsPerformed;
     int AttemptsTaken;
     double RelativeError;
     double Error0;
     bool ConvergenceReached;
+    int TotalSolves=0; // number of times the solver was invoked (used as a kill switch)
 
     void Print() {
         std::cout << "st " << StepNumber;
