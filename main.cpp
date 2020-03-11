@@ -60,10 +60,11 @@ int main(int argc, char *argv[])
         beamParams.beamThickness = 0.64;
         beamParams.CharacteristicLengthMax = 0.25;
         modelPrms.penaltyK = 10000;
-//        modelPrms.gravity = -0.1;
+        modelPrms.gravity = -0.05;
         modelPrms.SaveVTU = false;
         modelPrms.NewmarkBeta = 0.5;
         modelPrms.NewmarkGamma = 1;
+//        modelPrms.Y = 3.7e6;
 
         if(parser.isSet(idxOption)) {
             int idx = parser.value(idxOption).toInt();

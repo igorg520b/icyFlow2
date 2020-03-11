@@ -37,6 +37,7 @@ private:
     QWaitCondition condition;
     ImplicitModel4 *model;
     bool kill = false;
+    void saveCSV(int termination_reason);
 };
 
 #endif // BACKGROUNDWORKER_H

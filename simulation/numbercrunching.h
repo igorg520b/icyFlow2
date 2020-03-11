@@ -42,6 +42,10 @@ public:
             LinearSystem &ls, std::vector<CZ*> &czs,
             int &totalFailed, int &totalDamaged);
 
+    // force box
+    static void ForceBox(LinearSystem &ls, std::vector<icy::Node*> activeNodes, double k,
+                         double xmin, double xmax, double ymin, double ymax);
+
 private:
 
     // narrow phase

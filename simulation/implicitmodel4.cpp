@@ -287,6 +287,12 @@ void icy::ImplicitModel4::_assemble()
 
     // assemble collisions
     NumberCrunching::CollisionResponse(linearSystem, prms->DistanceEpsilon, prms->penaltyK);
+
+    if(beamParams->beamType == 1) {
+        double m = (mc.beam->ymax - mc.beam->ymin)/100;
+        NumberCrunching::ForceBox(linearSystem, mc.activeNodes, prms->penaltyK,
+          mc.beam->xmin-m, mc.beam->xmax+m, mc.beam->ymin-m, mc.beam->ymax+m);
+    }
 }
 
 bool icy::ImplicitModel4::Step()

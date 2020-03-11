@@ -328,12 +328,6 @@ icy::Face* icy::NumberCrunching::FindClosestFace(Node *nd, Element *elem)
 }
 
 
-
-
-
-
-
-
 int icy::NumberCrunching::NarrowPhaseTwoElems(Element *tetra1, Element *tetra2)
   {
       double nds[24];
@@ -940,12 +934,7 @@ void icy::NumberCrunching::AssembleCZs(
 
     int N = czs.size();
 #pragma omp parallel for
-    for(int i=0;i<N;i++)
-    {
-        icy::CZ *cz = czs[i];
-        CZForce(cz);
-    }
-
+    for(int i=0;i<N;i++) CZForce(czs[i]);
 
     totalFailed = totalDamaged = 0;
     // distribute into linear system
@@ -1406,7 +1395,6 @@ void icy::NumberCrunching::cohesive_law(
     Dtn = Dnt;
 }
 
-
 void icy::NumberCrunching::CZRotationMatrix(
     double x0, double y0, double z0,
     double x1, double y1, double z1,
@@ -1462,8 +1450,6 @@ void icy::NumberCrunching::CZRotationMatrix(
     r12 = r2z / nmag;
 }
 
-
-
 void icy::NumberCrunching::multAX(
         double a11, double a12, double a13,
         double a21, double a22, double a23,
@@ -1474,4 +1460,60 @@ void icy::NumberCrunching::multAX(
     y1 = x1 * a11 + x2 * a12 + x3 * a13;
     y2 = x1 * a21 + x2 * a22 + x3 * a23;
     y3 = x1 * a31 + x2 * a32 + x3 * a33;
+}
+
+//================================ force box
+
+void icy::NumberCrunching::ForceBox(LinearSystem &ls, std::vector<icy::Node*> activeNodes, double k,
+                                    double xmin, double xmax, double ymin, double ymax)
+{
+    for(auto &nd : activeNodes) {
+        int ni = nd->altId;
+        double x = nd->tx;
+        double y = nd->ty;
+        if(x < xmin) {
+            double dist = xmin-x;
+            double F = dist * k;
+            double df = -k;
+            ls.AddToRHS(ni, F, 0, 0);
+            ls.AddToLHS_Symmetric(
+                        ni, ni,
+                        df,0,0,
+                        0,0,0,
+                        0,0,0);
+        } else if(x>xmax) {
+            double dist = xmax-x;
+            double F = dist * k;
+            double df = k;
+            ls.AddToRHS(ni, F, 0, 0);
+            ls.AddToLHS_Symmetric(
+                        ni, ni,
+                        df,0,0,
+                        0,0,0,
+                        0,0,0);
+        }
+
+        if(y < ymin) {
+            double dist = ymin-y;
+            double F = dist * k;
+            double df = -k;
+            ls.AddToRHS(ni, 0, F, 0);
+            ls.AddToLHS_Symmetric(
+                        ni, ni,
+                        0,0,0,
+                        0,df,0,
+                        0,0,0);
+        } else if(y>ymax) {
+            double dist = ymax-y;
+            double F = dist * k;
+            double df = k;
+            ls.AddToRHS(ni, 0, F, 0);
+            ls.AddToLHS_Symmetric(
+                        ni, ni,
+                        0,0,0,
+                        0,df,0,
+                        0,0,0);
+        }
+
+    }
 }

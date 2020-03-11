@@ -61,16 +61,16 @@ public:
     double IndentationVelocity = 0.017;
     double penaltyK = 5000;
     double InitialTimeStep = 0.01;
-    int MaxSteps = 180;
+    int MaxSteps = 300;
     double nThreshold = 0, tThreshold = 0; // CZ peak separation point
     int StepAfterWhichFractionDetectionIsTriggered = 50;
     double FractionDetectionForceThreshold = 10;
-    int MaxSolves = 50; // prevents the simulation from running infinitely
+    int MaxSolves = 2000; // prevents the simulation from running infinitely
     int InstanceNumber = 0; // if executed in batch, this is set via command line parameters
 
     // material
     double Y = 3.7e9;
-    double rho = 7000;//916.2;
+    double rho = 916.2;
     double dampingMass = 0.0005;
     double dampingStiffness = 0.0005;
     double nu = 0.3;

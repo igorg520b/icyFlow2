@@ -21,7 +21,6 @@ void icy::Mesh::Clear()
     czs.clear();
     elems.clear();
     nodes.clear();
-
 }
 
 
