@@ -347,13 +347,19 @@ void icy::ImplicitModel4::writeCSV(int termination_reason)
     double indenterSize = beamParams->IndenterSize;
 
     char fileName[20];
-    sprintf(fileName, "%05d.csv", prms->InstanceNumber);
+    sprintf(fileName, "%d.csv", prms->InstanceNumber);
     myfile.open (fileName, std::fstream::out | std::fstream::trunc);
     myfile << termination_reason << std::endl;
     myfile << "length, " << beamLength << endl;
     myfile << "width, " << beamWidth << endl;
     myfile << "thickness, " << beamThickness << endl;
     myfile << "volume, " << volume << endl;
+    myfile << "elems, " << mc.beam->elems.size() << endl;
+    myfile << "czs, " << mc.beam->czs.size() << endl;
+    myfile << "nodes, " << mc.beam->nodes.size() << endl;
+    myfile << "CharacteristicLengthMax, " << beamParams->CharacteristicLengthMax << endl;
+    myfile << "cz_sigma_max, " << prms->sigma_max << endl;
+    myfile << "cz_tau_max, " << prms->tau_max << endl;
 
     // determine max force
     auto result = std::max_element(allFrames.begin(), allFrames.end(),

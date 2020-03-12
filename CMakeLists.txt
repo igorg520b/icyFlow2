@@ -11,12 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -qopenmp")
-
-
-
 find_package(VTK COMPONENTS
-
   vtkCommonColor
   vtkCommonCore
   vtkFiltersSources
@@ -127,15 +122,64 @@ find_package(Qt5Charts)
     backgroundworker.h
   )
 
+
+add_executable(icyFlow2ng
+  main_nogui.cpp
+  generator/beamparams.h
+  generator/generatortool.cpp
+  generator/generatortool.h
+  generator/czinsertiontool.cpp
+  generator/czinsertiontool.h
+  geometry/node.cpp
+  geometry/node.h
+  geometry/face.h
+  geometry/face.cpp
+  geometry/element.cpp
+  geometry/element.h
+  geometry/cz.h
+  geometry/cz.cpp
+  geometry/mesh.cpp
+  geometry/mesh.h
+  geometry/meshcollection.cpp
+  geometry/meshcollection.h
+  simulation/modelprms.h
+  simulation/csrdictionary.cpp
+  simulation/csrdictionary.h
+  simulation/frameinfo.h
+  simulation/implicitmodel4.cpp
+  simulation/implicitmodel4.h
+  simulation/linearsystem.cpp
+  simulation/linearsystem.h
+  simulation/bvh/bvht.cpp
+  simulation/bvh/bvht.h
+  simulation/bvh/bvhn.cpp
+  simulation/bvh/bvhn.h
+  simulation/bvh/kdop24.cpp
+  simulation/bvh/kdop24.h
+  simulation/point_triangle_distance.cpp
+  simulation/GteSymmetricEigensolver3x3.h
+  simulation/numbercrunching.cpp
+  simulation/numbercrunching.h
+  SimpleObjectPool.h
+)
+
 target_include_directories(icyFlow2 PUBLIC ${qtpb_dir})
 target_include_directories(icyFlow2 PUBLIC generator pb)
 target_include_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/include)
 target_link_directories(icyFlow2 PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
 target_link_directories(icyFlow2 PUBLIC /usr/local/lib)
-#target_link_directories(icyFlow2 PUBLIC /usr/local/lib/mkl)
-
 target_link_libraries(icyFlow2 PRIVATE Qt5::Widgets Qt5::Charts Qt5::Core)
 target_link_libraries(icyFlow2 PRIVATE ${VTK_LIBRARIES})
 target_link_libraries(icyFlow2 PUBLIC gmsh)
-#target_link_libraries(icyFlow2 PUBLIC mkl_rt)
 target_link_libraries(icyFlow2 PUBLIC mkl_intel_lp64 mkl_gnu_thread mkl_core gomp pthread m dl)
+
+target_include_directories(icyFlow2ng PUBLIC generator)
+target_include_directories(icyFlow2ng PUBLIC /home/s2/intel/mkl/include)
+target_link_directories(icyFlow2ng PUBLIC /home/s2/intel/mkl/lib/intel64_lin)
+target_link_directories(icyFlow2ng PUBLIC /usr/local/lib)
+target_link_libraries(icyFlow2ng PRIVATE Qt5::Core)
+target_link_libraries(icyFlow2ng PRIVATE ${VTK_LIBRARIES})
+target_link_libraries(icyFlow2ng PUBLIC gmsh)
+target_link_libraries(icyFlow2ng PUBLIC mkl_intel_lp64 mkl_gnu_thread mkl_core gomp pthread m dl)
+
+#-c -m 10 -l 1.5 -t 2.5 -i 0
