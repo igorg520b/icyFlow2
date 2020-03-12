@@ -333,3 +333,48 @@ bool icy::ImplicitModel4::Step()
 
     return false; // step not aborted
 }
+
+
+void icy::ImplicitModel4::writeCSV(int termination_reason)
+{
+    if(beamParams->beamType != 1) return;
+    std::cout << "writing file" << std::endl;
+
+    double beamLength = beamParams->beamL1;
+    double beamWidth = beamParams->beamA;
+    double beamThickness = beamParams->beamThickness;
+    double volume = beamLength * beamWidth * beamThickness;
+    double indenterSize = beamParams->IndenterSize;
+
+    char fileName[20];
+    sprintf(fileName, "%05d.csv", prms->InstanceNumber);
+    myfile.open (fileName, std::fstream::out | std::fstream::trunc);
+    myfile << termination_reason << std::endl;
+    myfile << "length, " << beamLength << endl;
+    myfile << "width, " << beamWidth << endl;
+    myfile << "thickness, " << beamThickness << endl;
+    myfile << "volume, " << volume << endl;
+
+    // determine max force
+    auto result = std::max_element(allFrames.begin(), allFrames.end(),
+                                  [](const FrameInfo &a, const FrameInfo &b)
+                                    {return a.IndenterForce < b.IndenterForce;});
+    double maxForce = result->IndenterForce;
+    myfile << "maxForce, " << maxForce << endl;
+
+    // calculate "s" distance
+    double s = (beamLength-indenterSize)/3.0;
+    myfile << "s, " << s << endl;
+
+    // calculate flexural strength
+    double sigma_f = 3*s*maxForce/(beamWidth*beamThickness*beamThickness);
+    myfile << "sigma_f, " << sigma_f << endl;
+
+    myfile << "step_number, time, indenter_force" << endl;
+    int N = allFrames.size();
+    for(int i=0;i<N;i++) {
+        FrameInfo &fi = allFrames[i];
+        myfile << fi.StepNumber << "," << fi.SimulationTime << "," << fi.IndenterForce << endl;;
+    }
+    myfile.close();
+}

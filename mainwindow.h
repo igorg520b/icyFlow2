@@ -44,7 +44,6 @@
 
 #include "objectpropertybrowser.h"
 #include <QDebug>
-#include <gmsh.h>
 #include "beamparams.h"
 #include "simulation/implicitmodel4.h"
 #include "backgroundworker.h"

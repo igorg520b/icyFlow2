@@ -43,6 +43,7 @@ public:
     ImplicitModel4();
     void Clear();
     bool Step();    // return true if aborted
+    void writeCSV(int reason);
     double *extPointsS; // [5][3];
     double *extPointsE;//[5][3];
 

@@ -50,8 +50,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->addWidget(statusDamagedCZs);
     ui->statusbar->addWidget(statusTotalSolves);
 
-    gmsh::initialize();
-
     sp=new QSplitter(Qt::Orientation::Horizontal);
     qtw = new QVTKOpenGLNativeWidget();
 

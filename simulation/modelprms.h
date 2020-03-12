@@ -67,6 +67,7 @@ public:
     double FractionDetectionForceThreshold = 10;
     int MaxSolves = 2000; // prevents the simulation from running infinitely
     int InstanceNumber = 0; // if executed in batch, this is set via command line parameters
+    bool NoGUI = false;
 
     // material
     double Y = 3.7e9;

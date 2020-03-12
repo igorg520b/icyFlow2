@@ -6,8 +6,8 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include <QString>
-#include "simulation/implicitmodel4.h"
 #include <vtkXMLUnstructuredGridWriter.h>
+#include "simulation/implicitmodel4.h"
 #include <fstream>
 
 namespace icy { class BackgroundWorker; }
