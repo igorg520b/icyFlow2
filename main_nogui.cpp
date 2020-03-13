@@ -78,10 +78,10 @@ int main(int argc, char *argv[])
         if(parser.isSet(idxOption)) {
             int idx = parser.value(idxOption).toInt();
             modelPrms.InstanceNumber = idx;
-            double idx_max = parser.value(idxOption).toDouble()-1;
+            int idx_max = parser.value(idxMaxOption).toInt()-1;
             double low = parser.value(lowOption).toDouble();
             double high = parser.value(highOption).toDouble();
-            double idxNormalized = (double)idx/idx_max;
+            double idxNormalized = (double)idx/(double)idx_max;
             double val = low+(high-low)*idxNormalized; // interpolated value
 
             // set volume of the beam equal to val

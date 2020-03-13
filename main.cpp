@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         if(parser.isSet(idxOption)) {
             int idx = parser.value(idxOption).toInt();
             modelPrms.InstanceNumber = idx;
-            double idx_max = parser.value(idxOption).toDouble()-1;
+            double idx_max = parser.value(idxMaxOption).toDouble()-1;
             double low = parser.value(lowOption).toDouble();
             double high = parser.value(highOption).toDouble();
             double idxNormalized = (double)idx/idx_max;
